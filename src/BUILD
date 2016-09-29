@@ -33,3 +33,10 @@ cc_library(
   hdrs = ["addoptoken.h"],
   deps = [":token"],
 )
+
+cc_library(
+  name = "muloptoken",
+  srcs = ["muloptoken.cc"],
+  hdrs = ["muloptoken.h"],
+  deps = [":token"],
+)

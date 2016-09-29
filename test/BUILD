@@ -3,6 +3,7 @@ package(default_visibility = ["//visibility:public"])
 cc_test(
   name = "token_test",
   srcs = ["token_test.cc"],
+  size = "small",
   deps = [
        "//src:token",
        "//third_party/gtest:gtest_main",
@@ -45,6 +46,16 @@ cc_test(
   size = "small",
   deps = [
        "//src:addoptoken",
+       "//third_party/gtest:gtest_main",
+  ],
+)
+
+cc_test(
+  name = "muloptoken_test",
+  srcs = ["muloptoken_test.cc"],
+  size = "small",
+  deps = [
+       "//src:muloptoken",
        "//third_party/gtest:gtest_main",
   ],
 )
