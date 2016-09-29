@@ -1,56 +1,56 @@
 # Compiler options
-CFLAGS = -g -std=c+11 -Wall --pedantic
+CFLAGS = -g -std=c++11 -Wall --pedantic
 
 token.o:	token.h token.cc
-	g++ -c -g -std=c++11 -Wall --pedantic token.cc
+	g++ -c $(CFLAGS) token.cc
 
 keywordtoken.o:	keywordtoken.h keywordtoken.cc token.h
-	g++ -c -g -std=c++11 -Wall --pedantic keywordtoken.cc
+	g++ -c $(CFLAGS) keywordtoken.cc
 
 punctoken.o:	punctoken.h punctoken.cc token.h
-	g++ -c -g -std=c++11 -Wall --pedantic punctoken.cc
+	g++ -c $(CFLAGS) punctoken.cc
 
 reloptoken.o:	reloptoken.h reloptoken.cc token.h
-	g++ -c -g -std=c++11 -Wall --pedantic reloptoken.cc
+	g++ -c $(CFLAGS) reloptoken.cc
 
 addoptoken.o:	addoptoken.h addoptoken.cc token.h
-	g++ -c -g -std=c++11 -Wall --pedantic addoptoken.cc
+	g++ -c $(CFLAGS) addoptoken.cc
 
 muloptoken.o:	muloptoken.h muloptoken.cc token.h
-	g++ -c -g -std=c++11 -Wall --pedantic muloptoken.cc
+	g++ -c $(CFLAGS) muloptoken.cc
 
 idtoken.o:	idtoken.h idtoken.cc token.h
-	g++ -c -g -std=c++11 -Wall --pedantic idtoken.cc
+	g++ -c $(CFLAGS) idtoken.cc
 
 numtoken.o:	numtoken.h numtoken.cc token.h
-	g++ -c -g -std=c++11 -Wall --pedantic numtoken.cc
+	g++ -c $(CFLAGS) numtoken.cc
 
 eoftoken.o:	eoftoken.h eoftoken.cc token.h
-	g++ -c -g -std=c++11 -Wall --pedantic eoftoken.cc
+	g++ -c $(CFLAGS) eoftoken.cc
 
 buffer.o:	buffer.h buffer.cc
-	g++ -c -g -std=c++11 -Wall --pedantic buffer.cc
+	g++ -c $(CFLAGS) buffer.cc
 
 streambuffer.o:	streambuffer.h streambuffer.cc buffer.h
-	g++ -c -g -std=c++11 -Wall --pedantic streambuffer.cc
+	g++ -c $(CFLAGS) streambuffer.cc
 
 filebuffer.o:	filebuffer.h filebuffer.cc buffer.h streambuffer.h
-	g++ -c -g -std=c++11 -Wall --pedantic filebuffer.cc
+	g++ -c $(CFLAGS) filebuffer.cc
 
 scanner.o:	scanner.h scanner.cc buffer.h filebuffer.h \
 		token.h keywordtoken.h punctoken.h reloptoken.h \
 		addoptoken.h muloptoken.h idtoken.h numtoken.h eoftoken.h
-	g++ -c -g -std=c++11 -Wall --pedantic scanner.cc	
+	g++ -c $(CFLAGS) scanner.cc	
 
 test_scanner.o:	test_scanner.cc scanner.h token.h keywordtoken.h \
 		punctoken.h reloptoken.h addoptoken.h muloptoken.h \
 		idtoken.h numtoken.h eoftoken.h
-	g++ -c -g -std=c++11 -Wall --pedantic test_scanner.cc
+	g++ -c $(CFLAGS) test_scanner.cc
 
 test_scanner:	test_scanner.o scanner.o buffer.o filebuffer.o streambuffer.o \
 		token.o keywordtoken.o punctoken.o reloptoken.o addoptoken.o \
 		muloptoken.o idtoken.o numtoken.o eoftoken.o
-	g++ -o test_scanner -g -Wall --pedantic scanner.o buffer.o filebuffer.o \
+	g++ -o test_scanner $(CFLAGS) scanner.o buffer.o filebuffer.o \
 		streambuffer.o eoftoken.o numtoken.o idtoken.o muloptoken.o \
 		addoptoken.o reloptoken.o punctoken.o keywordtoken.o \
 		token.o test_scanner.o
