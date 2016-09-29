@@ -16,7 +16,7 @@ FileBuffer::FileBuffer(const std::string& filename) {
     std::cerr << "Can't open source file " << filename << std::endl;
     buffer_fatal_error();
   }
-  buffer_ = std::make_unique<StreamBuffer>(&source_file_);
+  buffer_.reset(new StreamBuffer(&source_file_));
 }
 
 FileBuffer::~FileBuffer() {

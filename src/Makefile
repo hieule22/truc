@@ -1,5 +1,5 @@
 token.o:	token.h token.cc
-	g++ -c -g -Wall --pedantic token.cc
+	g++ -c -g -std=c++11 -Wall --pedantic token.cc
 
 keywordtoken.o:	keywordtoken.h keywordtoken.cc token.h
 	g++ -c -g -std=c++11 -Wall --pedantic keywordtoken.cc
@@ -26,13 +26,13 @@ eoftoken.o:	eoftoken.h eoftoken.cc token.h
 	g++ -c -g -std=c++11 -Wall --pedantic eoftoken.cc
 
 buffer.o:	buffer.h buffer.cc
-	g++ -c -g -Wall --pedantic buffer.cc
+	g++ -c -g -std=c++11 -Wall --pedantic buffer.cc
 
 streambuffer.o:	streambuffer.h streambuffer.cc buffer.h
 	g++ -c -g -std=c++11 -Wall --pedantic streambuffer.cc
 
 filebuffer.o:	filebuffer.h filebuffer.cc buffer.h streambuffer.h
-	g++ -c -g -std=c++14 -Wall --pedantic filebuffer.cc
+	g++ -c -g -std=c++11 -Wall --pedantic filebuffer.cc
 
 scanner.o:	scanner.h scanner.cc buffer.h filebuffer.h \
 		token.h keywordtoken.h punctoken.h reloptoken.h \

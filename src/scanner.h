@@ -2,6 +2,7 @@
 #define SCANNER_H
 
 #include <iostream>
+#include <memory>
 #include <stdlib.h>
 
 // The scanner reads from the buffer.
