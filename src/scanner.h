@@ -36,21 +36,25 @@ class Scanner
   Token *next_token();
 
  private:
+  // Checks if c represents an alphabetic character.
   inline bool is_alpha (char c) const 
   {
     return c >= 'a' && c <= 'z';
   }
 
+  // Checks if represents a digit.
   inline bool is_digit (char c) const
   {
     return c >= '0' && c <= '9';
   }
 
+  // Checks if c represents an alphabetic character or a digit.
   inline bool is_alphanum (char c) const
   {
     return is_alpha(c) || is_digit(c);
   }
 
+  // Checks if c represents a space.
   inline bool is_space(char c) const
   {
     return c == SPACE;
