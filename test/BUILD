@@ -119,3 +119,15 @@ cc_test(
        "//third_party/gtest:gtest_main",
   ],
 )
+
+cc_test(
+  name = "scanner_test",
+  srcs = ["scanner_test.cc"],
+  size = "small",
+  deps = [
+       "//src:scanner",
+       "//src:streambuffer",
+       "//third_party/gtest:gtest_main",
+  ],
+  copts = ["-std=c++14"],
+)
