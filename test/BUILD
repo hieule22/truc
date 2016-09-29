@@ -100,3 +100,12 @@ cc_test(
   ],
 )
 
+cc_test(
+  name = "streambuffer_test",
+  srcs = ["streambuffer_test.cc"],
+  size = "small",
+  deps = [
+       "//src:streambuffer",
+       "//third_party/gtest:gtest_main",
+  ],
+)

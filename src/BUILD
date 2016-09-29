@@ -67,3 +67,10 @@ cc_library(
   srcs = ["buffer.cc"],
   hdrs = ["buffer.h"],
 )
+
+cc_library(
+  name = "streambuffer",
+  srcs = ["streambuffer.cc"],
+  hdrs = ["streambuffer.h"],
+  deps = [":buffer"],
+)
