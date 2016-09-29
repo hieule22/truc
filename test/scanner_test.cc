@@ -59,7 +59,6 @@
 // EOF
 #define ENDOFFILE EofToken()
 
-namespace truplc {
 namespace {
 
 class ScannerTest : public testing::Test {
@@ -162,6 +161,8 @@ TEST_F(ScannerTest, MultipleNextTokens) {
   MatchTokens("and nota2", { new AND, new IDENTIFIER("nota2"), new ENDOFFILE});
   MatchTokens("and not a23", { new AND, new NOT, new IDENTIFIER("a23"),
           new ENDOFFILE });
+  MatchTokens("123abc", { new NUMBER("123"), new IDENTIFIER("abc"),
+          new ENDOFFILE });
   MatchTokens("integer >= 2", { new IDENTIFIER("integer"), new GREATEROREQUAL,
           new NUMBER("2"), new ENDOFFILE });
   MatchTokens("integer > = 2", { new IDENTIFIER("integer"), new GREATERTHAN,
@@ -176,5 +177,4 @@ TEST_F(ScannerTest, MultipleNextTokens) {
 }
 
 }  // namespace
-}  // namespace truplc
 
