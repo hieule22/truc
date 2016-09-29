@@ -10,3 +10,6 @@ bazel-testlogs
 
 # Hidden files
 .DS_STORE
+
+# Object files
+*.o
