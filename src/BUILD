@@ -19,3 +19,10 @@ cc_library(
   hdrs = ["punctoken.h"],
   deps = [":token"],
 )
+
+cc_library(
+  name = "reloptoken",
+  srcs = ["reloptoken.cc"],
+  hdrs = ["reloptoken.h"],
+  deps = [":token"],
+)
