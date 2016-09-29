@@ -12,12 +12,14 @@
 
 #include "buffer.h"
 
+using namespace std;
+
 class StreamBuffer : public Buffer {
  public:
   // Initializes the buffer from given input stream. The associated stream
   // remains property of the caller and shall not be destroyed or modified
   // during the lifetime of this object.
-  explicit StreamBuffer(std::istream *stream);
+  explicit StreamBuffer(istream *stream);
 
   // Removes and returns the next character from the stream. Returns EOF if
   // there is no more character to read.
@@ -43,10 +45,10 @@ class StreamBuffer : public Buffer {
   bool remove_space_and_comment();
 
   // Input stream to read characters from.
-  std::istream * const stream_;
+  istream * const stream_;
 
   // Internal character buffer.
-  std::list<char> buffer_;
+  list<char> buffer_;
 
   // Flags indicating if there are any remaining character to read.
   bool exhausted;

@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <iostream>
 
+using namespace std;
+
 namespace {
 
 const char kNonAlphanum[] =
@@ -18,8 +20,7 @@ const char kNonAlphanum[] =
 
 template <typename Container, typename T>
 bool contains(const Container& container, const T& value) {
-  return std::find(std::begin(container), std::end(container), value)
-      != std::end(container);
+  return find(begin(container), end(container), value) != end(container);
 }
 
 }  // namespace
@@ -28,10 +29,10 @@ Buffer::~Buffer() {}
 
 void Buffer::buffer_fatal_error() const
 {
-  std::cerr << "Exiting on BUFFER FATAL ERROR" << std::endl;
-  std::exit(EXIT_FAILURE);
+  cerr << "Exiting on BUFFER FATAL ERROR" << endl;
+  exit(EXIT_FAILURE);
 }
 
 bool Buffer::validate(const char c) const {
-  return std::islower(c) || std::isdigit(c) || contains(kNonAlphanum, c);
+  return islower(c) || isdigit(c) || contains(kNonAlphanum, c);
 }

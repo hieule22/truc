@@ -7,12 +7,12 @@
 Scanner::Scanner(char *filename)
     : buffer_(new FileBuffer(filename)) {}
 
-Scanner::Scanner(std::unique_ptr<Buffer> buffer)
-    : buffer_(std::move(buffer)) {}
+Scanner::Scanner(unique_ptr<Buffer> buffer)
+    : buffer_(move(buffer)) {}
 
-void Scanner::scanner_fatal_error(const std::string& message) const {
-  std::cerr << "Exiting on Scanner Fatal Error: " << message << std::endl;
-  std::exit(EXIT_FAILURE);
+void Scanner::scanner_fatal_error(const string& message) const {
+  cerr << "Exiting on Scanner Fatal Error: " << message << endl;
+  exit(EXIT_FAILURE);
 }
 
 namespace {
@@ -100,7 +100,7 @@ const int DIVIDE = 32;
 const int ASSIGN = 33;
 
 // Checks if a target character is a member of a given set of characters.
-bool IsMemberOf(const char target, const std::vector<char>& collection) {
+bool IsMemberOf(const char target, const vector<char>& collection) {
   for (const char c : collection) {
     if (target == c) {
       return true;
@@ -113,7 +113,7 @@ bool IsMemberOf(const char target, const std::vector<char>& collection) {
 
 Token *Scanner::next_token() {
   int state = START;
-  std::string attribute;
+  string attribute;
   Token* token = nullptr;
 
   while (state != DONE) {
@@ -186,7 +186,7 @@ Token *Scanner::next_token() {
         } else if (c == EOF_MARKER) {
           state = END_OF_FILE;
         } else {
-          scanner_fatal_error(std::string("Illegal character: ") + c);
+          scanner_fatal_error(string("Illegal character: ") + c);
         }
         break;
 

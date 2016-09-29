@@ -12,14 +12,13 @@
 namespace {
 
 // Checks if given input stream is empty.
-bool is_empty_stream(std::istream* stream) {
+bool is_empty_stream(istream* stream) {
   return stream->peek() == EOF;
 }
 
 // Fills buffer with characters from givn input stream up to
 // some specified limit.
-void fill_buffer(std::istream* const stream, std::list<char>* buffer,
-                 const size_t limit) {
+void fill_buffer(istream* stream, list<char>* buffer, const size_t limit) {
   for (size_t i = 0; i < limit && !is_empty_stream(stream); ++i) {
     buffer->push_back(stream->get());
   }
@@ -27,7 +26,7 @@ void fill_buffer(std::istream* const stream, std::list<char>* buffer,
 
 }  // namespace
 
-StreamBuffer::StreamBuffer(std::istream* stream)
+StreamBuffer::StreamBuffer(istream* stream)
     : stream_(stream), exhausted(false) {
   // Remove any preceding whitespace or comment.
   remove_space_and_comment();
@@ -90,7 +89,7 @@ char StreamBuffer::next_char() {
   // Flags error if current does not belong the TruPL alphabet.
   if (!validate(head)) {
     if (!(head == EOF_MARKER && exhausted)) {
-      std::cerr << "Invalid character: " << head << std::endl;
+      cerr << "Invalid character: " << head << endl;
       buffer_fatal_error();
     }
   }

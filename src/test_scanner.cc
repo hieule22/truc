@@ -12,7 +12,7 @@ int main (int argc, char **argv)
   char *filename;
 
   if (argc != 2) {
-    std::cerr << "Usage: " << argv[0] << " <input file name>" << std::endl;
+    cerr << "Usage: " << argv[0] << " <input file name>" << endl;
     exit (-1);
   }
 
@@ -33,13 +33,11 @@ int main (int argc, char **argv)
 
     // Print out the token type and its attributes, if any.
     if (t->get_token_type() == TOKEN_NO_TYPE) {
-      std::cout << "Error: next_token() returned typeless token." << std::endl;
+      cout << "Error: next_token() returned typeless token." << endl;
     } else {
-      std::cout << *(t->to_string()) << std::endl;
+      cout << *(t->to_string()) << endl;
     }
 
   } while (t->get_token_type() != TOKEN_EOF);
 
 }
-
-    

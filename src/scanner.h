@@ -20,14 +20,16 @@
 #include "numtoken.h"
 #include "eoftoken.h"
 
+using namespace std;
+
 class Scanner
 {
  public:
   // Constructs a Scanner for a given file.
   explicit Scanner(char *filename);
 
-  // Constructs a Scanner from a given buffer. Intended for testing.
-  explicit Scanner(std::unique_ptr<Buffer> buffer);
+  // Constructs a Scanner from a given buffer. Useful for testing.
+  explicit Scanner(unique_ptr<Buffer> buffer);
 
   // Return the next token in this file.
   // Return value is not owned by this object.
@@ -59,7 +61,8 @@ class Scanner
   void scanner_fatal_error(const std::string& mesg) const;
 
   // The character buffer.
-  std::unique_ptr<Buffer> buffer_;
+  unique_ptr<Buffer> buffer_;
 };
+
 #endif
   

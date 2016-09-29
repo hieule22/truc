@@ -11,10 +11,12 @@
 
 #include "buffer.h"
 
+using namespace std;
+
 class FileBuffer : public Buffer {
  public:
   // Opens the input program file and initializes the buffer.
-  explicit FileBuffer(const std::string& filename);
+  explicit FileBuffer(char *filename);
 
   // Closes the file and performs any needed clean-up.
   ~FileBuffer();
@@ -27,10 +29,10 @@ class FileBuffer : public Buffer {
 
  private:
   // The stream object for the source file.
-  std::ifstream source_file_;
+  ifstream source_file_;
 
   // The composed stream buffer. 
-  std::unique_ptr<Buffer> buffer_;
+  unique_ptr<Buffer> buffer_;
 };
 
 #endif

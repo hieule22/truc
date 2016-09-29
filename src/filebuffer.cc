@@ -9,11 +9,11 @@
 
 #include "streambuffer.h"
 
-FileBuffer::FileBuffer(const std::string& filename) {
+FileBuffer::FileBuffer(char *filename) {
   // Open the file and fill the buffer.
   source_file_.open(filename);
   if (source_file_.fail()) {
-    std::cerr << "Can't open source file " << filename << std::endl;
+    cerr << "Can't open source file " << *filename << endl;
     buffer_fatal_error();
   }
   buffer_.reset(new StreamBuffer(&source_file_));
