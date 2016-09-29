@@ -69,3 +69,13 @@ cc_test(
        "//third_party/gtest:gtest_main",
   ],
 )
+
+cc_test(
+  name = "numtoken_test",
+  srcs = ["numtoken_test.cc"],
+  size = "small",
+  deps = [
+       "//src:numtoken",
+       "//third_party/gtest:gtest_main",
+  ],
+)

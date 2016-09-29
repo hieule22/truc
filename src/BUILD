@@ -47,3 +47,10 @@ cc_library(
   hdrs = ["idtoken.h"],
   deps = [":token"],
 )
+
+cc_library(
+  name = "numtoken",
+  srcs = ["numtoken.cc"],
+  hdrs = ["numtoken.h"],
+  deps = [":token"],
+)
