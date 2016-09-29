@@ -22,8 +22,7 @@ typedef enum punc_attr { PUNC_SEMI = 200,
 class PuncToken : public Token
 {
  public:
-  // Constructs an uninitialized punctuation token with PUNC_NO_ATTR
-  // as the default attribute..
+  // Default constructor initializes attribute to PUNC_NO_ATTR.
   PuncToken();
 
   // Constructs a punctuation token from a given attribute.
