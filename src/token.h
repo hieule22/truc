@@ -1,6 +1,6 @@
 // Base class for all TruPL tokens.
-// @author: Hieu Le
-// @version: 09/28/2016
+// @author Hieu Le
+// @version 09/28/2016
 
 #ifndef TOKEN_H
 #define TOKEN_H
@@ -18,7 +18,8 @@ typedef enum token_type { TOKEN_KEYWORD =  0,
 			  TOKEN_EOF     =  7,
 			  TOKEN_NO_TYPE = 99 } token_type_type;
 
-class Token {
+class Token
+{
  public:
   // Default constructor with TOKEN_NO_TYPE as the default type.
   Token();
@@ -28,6 +29,7 @@ class Token {
 
   // Forms a string consisting of the token type and its' attribute.
   // Intended for debugging. Output should be of the form TOKEN_TYPE:Attribute.
+  // Return value is not owned by this Token instance.
   virtual std::string *to_string() const {
     return nullptr;
   }
