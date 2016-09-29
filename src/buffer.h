@@ -32,7 +32,7 @@ class Buffer
   // Places a character back into the buffer. c must be the last character
   // returned by next_char(). Should not be called more than once without an
   // intervening call to next_char();
-  virtual void unread_char (char c) = 0;
+  virtual void unread_char(char c) = 0;
   
   
  protected:
@@ -41,7 +41,7 @@ class Buffer
   void buffer_fatal_error() const;
   
   // Useful utility function.  Is c a whitespace char?
-  inline bool is_whitespace (const char c) const
+  inline bool is_whitespace(const char c) const
   {
     return (c == SPACE || c == TAB || c == NEW_LINE);
   }
