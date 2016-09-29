@@ -1,12 +1,14 @@
 // Token class for punctuation symbols from TruPL.
-// @author: Hieu Le
-// @version: 09/28/2016
+// @author Hieu Le
+// @version 09/28/2016
 
 #ifndef PUNCTOKEN_H
 #define PUNCTOKEN_H
 
 #include "token.h"
 #include <string>
+
+using namespace std;
 
 // Attributes for punctuation tokens from TruPL.
 typedef enum punc_attr { PUNC_SEMI = 200,
@@ -20,10 +22,11 @@ typedef enum punc_attr { PUNC_SEMI = 200,
 class PuncToken : public Token
 {
  public:
-  // Constructs an uninitialized punctuation token.
+  // Constructs an uninitialized punctuation token with PUNC_NO_ATTR
+  // as the default attribute..
   PuncToken();
 
-  // Constructs a punctuation token with an attribute.
+  // Constructs a punctuation token from a given attribute.
   explicit PuncToken(punc_attr_type attr);
 
   ~PuncToken() override;
@@ -32,12 +35,13 @@ class PuncToken : public Token
   punc_attr_type get_attribute() const;
 
   // Sets the attribute of this token.
-  void set_attribute (punc_attr_type type);
+  void set_attribute (punc_attr_type attr);
 
-  // Debug string will be of the form TOKEN_PUNC:<punc_attr_type>
-  std::string *to_string() const override;
+  // Debug string will be of the form TOKEN_PUNC:<punc_attr_type>.
+ string *to_string() const override;
 
  private:
+  // The attribute of this punctuation token.
   punc_attr_type attribute_;
 };
 

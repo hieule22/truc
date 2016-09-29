@@ -10,6 +10,6 @@ EofToken::EofToken() {
 
 EofToken::~EofToken() {}
 
-std::string *EofToken::to_string() const {
-  return new std::string("TOKEN_EOF:EOF");
+string *EofToken::to_string() const {
+  return new string("TOKEN_EOF:EOF");
 }

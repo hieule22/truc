@@ -1,4 +1,4 @@
-// Implementation for AddopToken class.
+// Implementation of AddopToken class.
 // @author Hieu Le
 // @version 09/28/2016
 
@@ -22,19 +22,19 @@ void AddopToken::set_attribute(const addop_attr_type attr) {
   attribute_ = attr;
 }
 
-std::string *AddopToken::to_string() const {
+string *AddopToken::to_string() const {
   switch (attribute_) {
     case addop_attr_type::ADDOP_ADD:
-      return new std::string("TOKEN_ADDOP:ADDOP_ADD");
+      return new string("TOKEN_ADDOP:ADDOP_ADD");
 
     case addop_attr_type::ADDOP_SUB:
-      return new std::string("TOKEN_ADDOP:ADDOP_SUB");
+      return new string("TOKEN_ADDOP:ADDOP_SUB");
 
     case addop_attr_type::ADDOP_OR:
-      return new std::string("TOKEN_ADDOP:ADDOP_OR");
+      return new string("TOKEN_ADDOP:ADDOP_OR");
 
     case addop_attr_type::ADDOP_NO_ATTR:
-      return new std::string("TOKEN_ADDOP:ADDOP_NO_ATTR");
+      return new string("TOKEN_ADDOP:ADDOP_NO_ATTR");
 
     default:
       return nullptr;

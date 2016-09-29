@@ -8,6 +8,8 @@
 #include "token.h"
 #include <string>
 
+using namespace std;
+
 // Attributes for keyword tokens from TruPL.
 typedef enum keyword_attr { KW_PROGRAM  = 100, 
 			    KW_PROCEDURE = 101,
@@ -27,10 +29,11 @@ typedef enum keyword_attr { KW_PROGRAM  = 100,
 class KeywordToken : public Token
 {
  public:
-  // Constructs an uninitialized keyword token.
+  // Constructs an uninitialized keyword token with KW_NO_ATTR as
+  // the default attribute..
   KeywordToken();
 
-  // Constructs a keywork token with an attribute.
+  // Constructs a keywork token from a specified attribute.
   explicit KeywordToken(keyword_attr_type attr);
 
   ~KeywordToken() override;
@@ -41,11 +44,11 @@ class KeywordToken : public Token
   // Sets the attribute of this token.
   void set_attribute(keyword_attr_type attr);
 
-  // Debug string of the form TOKEN_KEYWORD:<keyword_attr_type>
-  std::string *to_string() const override;
+  // Debug string will be of the form TOKEN_KEYWORD:<keyword_attr_type>.
+  string *to_string() const override;
 
  private:
-  // This token's attribute.
+  // This token attribute.
   keyword_attr_type attribute_;
 };
 

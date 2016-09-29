@@ -7,6 +7,8 @@
 
 #include <string>
 
+using namespace std;
+
 // Types of tokens from TruPL.
 typedef enum token_type { TOKEN_KEYWORD =  0,
 			  TOKEN_PUNC    =  1,
@@ -21,27 +23,27 @@ typedef enum token_type { TOKEN_KEYWORD =  0,
 class Token
 {
  public:
-  // Default constructor with TOKEN_NO_TYPE as the default type.
+  // Default constructor initializes token type to TOKEN_NO_TYPE.
   Token();
 
   // Virtual destructor for base class.
   virtual ~Token();
 
   // Forms a string consisting of the token type and its' attribute.
-  // Intended for debugging. Output should be of the form TOKEN_TYPE:Attribute.
+  // Useful for debugging. Output should be of the form TOKEN_TYPE:Attribute.
   // Return value is not owned by this Token instance.
-  virtual std::string *to_string() const {
+  virtual string *to_string() const {
     return nullptr;
   }
 
-  // Set the token type.
+  // Sets the token type to a specified type.
   void set_token_type (token_type_type type);
 
-  // Return the type of this token.
+  // Returns the type of this token.
   token_type_type get_token_type() const;
 
  private:
-  // The type of the tokens
+  // The type of this token.
   token_type_type type_;
 };
 

@@ -37,11 +37,11 @@ class Buffer
   
  protected:
   // If something catastrophic happens in the buffer, print
-  // an error message and then call this method to exit. */
+  // an error message and then call this method to exit.
   void buffer_fatal_error() const;
   
   // Useful utility function.  Is c a whitespace char?
-  inline bool is_whitespace (const char c)
+  inline bool is_whitespace (const char c) const
   {
     return (c == SPACE || c == TAB || c == NEW_LINE);
   }

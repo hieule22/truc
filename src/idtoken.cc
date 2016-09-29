@@ -13,14 +13,14 @@ IdToken::IdToken() : IdToken("") {}
 
 IdToken::~IdToken() {}
 
-std::string *IdToken::get_attribute() const {
-  return new std::string(attribute_);
+string *IdToken::get_attribute() const {
+  return new string(attribute_);
 }
 
 void IdToken::set_attribute(const std::string& attr) {
   attribute_ = attr;
 }
 
-std::string *IdToken::to_string() const {
-  return new std::string("TOKEN_ID:" + attribute_);
+string *IdToken::to_string() const {
+  return new string("TOKEN_ID:" + attribute_);
 }

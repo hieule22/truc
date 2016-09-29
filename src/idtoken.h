@@ -8,6 +8,8 @@
 #include "token.h"
 #include <string>
 
+using namespace std;
+
 class IdToken : public Token
 {
  public:
@@ -16,22 +18,23 @@ class IdToken : public Token
 
   // Constructs an identifier token from an input string representing the
   // identifier name.
-  explicit IdToken(const std::string& attr);
+  explicit IdToken(const string& attr);
   
   ~IdToken() override;
 
   // Returns a string representing this identifier token.
-  // The return value is not own by this instance.
+  // The return value is not owned by this object.
   std::string *get_attribute() const;
 
-  void set_attribute(const std::string& attr);
+  // Sets the name of this identifier to specified value.
+  void set_attribute(const string& attr);
 
   // Debug string will be of the form TOKEN_ID:<identifier name>
-  std::string *to_string() const override;
+  string *to_string() const override;
 
  private:
   // The string representing this identifier name.
-  std::string attribute_;
+  string attribute_;
 };
 
 #endif

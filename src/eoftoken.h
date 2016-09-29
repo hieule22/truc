@@ -7,17 +7,19 @@
 
 #include "token.h"
 
-// The EofToken has no attributes.
+using namespace std;
+
+// The EofToken has no attribute.
 
 class EofToken : public Token
 {
  public:
-  EofToken ();
+  EofToken();
   
-  ~EofToken () override;
+  ~EofToken() override;
 
   // Debug string will be of the form TOKEN_EOF:EOF.
-  std::string *to_string() const override;
+  string *to_string() const override;
 };
 
 #endif

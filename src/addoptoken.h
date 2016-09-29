@@ -8,6 +8,8 @@
 #include "token.h"
 #include <string>
 
+using namespace std;
+
 // Attributes for additive operators from TruPL.
 typedef enum addop_attr { ADDOP_ADD = 400,
 			  ADDOP_SUB = 401,
@@ -17,20 +19,25 @@ typedef enum addop_attr { ADDOP_ADD = 400,
 class AddopToken : public Token
 {
  public:
+  // Constructs a token with ADDOP_NO_ATTR as the default attribute.
   AddopToken();
   
+  // Constructs a token from given attribute.
   explicit AddopToken(addop_attr_type attr);
   
   ~AddopToken() override;
 
+  // Returns the attribute of this token.
   addop_attr_type get_attribute() const;
   
+  // Sets the attribute of this token to given value.
   void set_attribute (addop_attr_type attr);
 
   // Output will be of the form TOKEN_ADDOP:<addop_attr_type>.
-  std::string *to_string() const override;
+  string *to_string() const override;
 
  private:
+  // The attribute of this additive operator token.
   addop_attr_type attribute_;
 };
 
