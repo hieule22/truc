@@ -59,3 +59,13 @@ cc_test(
        "//third_party/gtest:gtest_main",
   ],
 )
+
+cc_test(
+  name = "idtoken_test",
+  srcs = ["idtoken_test.cc"],
+  size = "small",
+  deps = [
+       "//src:idtoken",
+       "//third_party/gtest:gtest_main",
+  ],
+)
