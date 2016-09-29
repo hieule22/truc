@@ -109,3 +109,13 @@ cc_test(
        "//third_party/gtest:gtest_main",
   ],
 )
+
+cc_test(
+  name = "filebuffer_test",
+  srcs = ["filebuffer_test.cc"],
+  size = "small",
+  deps = [
+       "//src:filebuffer",
+       "//third_party/gtest:gtest_main",
+  ],
+)

@@ -74,3 +74,14 @@ cc_library(
   hdrs = ["streambuffer.h"],
   deps = [":buffer"],
 )
+
+cc_library(
+  name = "filebuffer",
+  srcs = ["filebuffer.cc"],
+  hdrs = ["filebuffer.h"],
+  deps = [
+       ":buffer",
+       ":streambuffer",
+  ],
+  copts = ["-std=c++14"],
+)
