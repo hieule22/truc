@@ -61,3 +61,9 @@ cc_library(
   hdrs = ["eoftoken.h"],
   deps = [":token"],
 )
+
+cc_library(
+  name = "buffer",
+  srcs = ["buffer.cc"],
+  hdrs = ["buffer.h"],
+)

@@ -90,3 +90,13 @@ cc_test(
   ],
 )
 
+cc_test(
+  name = "buffer_test",
+  srcs = ["buffer_test.cc"],
+  size = "small",
+  deps = [
+       "//src:buffer",
+       "//third_party/gtest:gtest_main",
+  ],
+)
+
