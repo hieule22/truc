@@ -79,3 +79,14 @@ cc_test(
        "//third_party/gtest:gtest_main",
   ],
 )
+
+cc_test(
+  name = "eoftoken_test",
+  srcs = ["eoftoken_test.cc"],
+  size = "small",
+  deps = [
+       "//src:eoftoken",
+       "//third_party/gtest:gtest_main",
+  ],
+)
+
