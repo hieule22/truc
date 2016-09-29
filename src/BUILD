@@ -85,3 +85,28 @@ cc_library(
   ],
   copts = ["-std=c++14"],
 )
+
+cc_library(
+  name = "scanner",
+  srcs = ["scanner.cc"],
+  hdrs = ["scanner.h"],
+  deps = [
+       ":buffer",
+       ":filebuffer",
+       ":token",
+       ":keywordtoken",
+       ":punctoken",
+       ":reloptoken",
+       ":addoptoken",
+       ":muloptoken",
+       ":numtoken",
+       ":idtoken",
+       ":eoftoken",
+  ],
+)
+
+cc_binary(
+  name = "test_scanner",
+  srcs = ["test_scanner.cc"],
+  deps = [":scanner"],
+)
