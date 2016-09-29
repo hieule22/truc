@@ -1,3 +1,6 @@
+# Compiler options
+CFLAGS = -g -std=c+11 -Wall --pedantic
+
 token.o:	token.h token.cc
 	g++ -c -g -std=c++11 -Wall --pedantic token.cc
 
