@@ -1,0 +1,12 @@
+# This is a program written in TruPL with many superfluous comments.
+program manycomments:  # This program does not do anything.
+	# The program starts here.
+	begin:	      
+		 # variable a of type boolean
+		 bool a;
+		 # Set b to true
+		 b = true;
+		 # Print the value of c.
+		 print c
+	end
+# The program ends here.

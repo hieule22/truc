@@ -1,0 +1,6 @@
+# @#$%^&*()
+# $%^&*()
+
+int a:=(1+2)*3-4#Expression.
+if((d=0))then print d; else print a;
+123+abcd/345#Comments\n\n
