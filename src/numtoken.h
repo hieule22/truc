@@ -16,7 +16,7 @@ class NumToken : public Token
 
   // Constructs a number token from an input string representing the numerical
   // value of that number.
-  NumToken(const std::string& attr);
+  explicit NumToken(const std::string& attr);
   
   ~NumToken() override;
 

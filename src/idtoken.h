@@ -16,7 +16,7 @@ class IdToken : public Token
 
   // Constructs an identifier token from an input string representing the
   // identifier name.
-  IdToken(const std::string& attr);
+  explicit IdToken(const std::string& attr);
   
   ~IdToken() override;
 

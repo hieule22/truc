@@ -19,7 +19,7 @@ class AddopToken : public Token
  public:
   AddopToken();
   
-  AddopToken(addop_attr_type attr);
+  explicit AddopToken(addop_attr_type attr);
   
   ~AddopToken() override;
 

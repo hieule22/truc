@@ -18,7 +18,7 @@ class MulopToken : public Token {
  public:
   MulopToken();
   
-  MulopToken(mulop_attr_type attr);
+  explicit MulopToken(mulop_attr_type attr);
   
   ~MulopToken() override;
 
