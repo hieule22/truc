@@ -38,3 +38,13 @@ cc_test(
        "//third_party/gtest:gtest_main",
   ],
 )
+
+cc_test(
+  name = "addoptoken_test",
+  srcs = ["addoptoken_test.cc"],
+  size = "small",
+  deps = [
+       "//src:addoptoken",
+       "//third_party/gtest:gtest_main",
+  ],
+)

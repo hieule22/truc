@@ -26,3 +26,10 @@ cc_library(
   hdrs = ["reloptoken.h"],
   deps = [":token"],
 )
+
+cc_library(
+  name = "addoptoken",
+  srcs = ["addoptoken.cc"],
+  hdrs = ["addoptoken.h"],
+  deps = [":token"],
+)
