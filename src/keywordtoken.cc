@@ -4,7 +4,7 @@
 
 #include "keywordtoken.h"
 
-KeywordToken::KeywordToken(const keyword_attr_type type) : attribute_(type) {
+KeywordToken::KeywordToken(const keyword_attr_type attr) : attribute_(attr) {
   Token::set_token_type(TOKEN_KEYWORD);
 }
 

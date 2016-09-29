@@ -29,8 +29,7 @@ typedef enum keyword_attr { KW_PROGRAM  = 100,
 class KeywordToken : public Token
 {
  public:
-  // Constructs an uninitialized keyword token with KW_NO_ATTR as
-  // the default attribute..
+  // Default constructor initializes attribute to KW_NO_ATTR.
   KeywordToken();
 
   // Constructs a keywork token from a specified attribute.
