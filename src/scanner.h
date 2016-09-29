@@ -2,7 +2,6 @@
 #define SCANNER_H
 
 #include <iostream>
-#include <memory>
 #include <stdlib.h>
 
 // The scanner reads from the buffer.
@@ -28,8 +27,9 @@ class Scanner
   // Constructs a Scanner for a given file.
   explicit Scanner(char *filename);
 
-  // Constructs a Scanner from a given buffer. Useful for testing.
-  explicit Scanner(unique_ptr<Buffer> buffer);
+  // Constructs a Scanner from a given buffer.
+  // Useful for testing. The buffer is owned by this object.
+  explicit Scanner(Buffer *buffer);
 
   ~Scanner();
 

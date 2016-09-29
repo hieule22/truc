@@ -7,8 +7,8 @@
 Scanner::Scanner(char *filename)
     : buffer_(new FileBuffer(filename)) {}
 
-Scanner::Scanner(unique_ptr<Buffer> buffer)
-    : buffer_(buffer.release()) {}
+Scanner::Scanner(Buffer *buffer)
+    : buffer_(buffer) {}
 
 Scanner::~Scanner() {
   delete buffer_;
