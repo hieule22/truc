@@ -8,7 +8,11 @@ Scanner::Scanner(char *filename)
     : buffer_(new FileBuffer(filename)) {}
 
 Scanner::Scanner(unique_ptr<Buffer> buffer)
-    : buffer_(move(buffer)) {}
+    : buffer_(buffer.release()) {}
+
+Scanner::~Scanner() {
+  delete buffer_;
+}
 
 void Scanner::scanner_fatal_error(const string& message) const {
   cerr << "Exiting on Scanner Fatal Error: " << message << endl;

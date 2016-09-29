@@ -31,6 +31,8 @@ class Scanner
   // Constructs a Scanner from a given buffer. Useful for testing.
   explicit Scanner(unique_ptr<Buffer> buffer);
 
+  ~Scanner();
+
   // Return the next token in this file.
   // Return value is not owned by this object.
   Token *next_token();
@@ -65,7 +67,7 @@ class Scanner
   void scanner_fatal_error(const std::string& mesg) const;
 
   // The character buffer.
-  unique_ptr<Buffer> buffer_;
+  Buffer* buffer_;
 };
 
 #endif
