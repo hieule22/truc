@@ -2,8 +2,8 @@
 // @author Hieu Le
 // @version 09/28/2016
 
-#ifndef STREAMBUFFER_H__
-#define STREAMBUFFER_H__
+#ifndef STREAMBUFFER_H
+#define STREAMBUFFER_H
 
 #include <iostream>
 #include <list>
