@@ -12,7 +12,6 @@ void Token::set_token_type (const token_type_type type) {
   type_ = type;
 }
 
-token_type_type Token::get_token_type() const
-{
+token_type_type Token::get_token_type() const {
   return type_;
 }

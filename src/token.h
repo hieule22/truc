@@ -37,7 +37,7 @@ class Token
   }
 
   // Sets the token type to a specified type.
-  void set_token_type (token_type_type type);
+  void set_token_type(token_type_type type);
 
   // Returns the type of this token.
   token_type_type get_token_type() const;
