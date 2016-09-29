@@ -688,6 +688,7 @@ Token *Scanner::next_token() {
           attribute.push_back(c);
         } else if (c == 'o') {
           state = PRO;
+          attribute.push_back(c);
         } else if (is_alphanum(c)) {
           state = IDENTIFIER;
           attribute.push_back(c);

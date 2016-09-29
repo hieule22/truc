@@ -92,19 +92,83 @@ class ScannerTest : public testing::Test {
 };
 
 TEST_F(ScannerTest, NextTokenBasic) {
+  MatchSingleToken("p", IDENTIFIER("p"));
+  MatchSingleToken("pr", IDENTIFIER("pr"));
+  MatchSingleToken("pro", IDENTIFIER("pro"));
+  MatchSingleToken("prog", IDENTIFIER("prog"));
+  MatchSingleToken("progr", IDENTIFIER("progr"));
+  MatchSingleToken("progra", IDENTIFIER("progra"));
   MatchSingleToken("program", PROGRAM);
+  MatchSingleToken("programs", IDENTIFIER("programs"));
+
+  MatchSingleToken("proc", IDENTIFIER("proc"));
+  MatchSingleToken("proce", IDENTIFIER("proce"));
+  MatchSingleToken("proced", IDENTIFIER("proced"));
+  MatchSingleToken("procedu", IDENTIFIER("procedu"));
+  MatchSingleToken("procedur", IDENTIFIER("procedur"));
   MatchSingleToken("procedure", PROCEDURE);
+  MatchSingleToken("procedures", IDENTIFIER("procedures"));
+
+
+  MatchSingleToken("i", IDENTIFIER("i"));
+  MatchSingleToken("in", IDENTIFIER("in"));
   MatchSingleToken("int", INT);
+  MatchSingleToken("ints", IDENTIFIER("ints"));
+
+  MatchSingleToken("b", IDENTIFIER("b"));
+  MatchSingleToken("bo", IDENTIFIER("bo"));
+  MatchSingleToken("boo", IDENTIFIER("boo"));
   MatchSingleToken("bool", BOOL);
+  MatchSingleToken("boolean", IDENTIFIER("boolean"));
+
+  MatchSingleToken("be", IDENTIFIER("be"));
+  MatchSingleToken("beg", IDENTIFIER("beg"));
+  MatchSingleToken("begi", IDENTIFIER("begi"));
   MatchSingleToken("begin", BEGIN);
+  MatchSingleToken("beginning", IDENTIFIER("beginning"));
+
+  MatchSingleToken("e", IDENTIFIER("e"));
+  MatchSingleToken("en", IDENTIFIER("en"));
   MatchSingleToken("end", END);
+  MatchSingleToken("end123", IDENTIFIER("end123"));
+  
   MatchSingleToken("if", IF);
+  MatchSingleToken("iffy", IDENTIFIER("iffy"));
+
+  MatchSingleToken("t", IDENTIFIER("t"));
+  MatchSingleToken("th", IDENTIFIER("th"));
+  MatchSingleToken("the", IDENTIFIER("the"));
   MatchSingleToken("then", THEN);
+  MatchSingleToken("thenprogram", IDENTIFIER("thenprogram"));
+
+  MatchSingleToken("e", IDENTIFIER("e"));
+  MatchSingleToken("el", IDENTIFIER("el"));
+  MatchSingleToken("els", IDENTIFIER("els"));
   MatchSingleToken("else", ELSE);
+  MatchSingleToken("elseif", IDENTIFIER("elseif"));
+
+  MatchSingleToken("w", IDENTIFIER("w"));
+  MatchSingleToken("wh", IDENTIFIER("wh"));
+  MatchSingleToken("whi", IDENTIFIER("whi"));
+  MatchSingleToken("whil", IDENTIFIER("whil"));
   MatchSingleToken("while", WHILE);
+  MatchSingleToken("whilelse", IDENTIFIER("whilelse"));
+
+  MatchSingleToken("l", IDENTIFIER("l"));
+  MatchSingleToken("lo", IDENTIFIER("lo"));
+  MatchSingleToken("loo", IDENTIFIER("loo"));
   MatchSingleToken("loop", LOOP);
+  MatchSingleToken("looprint", IDENTIFIER("looprint"));
+
+  MatchSingleToken("pri", IDENTIFIER("pri"));
+  MatchSingleToken("prin", IDENTIFIER("prin"));
   MatchSingleToken("print", PRINT);
+  MatchSingleToken("printend", IDENTIFIER("printend"));
+
+  MatchSingleToken("n", IDENTIFIER("n"));  
+  MatchSingleToken("no", IDENTIFIER("no"));
   MatchSingleToken("not", NOT);
+  MatchSingleToken("not123", IDENTIFIER("not123"));  
 
   MatchSingleToken(";", SEMICOLON);
   MatchSingleToken(":", COLON);
@@ -135,6 +199,7 @@ TEST_F(ScannerTest, NextTokenBasic) {
   MatchSingleToken("loo", IDENTIFIER("loo"));
   MatchSingleToken("elseif", IDENTIFIER("elseif"));
   MatchSingleToken("myprocedure", IDENTIFIER("myprocedure"));
+  MatchSingleToken("procedures", IDENTIFIER("procedures"));
   MatchSingleToken("andnota23", IDENTIFIER("andnota23"));
   MatchSingleToken("a1b2c3d4e5f6g7h8i9", IDENTIFIER("a1b2c3d4e5f6g7h8i9"));
   MatchSingleToken("a123456789", IDENTIFIER("a123456789"));
@@ -174,6 +239,32 @@ TEST_F(ScannerTest, MultipleNextTokens) {
   MatchTokens("a1+b2<>c3", { new IDENTIFIER("a1"), new ADD,
           new IDENTIFIER("b2"), new NOTEQUAL, new IDENTIFIER("c3"),
           new ENDOFFILE });
+}
+
+TEST_F(ScannerTest, StressTest) {
+  std::string input;
+  std::vector<Token*> expected;
+  Token* tokens[] = {new IDENTIFIER("foo"), new EQUAL, new NUMBER("1"), new AND,
+                     new IDENTIFIER("bar"), new NOTEQUAL, new NUMBER("2")};
+  for (int i = 0; i < 20000; ++i) {
+    input.append("foo = 1 and bar <> 2");
+    for (auto iter = std::begin(tokens); iter != std::end(tokens); ++iter) {
+      expected.push_back(*iter);
+    }
+  }
+  expected.push_back(new ENDOFFILE);
+  MatchTokens(input, expected);
+}
+
+TEST_F(ScannerTest, EndToEnd) {
+  MatchTokens("\n\n##This is a comment.\n"
+              "int a=2; #This is another comment\t\t$$$%%%!!!\n"
+              "procedures \n \t progra \n \t ints a99999"
+              "#One last comment \t \t # Hello world $$$ #### \n\n\n\t",
+              { new INT, new IDENTIFIER("a"), new EQUAL, new NUMBER("2"),
+                    new SEMICOLON, new IDENTIFIER("procedures"),
+                    new IDENTIFIER("progra"), new IDENTIFIER("ints"),
+                    new IDENTIFIER("a99999"), new ENDOFFILE });
 }
 
 }  // namespace
