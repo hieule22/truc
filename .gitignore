@@ -1,0 +1,12 @@
+# Bazel build output
+bazel-bin
+bazel-cs420
+bazel-genfiles
+bazel-out
+bazel-testlogs
+
+# Emacs autosaves
+*~
+
+# Hidden files
+.DS_STORE
