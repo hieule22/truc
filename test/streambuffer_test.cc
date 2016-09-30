@@ -139,6 +139,13 @@ TEST(StreamBufferDeathTest, NextCharIllegalInput) {
                 ::testing::ExitedWithCode(EXIT_FAILURE),
                 "c*Invalid character: \\$c*");
   }
+  {
+    std::istringstream ss("#$$$$$\nabc#%%%%%%\n%$");
+    StreamBuffer buffer(&ss);
+    ASSERT_EXIT( { while (true) buffer.next_char(); },
+		::testing::ExitedWithCode(EXIT_FAILURE),
+		"c*Invalid character: \\%c*");
+  }
 }
 
 }  // namespace
