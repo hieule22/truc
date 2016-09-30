@@ -108,7 +108,7 @@ const int DIVIDE = 32;
 const int ASSIGN = 33;
 
 // Checks if a target character is a member of a given set of characters.
-bool IsMemberOf(const char target, const vector<char>& collection) {
+bool is_member_of(const char target, const vector<char>& collection) {
   for (const char c : collection) {
     if (target == c) {
       return true;
@@ -130,7 +130,7 @@ Token *Scanner::next_token() {
 
     switch (state) {
       case START:
-        if (is_alpha(c) && !IsMemberOf(c, {
+        if (is_alpha(c) && !is_member_of(c, {
               'a', 'b', 'e', 'i', 'l', 'n', 'o', 'p', 't', 'w'})) {
           state = IDENTIFIER;
           attribute.push_back(c);
