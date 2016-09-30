@@ -1,3 +1,7 @@
+// Implementation of Scanner class.
+// @author Hieu Le
+// @version September 30th, 2016
+
 #include "scanner.h"
 
 #include <vector>
@@ -21,8 +25,8 @@ void Scanner::scanner_fatal_error(const string& message) const {
 
 namespace {
 
-// Set of states for the deterministic finite automata that recognizes all
-// the valid lexemes of TruPL.
+// Set of states for the deterministic finite automaton that recognizes all
+// valid lexemes from TruPL.
 
 const int START = 0;
 const int DONE = 999;
@@ -1068,7 +1072,6 @@ Token *Scanner::next_token() {
       case COLON:
         if (c == '=') {
           state = ASSIGN;
-          attribute.push_back(c);
         } else {
           state = DONE;
           token = new PuncToken(punc_attr_type::PUNC_COLON);
@@ -1121,10 +1124,8 @@ Token *Scanner::next_token() {
       case LESS:
         if (c == '=') {
           state = LESSEQUAL;
-          attribute.push_back(c);
         } else if (c == '>') {
           state = NOTEQUAL;
-          attribute.push_back(c);
         } else {
           state = DONE;
           token = new RelopToken(relop_attr_type::RELOP_LT);
@@ -1153,7 +1154,6 @@ Token *Scanner::next_token() {
       case GREATER:
         if (c == '=') {
           state = GREATEREQUAL;
-          attribute.push_back(c);
         } else {
           state = DONE;
           token = new RelopToken(relop_attr_type::RELOP_GT);
