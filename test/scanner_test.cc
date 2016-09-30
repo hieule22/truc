@@ -168,7 +168,16 @@ TEST_F(ScannerTest, NextTokenBasic) {
   MatchSingleToken("n", IDENTIFIER("n"));  
   MatchSingleToken("no", IDENTIFIER("no"));
   MatchSingleToken("not", NOT);
-  MatchSingleToken("not123", IDENTIFIER("not123"));  
+  MatchSingleToken("not123", IDENTIFIER("not123"));
+
+  MatchSingleToken("o", IDENTIFIER("o"));
+  MatchSingleToken("or", OR);
+  MatchSingleToken("orr", IDENTIFIER("orr"));
+
+  MatchSingleToken("a", IDENTIFIER("a"));
+  MatchSingleToken("an", IDENTIFIER("an"));
+  MatchSingleToken("and", AND);
+  MatchSingleToken("andd", IDENTIFIER("andd"));
 
   MatchSingleToken(";", SEMICOLON);
   MatchSingleToken(":", COLON);
@@ -186,11 +195,9 @@ TEST_F(ScannerTest, NextTokenBasic) {
 
   MatchSingleToken("+", ADD);
   MatchSingleToken("-", SUBTRACT);
-  MatchSingleToken("or", OR);
 
   MatchSingleToken("*", MULTIPLY);
   MatchSingleToken("/", DIVIDE);
-  MatchSingleToken("and", AND);
 
   MatchSingleToken("foobarquoz", IDENTIFIER("foobarquoz"));
   MatchSingleToken("a", IDENTIFIER("a"));
@@ -212,7 +219,7 @@ TEST_F(ScannerTest, NextTokenBasic) {
   MatchSingleToken("", ENDOFFILE);
 }
 
-// TODO(hieutle): Fix memory leaks.
+// TODO(hieule22): Fix memory leaks.
 TEST_F(ScannerTest, MultipleNextTokens) {
   MatchTokens("int a = 1;", { new INT, new IDENTIFIER("a"), new EQUAL,
           new NUMBER("1"), new SEMICOLON, new ENDOFFILE });
@@ -241,6 +248,7 @@ TEST_F(ScannerTest, MultipleNextTokens) {
           new ENDOFFILE });
 }
 
+// TODO(hieule22): Fix memory leaks.
 TEST_F(ScannerTest, StressTest) {
   std::string input;
   std::vector<Token*> expected;
@@ -256,6 +264,7 @@ TEST_F(ScannerTest, StressTest) {
   MatchTokens(input, expected);
 }
 
+// TODO(hieule22): Fix memory leaks.
 TEST_F(ScannerTest, EndToEnd) {
   MatchTokens("\n\n##This is a comment.\n"
               "int a=2; #This is another comment\t\t$$$%%%!!!\n"
@@ -265,6 +274,8 @@ TEST_F(ScannerTest, EndToEnd) {
                     new SEMICOLON, new IDENTIFIER("procedures"),
                     new IDENTIFIER("progra"), new IDENTIFIER("ints"),
                     new IDENTIFIER("a99999"), new ENDOFFILE });
+  MatchTokens("#Helloworld\t\t\t\t\t\t\t#$%^&*&^^^\n\n\n\n\n 123abc",
+	      { new NUMBER("123"), new IDENTIFIER("abc"), new ENDOFFILE });
 }
 
 }  // namespace
