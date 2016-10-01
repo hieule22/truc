@@ -50,6 +50,9 @@ TEST(BufferTest, NextCharWithComments) {
   TestNextChar("abc #!@#$%^&*\n", {'a', 'b', 'c', SPACE, EOF_MARKER});
   TestNextChar("a#$$$\nb", {'a', SPACE, 'b', EOF_MARKER});
   TestNextChar("#$$$", {EOF_MARKER});
+  TestNextChar("a#", {'a', SPACE, EOF_MARKER});
+  TestNextChar("#\na", {'a', EOF_MARKER});
+  TestNextChar("#", {EOF_MARKER});
 }
 
 
@@ -60,6 +63,7 @@ TEST(BufferTest, NextCharWithMixingWhitespaceAndComments) {
                {'a', SPACE, 'b', SPACE, 'c', SPACE, EOF_MARKER});
   TestNextChar("  a #$$$foo$$$\t\t\t  ^^^bar^^^\n\n\n\n b",
                {'a', SPACE, 'b', EOF_MARKER});
+  TestNextChar("#\t\tabc$$$$####\n a \t\n#\t\tABC***###", {'a', SPACE, EOF_MARKER});
 }
 
 TEST(BufferTest, NextCharWithLongInputStream) {
@@ -98,6 +102,24 @@ TEST(BufferTest, NextCharWithLongInputStream) {
     }
     expected.push_back(EOF_MARKER);
     TestNextChar(input, expected);
+  }
+  {
+    std::string input;
+    for (int i = 0; i < 20000; ++i) {
+      input.append("\n\t\t\n");
+    }
+    TestNextChar(input, {EOF_MARKER});
+    input.append("a");
+    TestNextChar(input, {'a', EOF_MARKER});
+  }
+  {
+    std::string input = "#";
+    for (int i = 0; i < 20000; ++i) {
+      input.append("$$$ABC123\t\t");
+    }
+    TestNextChar(input, {EOF_MARKER});
+    input.append("\na");
+    TestNextChar(input, {'a', EOF_MARKER});
   }
 }
 
