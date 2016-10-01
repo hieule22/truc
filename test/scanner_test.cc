@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "src/streambuffer.h"
+#include "src/buffer.h"
 
 // Keywords.
 #define PROGRAM   KeywordToken(keyword_attr_type::KW_PROGRAM)
@@ -66,7 +66,7 @@ class ScannerTest : public testing::Test {
   // Creates a character buffer from given input string.
   Buffer* CreateBuffer(const std::string& input) {
     ss = std::make_unique<std::istringstream>(input);
-    return new StreamBuffer(ss.get());
+    return new Buffer(ss.get());
   }
 
   // Checks if the token represented in input string matches expected token.
@@ -279,4 +279,3 @@ TEST_F(ScannerTest, EndToEnd) {
 }
 
 }  // namespace
-

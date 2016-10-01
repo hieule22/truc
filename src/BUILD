@@ -69,30 +69,11 @@ cc_library(
 )
 
 cc_library(
-  name = "streambuffer",
-  srcs = ["streambuffer.cc"],
-  hdrs = ["streambuffer.h"],
-  deps = [":buffer"],
-)
-
-cc_library(
-  name = "filebuffer",
-  srcs = ["filebuffer.cc"],
-  hdrs = ["filebuffer.h"],
-  deps = [
-       ":buffer",
-       ":streambuffer",
-  ],
-  copts = ["-std=c++14"],
-)
-
-cc_library(
   name = "scanner",
   srcs = ["scanner.cc"],
   hdrs = ["scanner.h"],
   deps = [
        ":buffer",
-       ":filebuffer",
        ":token",
        ":keywordtoken",
        ":punctoken",

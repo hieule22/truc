@@ -6,10 +6,8 @@
 
 #include <vector>
 
-#include "filebuffer.h"
-
 Scanner::Scanner(char *filename)
-    : buffer_(new FileBuffer(filename)) {}
+    : buffer_(new Buffer(filename)) {}
 
 Scanner::Scanner(Buffer *buffer)
     : buffer_(buffer) {}

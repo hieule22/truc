@@ -5,6 +5,10 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
+#include <fstream>
+#include <iostream>
+#include <list>
+
 // Not part of TruPL alphabet. Used only by the lexical analyzer to denote EOF.
 #define EOF_MARKER '$'
 
@@ -16,10 +20,18 @@
 #define TAB '\t'
 #define NEW_LINE '\n'
 
+using namespace std;
+
 class Buffer
 {
  public:
-  virtual ~Buffer();
+  // Opens the input program file and initializes the buffer.
+  explicit Buffer(const char *filename);
+
+  // Initializes the buffer from an input stream. Useful for testing.
+  explicit Buffer(istream *stream);
+  
+  ~Buffer();
   
   // Removes and returns the next character from the buffer. Any preceding
   // region of whitespaces and comments will be ignored. Any intervening or
@@ -27,28 +39,50 @@ class Buffer
   // single delimiting space. The EOF marker is returned when user attempts
   // to read past the end of input. The buffer will crash upon encountering
   // a symbol that is not part of the TruPL alphabet.
-  virtual char next_char() = 0;
+  char next_char();
   
   // Places a character back into the buffer. c must be the last character
   // returned by next_char(). Should not be called more than once without an
   // intervening call to next_char();
-  virtual void unread_char(char c) = 0;
+  void unread_char(char c);
   
   
- protected:
+ private:
+  // Capacity of internal character buffer.
+  static const int MAX_BUFFER_SIZE = 1024;
+  
   // If something catastrophic happens in the buffer, print
   // an error message and then call this method to exit.
   void buffer_fatal_error() const;
   
   // Useful utility function.  Is c a whitespace char?
-  inline bool is_whitespace(const char c) const
-  {
+  inline bool is_whitespace(const char c) const {
     return (c == SPACE || c == TAB || c == NEW_LINE);
   }
 
-  // Checks if a given character c belongs to the TruPL alphabet.
-  // Returns true if it does; false otherwise.
-  bool validate(const char c) const;
+  // Gets the next character and performs any necessary buffer refill.
+  char next();
+
+  // Skips the current line of characters.
+  void skip_line();
+
+  // Removes any nearby whitespace or comment. If there is any remaining token
+  // to process, the first character of that token would be stored in the buffer
+  // front.
+  // Returns true if any removal takes place; false otherwise.
+  bool remove_space_and_comment();
+
+  // The stream object for the source file.
+  ifstream source_file_;
+
+  // The underlying input stream to read characters from.
+  istream *stream_;
+
+  // The character buffer.
+  list<char> buffer_;
+
+  // Flags indicating if there is any remaming character to read.
+  bool exhausted_;
 };
 
 #endif
