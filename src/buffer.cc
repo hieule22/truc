@@ -1,4 +1,4 @@
-// Implementation of Buffer interface.
+// Implementation of Buffer class.
 // @author Hieu Le
 // @version 09/28/2016
 
@@ -12,6 +12,8 @@
 
 using namespace std;
 
+// Anonymous namespace makes these declarations visible only to this compilation
+// unit and therefore not polluting the global namespace.
 namespace {
 
 // All valid non-alphanumeric symbols from TruPL.
@@ -36,10 +38,10 @@ bool is_empty_stream(istream *const stream) {
   return stream->peek() == EOF;
 }
 
-// Fills buffer with characters from givn input stream up to
-// some specified limit.
-void fill_buffer(istream *const stream, list<char>* buffer, const size_t limit) {
-  for (size_t i = 0; i < limit && !is_empty_stream(stream); ++i) {
+// Fills buffer with characters from given input stream up to some specified
+// limit.
+void fill_buffer(istream *const stream, list<char>* buffer, const size_t lim) {
+  for (size_t i = 0; i < lim && !is_empty_stream(stream); ++i) {
     buffer->push_back(stream->get());
   }
 }
@@ -53,7 +55,7 @@ void Buffer::buffer_fatal_error() const {
 
 Buffer::Buffer(istream *const stream)
     : stream_(stream), exhausted_(false) {
-  remove_space_and_comment();
+  remove_space_and_comment();  // Remove any preceding whitespace.
 }
 
 Buffer::Buffer(const char *const filename) : exhausted_(false) {
@@ -63,7 +65,7 @@ Buffer::Buffer(const char *const filename) : exhausted_(false) {
     buffer_fatal_error();
   }
   stream_ = &source_file_;
-  remove_space_and_comment();
+  remove_space_and_comment();  // Remove any preceding whitespace
 }
 
 Buffer::~Buffer() {
@@ -90,6 +92,8 @@ char Buffer::next() {
 
 void Buffer::skip_line() {
   char head = next();
+  // Skips character until the nearest new line character or until encountering
+  // the end of file, whichever comes first.
   while (head != NEW_LINE && !exhausted_) {
     head = next();
   }
@@ -103,7 +107,7 @@ bool Buffer::remove_space_and_comment() {
     while (is_whitespace(head)) {  // Remove whitespaces.
       head = next();
     }
-    if (head == COMMENT_MARKER) {
+    if (head == COMMENT_MARKER) {  // Remove comments.
       skip_line();
       head = next();
     }
@@ -120,13 +124,14 @@ bool Buffer::remove_space_and_comment() {
 
 char Buffer::next_char() {
   // Remove any subsequent region of white spaces and comments and return the
-  // default space delimiter.
+  // default space delimiter if any removal takes place.
   if (remove_space_and_comment()) {
     return SPACE;
   }
 
   char head = next();
-  // Flags error if current does not belong the TruPL alphabet.
+  // Flag error if current does not belong the TruPL alphabet. The case where
+  // the EOF symbol is returned has to be excluded however.
   if (!validate(head)) {
     if (!(head == EOF_MARKER && exhausted_)) {
       cerr << "Invalid character: " << head << endl;
