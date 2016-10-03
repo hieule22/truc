@@ -30,7 +30,7 @@ class Buffer {
   explicit Buffer(const char *filename);
 
   // Initializes the buffer from an input stream. Useful for testing.
-  // The stream is not owned by this object and should not be modified or
+  // The stream remains property of the caller and should not be modified or
   // destroyed during the lifetime of this buffer.
   explicit Buffer(istream *stream);
 
@@ -82,7 +82,7 @@ class Buffer {
   // The character buffer.
   list<char> buffer_;
 
-  // Flags indicating if there is any remaining character to read.
+  // Flag indicating if there is any remaining character to read.
   bool exhausted_;
 };
 
