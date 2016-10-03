@@ -53,11 +53,11 @@ class Buffer {
   // Capacity of internal character buffer.
   static const int MAX_BUFFER_SIZE = 1024;
 
-  // If something catastrophic happens in the buffer, print an error message
-  // and then call this method to exit.
+  // Logs an error message to console and terminates the program.
+  // Intended for use when something catastrophic happens in the buffer.
   void buffer_fatal_error() const;
 
-  // Useful utility function.  Is c a whitespace char?
+  // Checks if c represents a whitespace character.
   inline bool is_whitespace(const char c) const {
     return (c == SPACE || c == TAB || c == NEW_LINE);
   }
