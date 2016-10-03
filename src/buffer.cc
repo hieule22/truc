@@ -5,7 +5,6 @@
 #include "buffer.h"
 
 #include <cctype>
-#include <cstdlib>
 
 #include <algorithm>
 #include <iostream>

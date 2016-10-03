@@ -5,6 +5,8 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
+#include <cstdlib>
+
 #include <fstream>
 #include <iostream>
 #include <list>
