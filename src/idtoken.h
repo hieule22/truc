@@ -13,10 +13,10 @@ using namespace std;
 
 class IdToken : public Token {
  public:
-  // Default constructor initializes identifier name to an empty string.
+  // Constructs an id token with the empty string as default attribute.
   IdToken();
 
-  // Constructs an identifier token from specified name.
+  // Constructs an identifier token from a specified attribute.
   explicit IdToken(const string& attr);
 
   ~IdToken() override;
@@ -25,14 +25,14 @@ class IdToken : public Token {
   // The return value becomes property of the caller.
   std::string *get_attribute() const;
 
-  // Sets the name of this identifier to specified value.
+  // Sets the attribute of this identifier token to a specified value.
   void set_attribute(const string& attr);
 
   // Debug string will be of the form TOKEN_ID:<identifier name>
   string *to_string() const override;
 
  private:
-  // The string representing this identifier name.
+  // The attribute of this identifier token.
   string attribute_;
 };
 
