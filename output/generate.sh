@@ -12,8 +12,8 @@ PACKAGE_NAME="le_h_init.tar"
 cd $DIR/..
 
 # Package all relevant files.
-tar c --exclude="BUILD" --exclude="*.o" \
-    --exclude="test_scanner" -vf $PACKAGE_NAME $TARGET
+tar c --exclude="BUILD" --exclude="*.o" --exclude="test_scanner" \
+    --exclude-backups -vf $PACKAGE_NAME $TARGET
 
 # Move created package to output.
 mv $PACKAGE_NAME $DIR
