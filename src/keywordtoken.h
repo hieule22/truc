@@ -40,7 +40,7 @@ class KeywordToken : public Token {
   // Returns the attribute of this keyword token.
   keyword_attr_type get_attribute() const;
 
-  // Sets the attribute of this keyword token.
+  // Sets the attribute of this keyword token to a specified value.
   void set_attribute(keyword_attr_type attr);
 
   // Debug string will be of the form TOKEN_KEYWORD:<keyword_attr_type>.
