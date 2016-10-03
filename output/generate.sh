@@ -1,20 +1,16 @@
 #!/bin/bash
 # Script to package source file.
 
-# Current directory.
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TARGET="src"
 SRC="$DIR/../$TARGET"
 PACKAGE_NAME="le_h_init.tar"
 
-# Command line args.
-ARG=$1
-
-if [ $# -eq 1 ] && [ $ARG == "bazel" ]; then
+# Build and test with bazel.
+if [ $# -eq 1 ] && [ $1 == "bazel" ]; then
    # Build all targets.
    cd $DIR/../src/
    bazel build :all
-
    # Run all tests
    cd $DIR/../test/
    bazel test :all
