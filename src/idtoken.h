@@ -22,7 +22,7 @@ class IdToken : public Token {
   ~IdToken() override;
 
   // Returns a string representing this identifier token.
-  // The return value is not owned by this object.
+  // The return value becomes property of the caller.
   std::string *get_attribute() const;
 
   // Sets the name of this identifier to specified value.
