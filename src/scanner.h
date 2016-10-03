@@ -63,8 +63,8 @@ class Scanner {
     return c == SPACE;
   }
 
-  // If a lexical error OR an internal scanner error occurs,
-  // call this method. It will print the mesg and exit.
+  // Logs an error message to console and terminates the program.
+  // Intended for use when a lexical error or an internal scanner error occurs.
   void scanner_fatal_error(const std::string& mesg) const;
 
   // The character buffer.
