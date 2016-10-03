@@ -15,6 +15,8 @@ namespace {
 TEST(AddopTokenTest, GetTokenType) {
   const AddopToken token(addop_attr_type::ADDOP_OR);
   EXPECT_EQ(token.get_token_type(), token_type_type::TOKEN_ADDOP);
+  const AddopToken default_token;
+  EXPECT_EQ(default_token.get_token_type(), token_type_type::TOKEN_ADDOP);
 }
 
 TEST(AddopTokenTest, GetAttribute) {

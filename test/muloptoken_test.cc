@@ -15,6 +15,8 @@ namespace {
 TEST(MulopTokenTest, GetTokenType) {
   const MulopToken token(mulop_attr_type::MULOP_MUL);
   EXPECT_EQ(token.get_token_type(), token_type_type::TOKEN_MULOP);
+  const MulopToken default_token;
+  EXPECT_EQ(default_token.get_token_type(), token_type_type::TOKEN_MULOP);
 }
 
 TEST(MulopTokenTest, GetAttribute) {

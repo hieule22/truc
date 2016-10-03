@@ -14,7 +14,9 @@ namespace {
 
 TEST(RelopTokenTest, GetTokenType) {
   const RelopToken token(relop_attr_type::RELOP_NE);
-  EXPECT_EQ(token.get_token_type(), token_type_type::TOKEN_RELOP);  
+  EXPECT_EQ(token.get_token_type(), token_type_type::TOKEN_RELOP);
+  const RelopToken default_token;
+  EXPECT_EQ(default_token.get_token_type(), token_type_type::TOKEN_RELOP);
 }
 
 TEST(RelopTokenTest, GetAttribute) {

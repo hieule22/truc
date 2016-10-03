@@ -14,6 +14,8 @@ namespace {
 TEST(PuncTokenTest, GetTokenType) {
   const PuncToken token(punc_attr_type::PUNC_CLOSE);
   EXPECT_EQ(token.get_token_type(), token_type_type::TOKEN_PUNC);
+  const PuncToken default_token;
+  EXPECT_EQ(default_token.get_token_type(), token_type_type::TOKEN_PUNC);
 }
 
 TEST(PuncTokenTest, GetAttribute) {

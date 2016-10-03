@@ -14,6 +14,8 @@ namespace {
 TEST(NumTokenTest, GetTokenType) {
   const NumToken token("12345");
   EXPECT_EQ(token.get_token_type(), token_type_type::TOKEN_NUM);
+  const NumToken default_token;
+  EXPECT_EQ(default_token.get_token_type(), token_type_type::TOKEN_NUM);
 }
 
 TEST(NumTokenTest, GetAttribute) {
