@@ -19,25 +19,25 @@ typedef enum addop_attr { ADDOP_ADD = 400,
 
 class AddopToken : public Token {
  public:
-  // Default constructor initializes attribute to ADDOP_NO_ATTR.
+  // Constructs an addop token with ADDOP_NO_ATTR as default attribute.
   AddopToken();
 
-  // Constructs a token from a specified attribute.
+  // Constructs an addop token from a specified attribute.
   explicit AddopToken(addop_attr_type attr);
 
   ~AddopToken() override;
 
-  // Returns the attribute of this token.
+  // Returns the attribute of this addop token.
   addop_attr_type get_attribute() const;
 
-  // Sets the attribute of this token to given value.
+  // Sets the attribute of this addop token to a specified value.
   void set_attribute(addop_attr_type attr);
 
   // Output will be of the form TOKEN_ADDOP:<addop_attr_type>.
   string *to_string() const override;
 
  private:
-  // The attribute of this additive operator token.
+  // The attribute of this addop token.
   addop_attr_type attribute_;
 };
 
