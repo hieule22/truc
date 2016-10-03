@@ -6,11 +6,9 @@
 
 #include <vector>
 
-Scanner::Scanner(char *filename)
-    : buffer_(new Buffer(filename)) {}
+Scanner::Scanner(char *filename) : buffer_(new Buffer(filename)) {}
 
-Scanner::Scanner(Buffer *buffer)
-    : buffer_(buffer) {}
+Scanner::Scanner(Buffer *buffer) : buffer_(buffer) {}
 
 Scanner::~Scanner() {
   delete buffer_;
@@ -124,7 +122,7 @@ Token *Scanner::next_token() {
 
   while (state != DONE) {
     // Always read a char from buffer before each transition.
-    char c = buffer_->next_char();
+    const char c = buffer_->next_char();
 
     switch (state) {
       case START:

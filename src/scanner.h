@@ -32,14 +32,14 @@ class Scanner {
   // Constructs a Scanner for a given file.
   explicit Scanner(char *filename);
 
-  // Constructs a Scanner from a given buffer.
-  // Useful for testing. The buffer is owned by this object.
+  // Constructs a Scanner from a given buffer. Useful for testing.
+  // Ownership of the buffer is acquired by this object.
   explicit Scanner(Buffer *buffer);
 
   ~Scanner();
 
   // Return the next token in this file.
-  // Return value becomes property of the caller.
+  // Returned value becomes property of the caller.
   Token *next_token();
 
  private:
