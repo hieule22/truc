@@ -1,0 +1,15 @@
+# Some random comments here
+
+program helloworld:	# Hola mundo
+	print       a       =  2	# Hola mundo
+loop	begin end
+1234 a < 2
+end
+
+# THIS IS SOME COMMENT ### COMMMENT
+
+ABC = 1
+
+
+
+# Some random comments	here			and 				there
