@@ -19,25 +19,25 @@ typedef enum mulop_attr { MULOP_MUL = 500,
 
 class MulopToken : public Token {
  public:
-  // Constructs a token with MULOP_NO_ATTR as the default attribute.
+  // Constructs a mulop token with MULOP_NO_ATTR as default attribute.
   MulopToken();
 
-  // Constructs a token from a given attribute.
+  // Constructs a mulop token from a specified attribute.
   explicit MulopToken(mulop_attr_type attr);
 
   ~MulopToken() override;
 
-  // Returns the attribute of this token.
+  // Returns the attribute of this mulop token.
   mulop_attr_type get_attribute() const;
 
-  // Sets the attribute of this token to given value.
+  // Sets the attribute of this mulop token to a specified value.
   void set_attribute(mulop_attr_type attr);
 
   // Debug string will be of the form TOKEN_MULOP:<mulop_attr_type>.
   string *to_string() const override;
 
  private:
-  // The attribute of this multiplicative operator token.
+  // The attribute of this mulop token.
   mulop_attr_type attribute_;
 };
 
