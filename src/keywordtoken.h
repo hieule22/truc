@@ -47,7 +47,7 @@ class KeywordToken : public Token {
   string *to_string() const override;
 
  private:
-  // This token attribute.
+  // The attribute of this keyword token.
   keyword_attr_type attribute_;
 };
 

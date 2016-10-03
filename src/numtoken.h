@@ -13,7 +13,7 @@ using namespace std;
 
 class NumToken : public Token {
  public:
-  // Default constructor. The numerical value is initialized to "0".
+  // Default constructor initializes attribute to "0".
   NumToken();
 
   // Constructs a number token from an input string representing the numerical
@@ -23,7 +23,7 @@ class NumToken : public Token {
   ~NumToken() override;
 
   // Returns a string representing the value of this token.
-  // Return value is not owned by this object.
+  // Returned value becomes property of the caller.
   string *get_attribute() const;
 
   // Set the attribute of this token to specified value.

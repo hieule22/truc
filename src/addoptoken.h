@@ -19,10 +19,10 @@ typedef enum addop_attr { ADDOP_ADD = 400,
 
 class AddopToken : public Token {
  public:
-  // Constructs a token with ADDOP_NO_ATTR as the default attribute.
+  // Default constructor initializes attribute to ADDOP_NO_ATTR.
   AddopToken();
 
-  // Constructs a token from given attribute.
+  // Constructs a token from a specified attribute.
   explicit AddopToken(addop_attr_type attr);
 
   ~AddopToken() override;

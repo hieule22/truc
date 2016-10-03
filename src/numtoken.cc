@@ -4,8 +4,7 @@
 
 #include "numtoken.h"
 
-NumToken::NumToken(const string& attr)
-    : attribute_(attr) {
+NumToken::NumToken(const string& attr) : attribute_(attr) {
   Token::set_token_type(token_type_type::TOKEN_NUM);
 }
 

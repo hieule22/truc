@@ -4,8 +4,7 @@
 
 #include "addoptoken.h"
 
-AddopToken::AddopToken(const addop_attr_type attr)
-    : attribute_(attr) {
+AddopToken::AddopToken(const addop_attr_type attr) : attribute_(attr) {
   Token::set_token_type(token_type_type::TOKEN_ADDOP);
 }
 

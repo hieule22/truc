@@ -4,8 +4,7 @@
 
 #include "reloptoken.h"
 
-RelopToken::RelopToken(const relop_attr_type attr)
-    : attribute_(attr) {
+RelopToken::RelopToken(const relop_attr_type attr) : attribute_(attr) {
   Token::set_token_type(token_type_type::TOKEN_RELOP);
 }
 

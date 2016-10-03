@@ -1,11 +1,10 @@
-// Implementation for MulopToken class.
+// Implementation of MulopToken class.
 // @author Hieu Le
 // @version 09/28/2016
 
 #include "muloptoken.h"
 
-MulopToken::MulopToken(const mulop_attr_type attr)
-    : attribute_(attr) {
+MulopToken::MulopToken(const mulop_attr_type attr) : attribute_(attr) {
   Token::set_token_type(token_type_type::TOKEN_MULOP);
 }
 

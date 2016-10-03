@@ -1,11 +1,10 @@
-// Implementation for PuncToken class.
+// Implementation of PuncToken class.
 // @author Hieu Le
 // @version 09/28/2016
 
 #include "punctoken.h"
 
-PuncToken::PuncToken(const punc_attr_type attr)
-    : attribute_(attr) {
+PuncToken::PuncToken(const punc_attr_type attr) : attribute_(attr) {
   Token::set_token_type(token_type_type::TOKEN_PUNC);
 }
 

@@ -22,10 +22,10 @@ typedef enum relop_attr { RELOP_EQ = 300,
 
 class RelopToken : public Token {
  public:
-  // Constructs a token with RELOP_NO_ATTR as the default attribute.
+  // Defaults constructor initializes attribute to RELOP_NO_ATTR.
   RelopToken();
 
-  // Constructs a token from specified attribute.
+  // Constructs a token from a specified attribute.
   explicit RelopToken(relop_attr_type attr);
 
   ~RelopToken() override;
