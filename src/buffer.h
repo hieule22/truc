@@ -5,7 +5,7 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
-#include <cstdlib>
+#include <stdlib.h>
 
 #include <fstream>
 #include <iostream>
@@ -14,7 +14,7 @@
 // Not part of TruPL alphabet. Used only by the lexical analyzer to denote EOF.
 #define EOF_MARKER '$'
 
-// Symbol denoting the start of a comment line.
+// Symbol denoting the start of a comment.
 #define COMMENT_MARKER '#'
 
 // Whitespace symbols.

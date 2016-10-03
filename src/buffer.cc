@@ -4,15 +4,15 @@
 
 #include "buffer.h"
 
-#include <cctype>
+#include <ctype.h>
 
 #include <algorithm>
 #include <iostream>
 
 using namespace std;
 
-// Anonymous namespace makes these declarations visible only to this compilation
-// unit and therefore not polluting the global namespace.
+// Placing declarations in an anonymous namespace makes them visible only to
+// this compilation unit and not polluting the global namespace.
 namespace {
 
 // All valid non-alphanumeric symbols from TruPL.
@@ -27,7 +27,6 @@ bool contains(const Container& container, const T& value) {
 }
 
 // Checks if a given character c belongs to the TruPL alphabet.
-// Returns true if it does; false otherwise.
 bool validate(const char c) {
   return islower(c) || isdigit(c) || contains(kNonAlphanum, c);
 }
@@ -37,8 +36,7 @@ bool is_empty_stream(istream *const stream) {
   return stream->peek() == EOF;
 }
 
-// Fills buffer with characters from given input stream up to some specified
-// limit.
+// Fills buffer with characters from an input stream up to some specified limit.
 void fill_buffer(istream *const stream, list<char>* buffer, const size_t lim) {
   for (size_t i = 0; i < lim && !is_empty_stream(stream); ++i) {
     buffer->push_back(stream->get());
@@ -52,9 +50,8 @@ void Buffer::buffer_fatal_error() const {
   exit(EXIT_FAILURE);
 }
 
-Buffer::Buffer(istream *const stream)
-    : stream_(stream), exhausted_(false) {
-  remove_space_and_comment();  // Remove any preceding whitespace.
+Buffer::Buffer(istream *const stream) : stream_(stream), exhausted_(false) {
+  remove_space_and_comment();  // Remove any preceding whitespace or comment.
 }
 
 Buffer::Buffer(const char *const filename) : exhausted_(false) {
@@ -64,7 +61,7 @@ Buffer::Buffer(const char *const filename) : exhausted_(false) {
     buffer_fatal_error();
   }
   stream_ = &source_file_;
-  remove_space_and_comment();  // Remove any preceding whitespace
+  remove_space_and_comment();  // Remove any preceding whitespace or comment.
 }
 
 Buffer::~Buffer() {
@@ -78,7 +75,7 @@ char Buffer::next() {
   if (buffer_.empty()) {
     fill_buffer(stream_, &buffer_, MAX_BUFFER_SIZE);
   }
-  // Signal EOF if buffer is still empty after refill attempt.
+  // Return EOF if buffer is still empty after refill attempt.
   if (buffer_.empty()) {
     exhausted_ = true;
     return EOF_MARKER;
@@ -122,15 +119,15 @@ bool Buffer::remove_space_and_comment() {
 }
 
 char Buffer::next_char() {
-  // Remove any subsequent region of white spaces and comments and return the
+  // Remove any subsequent region of whitespaces and comments and return the
   // default space delimiter if any removal takes place.
   if (remove_space_and_comment()) {
     return SPACE;
   }
 
   char head = next();
-  // Flag error if current does not belong the TruPL alphabet. The case where
-  // the EOF symbol is returned has to be excluded however.
+  // Crash if head does not belong the TruPL alphabet. The case where EOF symbol
+  // is returned has to be excluded however.
   if (!validate(head)) {
     if (!(head == EOF_MARKER && exhausted_)) {
       cerr << "Invalid character: " << head << endl;

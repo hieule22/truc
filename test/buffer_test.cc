@@ -170,6 +170,13 @@ TEST(BufferDeathTest, NextCharIllegalInput) {
 		::testing::ExitedWithCode(EXIT_FAILURE),
 		"c*Invalid character: \\%c*");
   }
+  {
+    std::istringstream ss("#AAAAAAAAAAAAAA\nA");
+    Buffer buffer(&ss);
+    ASSERT_EXIT(buffer.next_char(),
+		::testing::ExitedWithCode(EXIT_FAILURE),
+		"c*Invalid character: Ac*");
+  }
 }
 
 }  // namespace
