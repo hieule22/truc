@@ -215,7 +215,7 @@ TEST_F(ScannerTest, NextTokenBasic) {
   MatchSingleToken("9999999999999", NUMBER("9999999999999"));
   MatchSingleToken("000000000000", NUMBER("000000000000"));
   MatchSingleToken("123456789", NUMBER("123456789"));
-
+  
   MatchSingleToken("", ENDOFFILE);
 }
 
@@ -246,6 +246,14 @@ TEST_F(ScannerTest, MultipleNextTokens) {
   MatchTokens("a1+b2<>c3", { new IDENTIFIER("a1"), new ADD,
           new IDENTIFIER("b2"), new NOTEQUAL, new IDENTIFIER("c3"),
           new ENDOFFILE });
+  MatchTokens("<<=", { new LESSTHAN, new LESSOREQUAL, new ENDOFFILE });
+  MatchTokens(">>=", {new GREATERTHAN, new GREATEROREQUAL, new ENDOFFILE });
+  MatchTokens("pro gram", { new IDENTIFIER("pro"), new IDENTIFIER("gram"),
+          new ENDOFFILE });
+  MatchTokens(":==", { new ASSIGNMENT, new EQUAL, new ENDOFFILE });
+  MatchTokens("<<>>", { new LESSTHAN, new NOTEQUAL, new GREATERTHAN,
+          new ENDOFFILE });
+  MatchTokens("looploop", { new IDENTIFIER("looploop"), new ENDOFFILE });
 }
 
 // TODO(hieule22): Fix memory leaks.
@@ -276,6 +284,13 @@ TEST_F(ScannerTest, EndToEnd) {
                     new IDENTIFIER("a99999"), new ENDOFFILE });
   MatchTokens("#Helloworld\t\t\t\t\t\t\t#$%^&*&^^^\n\n\n\n\n 123abc",
 	      { new NUMBER("123"), new IDENTIFIER("abc"), new ENDOFFILE });
+  MatchTokens("1#\n2#\n3", { new NUMBER("1"), new NUMBER("2"),
+          new NUMBER("3"), new ENDOFFILE });
+  MatchTokens("#ABCXYZ#$%^&*()", { new ENDOFFILE });
+  MatchTokens("a#ABCXYZ%^&**()_((()))###", { new IDENTIFIER("a"),
+          new ENDOFFILE });
+  MatchTokens("a\n\nb", { new IDENTIFIER("a"), new IDENTIFIER("b"),
+          new ENDOFFILE });
 }
 
 }  // namespace
