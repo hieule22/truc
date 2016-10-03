@@ -5,17 +5,18 @@
 #ifndef TOKENEOF_H
 #define TOKENEOF_H
 
+#include <string>
+
 #include "token.h"
 
 using namespace std;
 
 // The EofToken has no attribute.
 
-class EofToken : public Token
-{
+class EofToken : public Token {
  public:
   EofToken();
-  
+
   ~EofToken() override;
 
   // Debug string will be of the form TOKEN_EOF:EOF.
@@ -23,5 +24,3 @@ class EofToken : public Token
 };
 
 #endif
-
-  

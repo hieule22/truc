@@ -23,18 +23,19 @@ void AddopToken::set_attribute(const addop_attr_type attr) {
 }
 
 string *AddopToken::to_string() const {
+  const string prefix = "TOKEN_ADDOP:";
   switch (attribute_) {
     case addop_attr_type::ADDOP_ADD:
-      return new string("TOKEN_ADDOP:ADDOP_ADD");
+      return new string(prefix + "ADDOP_ADD");
 
     case addop_attr_type::ADDOP_SUB:
-      return new string("TOKEN_ADDOP:ADDOP_SUB");
+      return new string(prefix + "ADDOP_SUB");
 
     case addop_attr_type::ADDOP_OR:
-      return new string("TOKEN_ADDOP:ADDOP_OR");
+      return new string(prefix + "ADDOP_OR");
 
     case addop_attr_type::ADDOP_NO_ATTR:
-      return new string("TOKEN_ADDOP:ADDOP_NO_ATTR");
+      return new string(prefix + "ADDOP_NO_ATTR");
 
     default:
       return nullptr;

@@ -5,13 +5,13 @@
 #ifndef NUMTOKEN_H
 #define NUMTOKEN_H
 
-#include "token.h"
 #include <string>
+
+#include "token.h"
 
 using namespace std;
 
-class NumToken : public Token
-{
+class NumToken : public Token {
  public:
   // Default constructor. The numerical value is initialized to "0".
   NumToken();
@@ -19,7 +19,7 @@ class NumToken : public Token
   // Constructs a number token from an input string representing the numerical
   // value of that number.
   explicit NumToken(const string& attr);
-  
+
   ~NumToken() override;
 
   // Returns a string representing the value of this token.

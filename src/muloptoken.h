@@ -5,8 +5,9 @@
 #ifndef MULOPTOKEN_H
 #define MULOPTOKEN_H
 
-#include "token.h"
 #include <string>
+
+#include "token.h"
 
 using namespace std;
 
@@ -20,17 +21,17 @@ class MulopToken : public Token {
  public:
   // Constructs a token with MULOP_NO_ATTR as the default attribute.
   MulopToken();
-  
+
   // Constructs a token from a given attribute.
   explicit MulopToken(mulop_attr_type attr);
-  
+
   ~MulopToken() override;
 
   // Returns the attribute of this token.
-  mulop_attr_type get_attribute () const;
-  
+  mulop_attr_type get_attribute() const;
+
   // Sets the attribute of this token to given value.
-  void set_attribute (mulop_attr_type attr);
+  void set_attribute(mulop_attr_type attr);
 
   // Debug string will be of the form TOKEN_MULOP:<mulop_attr_type>.
   string *to_string() const override;

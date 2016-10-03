@@ -23,27 +23,28 @@ void RelopToken::set_attribute(const relop_attr_type attr) {
 }
 
 string *RelopToken::to_string() const {
+  const string prefix = "TOKEN_RELOP:";
   switch (attribute_) {
     case relop_attr_type::RELOP_EQ:
-      return new string("TOKEN_RELOP:RELOP_EQ");
+      return new string(prefix + "RELOP_EQ");
 
     case relop_attr_type::RELOP_NE:
-      return new string("TOKEN_RELOP:RELOP_NE");
+      return new string(prefix + "RELOP_NE");
 
     case relop_attr_type::RELOP_GT:
-      return new string("TOKEN_RELOP:RELOP_GT");
+      return new string(prefix + "RELOP_GT");
 
     case relop_attr_type::RELOP_GE:
-      return new string("TOKEN_RELOP:RELOP_GE");
+      return new string(prefix + "RELOP_GE");
 
     case relop_attr_type::RELOP_LT:
-      return new string("TOKEN_RELOP:RELOP_LT");
+      return new string(prefix + "RELOP_LT");
 
     case relop_attr_type::RELOP_LE:
-      return new string("TOKEN_RELOP:RELOP_LE");
+      return new string(prefix + "RELOP_LE");
 
     case relop_attr_type::RELOP_NO_ATTR:
-      return new string("TOKEN_RELOP:RELOP_NO_ATTR");
+      return new string(prefix + "RELOP_NO_ATTR");
 
     default:
       return nullptr;

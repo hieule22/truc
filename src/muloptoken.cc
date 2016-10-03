@@ -23,18 +23,19 @@ void MulopToken::set_attribute(const mulop_attr_type attr) {
 }
 
 string *MulopToken::to_string() const {
+  const string prefix = "TOKEN_MULOP:";
   switch (attribute_) {
     case mulop_attr_type::MULOP_MUL:
-      return new string("TOKEN_MULOP:MULOP_MUL");
+      return new string(prefix + "MULOP_MUL");
 
     case mulop_attr_type::MULOP_DIV:
-      return new string("TOKEN_MULOP:MULOP_DIV");
+      return new string(prefix + "MULOP_DIV");
 
     case mulop_attr_type::MULOP_AND:
-      return new string("TOKEN_MULOP:MULOP_AND");
+      return new string(prefix + "MULOP_AND");
 
     case mulop_attr_type::MULOP_NO_ATTR:
-      return new string("TOKEN_MULOP:MULOP_NO_ATTR");
+      return new string(prefix + "MULOP_NO_ATTR");
 
     default:
       return nullptr;

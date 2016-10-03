@@ -5,21 +5,20 @@
 #ifndef IDTOKEN_H
 #define IDTOKEN_H
 
-#include "token.h"
 #include <string>
+
+#include "token.h"
 
 using namespace std;
 
-class IdToken : public Token
-{
+class IdToken : public Token {
  public:
-  // Default constructor. Identifier name is initialized to an empty string.
+  // Default constructor initializes identifier name to an empty string.
   IdToken();
 
-  // Constructs an identifier token from an input string representing the
-  // identifier name.
+  // Constructs an identifier token from specified name.
   explicit IdToken(const string& attr);
-  
+
   ~IdToken() override;
 
   // Returns a string representing this identifier token.

@@ -8,7 +8,7 @@ Token::Token() : type_(TOKEN_NO_TYPE) {}
 
 Token::~Token() {}
 
-void Token::set_token_type (const token_type_type type) {
+void Token::set_token_type(const token_type_type type) {
   type_ = type;
 }
 

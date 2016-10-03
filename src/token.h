@@ -20,8 +20,7 @@ typedef enum token_type { TOKEN_KEYWORD =  0,
 			  TOKEN_EOF     =  7,
 			  TOKEN_NO_TYPE = 99 } token_type_type;
 
-class Token
-{
+class Token {
  public:
   // Default constructor initializes token type to TOKEN_NO_TYPE.
   Token();

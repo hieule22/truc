@@ -4,7 +4,7 @@
 
 #include "idtoken.h"
 
-IdToken::IdToken(const std::string& attr)
+IdToken::IdToken(const string& attr)
     : attribute_(attr) {
   Token::set_token_type(token_type_type::TOKEN_ID);
 }
@@ -17,7 +17,7 @@ string *IdToken::get_attribute() const {
   return new string(attribute_);
 }
 
-void IdToken::set_attribute(const std::string& attr) {
+void IdToken::set_attribute(const string& attr) {
   attribute_ = attr;
 }
 

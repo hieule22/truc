@@ -6,6 +6,7 @@
 #define RELOPTOKEN_H
 
 #include <string>
+
 #include "token.h"
 
 using namespace std;
@@ -19,8 +20,7 @@ typedef enum relop_attr { RELOP_EQ = 300,
 			  RELOP_LE = 305,
 			  RELOP_NO_ATTR = 399 } relop_attr_type;
 
-class RelopToken : public Token
-{
+class RelopToken : public Token {
  public:
   // Constructs a token with RELOP_NO_ATTR as the default attribute.
   RelopToken();

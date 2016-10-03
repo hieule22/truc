@@ -5,8 +5,9 @@
 #ifndef PUNCTOKEN_H
 #define PUNCTOKEN_H
 
-#include "token.h"
 #include <string>
+
+#include "token.h"
 
 using namespace std;
 
@@ -19,8 +20,7 @@ typedef enum punc_attr { PUNC_SEMI = 200,
 			 PUNC_CLOSE = 205,
 			 PUNC_NO_ATTR = 299 } punc_attr_type;
 
-class PuncToken : public Token
-{
+class PuncToken : public Token {
  public:
   // Default constructor initializes attribute to PUNC_NO_ATTR.
   PuncToken();
@@ -34,10 +34,10 @@ class PuncToken : public Token
   punc_attr_type get_attribute() const;
 
   // Sets the attribute of this token.
-  void set_attribute (punc_attr_type attr);
+  void set_attribute(punc_attr_type attr);
 
   // Debug string will be of the form TOKEN_PUNC:<punc_attr_type>.
- string *to_string() const override;
+  string *to_string() const override;
 
  private:
   // The attribute of this punctuation token.

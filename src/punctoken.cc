@@ -23,27 +23,28 @@ void PuncToken::set_attribute(const punc_attr_type attr) {
 }
 
 string *PuncToken::to_string() const {
+  const string prefix = "TOKEN_PUNC:";
   switch (attribute_) {
     case punc_attr_type::PUNC_SEMI:
-      return new string("TOKEN_PUNC:PUNC_SEMI");
+      return new string(prefix + "PUNC_SEMI");
 
     case punc_attr_type::PUNC_COLON:
-      return new string("TOKEN_PUNC:PUNC_COLON");
+      return new string(prefix + "PUNC_COLON");
 
     case punc_attr_type::PUNC_COMMA:
-      return new string("TOKEN_PUNC:PUNC_COMMA");
+      return new string(prefix + "PUNC_COMMA");
 
     case punc_attr_type::PUNC_ASSIGN:
-      return new string("TOKEN_PUNC:PUNC_ASSIGN");
+      return new string(prefix + "PUNC_ASSIGN");
 
     case punc_attr_type::PUNC_OPEN:
-      return new string("TOKEN_PUNC:PUNC_OPEN");
+      return new string(prefix + "PUNC_OPEN");
 
     case punc_attr_type::PUNC_CLOSE:
-      return new string("TOKEN_PUNC:PUNC_CLOSE");
+      return new string(prefix + "PUNC_CLOSE");
 
     case punc_attr_type::PUNC_NO_ATTR:
-      return new string("TOKEN_PUNC:PUNC_NO_ATTR");
+      return new string(prefix + "PUNC_NO_ATTR");
 
     default:
         return nullptr;
