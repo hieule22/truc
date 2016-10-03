@@ -30,7 +30,7 @@ class Token {
 
   // Forms a string consisting of the token type and its' attribute.
   // Useful for debugging. Output should be of the form TOKEN_TYPE:Attribute.
-  // Return value is not owned by this Token instance.
+  // Returned value becomes property of the caller.
   virtual string *to_string() const {
     return nullptr;
   }

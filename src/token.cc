@@ -1,4 +1,4 @@
-// Implementation of KeywordToken class.
+// Implementation of Token class.
 // @author Hieu Le
 // @version 09/28/2016
 
