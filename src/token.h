@@ -22,7 +22,7 @@ typedef enum token_type { TOKEN_KEYWORD =  0,
 
 class Token {
  public:
-  // Default constructor initializes token type to TOKEN_NO_TYPE.
+  // Constructs a token with TOKEN_NO_TYPE as default attribute.
   Token();
 
   // Virtual destructor for base class.
@@ -35,7 +35,7 @@ class Token {
     return nullptr;
   }
 
-  // Sets the token type to a specified type.
+  // Sets the type of this token to a specified value.
   void set_token_type(token_type_type type);
 
   // Returns the type of this token.
