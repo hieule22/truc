@@ -14,6 +14,8 @@ namespace {
 TEST(KeywordTokenTest, GetTokenType) {
   const KeywordToken token(keyword_attr_type::KW_WHILE);
   EXPECT_EQ(token.get_token_type(), token_type_type::TOKEN_KEYWORD);
+  const KeywordToken default_token;
+  EXPECT_EQ(token.get_token_type(), token_type_type::TOKEN_KEYWORD);
 }
 
 TEST(KeywordTokenTest, GetAttribute) {
