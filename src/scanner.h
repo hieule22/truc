@@ -44,22 +44,22 @@ class Scanner {
 
  private:
   // Checks if c represents an alphabetic character.
-  inline bool is_alpha(char c) const {
+  inline bool is_alpha(const char c) const {
     return c >= 'a' && c <= 'z';
   }
 
   // Checks if c represents a digit.
-  inline bool is_digit(char c) const {
+  inline bool is_digit(const char c) const {
     return c >= '0' && c <= '9';
   }
 
   // Checks if c represents an alphabetic character or a digit.
-  inline bool is_alphanum(char c) const {
+  inline bool is_alphanum(const char c) const {
     return is_alpha(c) || is_digit(c);
   }
 
   // Checks if c represents a space.
-  inline bool is_space(char c) const {
+  inline bool is_space(const char c) const {
     return c == SPACE;
   }
 

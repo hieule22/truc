@@ -19,6 +19,8 @@ void Scanner::scanner_fatal_error(const string& message) const {
   exit(EXIT_FAILURE);
 }
 
+// Placing declarations inside an anonymous namespace make them visible only
+// to this compilation unit and not polluting the global namespace.
 namespace {
 
 // Set of states for the deterministic finite automaton that recognizes all
