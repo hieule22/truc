@@ -98,6 +98,8 @@ void Buffer::skip_line() {
 bool Buffer::remove_space_and_comment() {
   char head = next();
   bool has_whitespace_or_comment = false;
+  
+  // Advance head to skip all whitespaces and comments.p
   while (is_whitespace(head) || head == COMMENT_MARKER) {
     has_whitespace_or_comment = true;
     while (is_whitespace(head)) {  // Remove whitespaces.
