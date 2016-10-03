@@ -1,4 +1,4 @@
-// Scanner class to extract valid TruPL lexemes from a source file.
+// Scanner class to extract all TruPL lexemes from a source file.
 // @author Hieu Le
 // @version September 30th, 2016
 

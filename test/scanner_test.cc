@@ -210,6 +210,8 @@ TEST_F(ScannerTest, NextTokenBasic) {
   MatchSingleToken("andnota23", IDENTIFIER("andnota23"));
   MatchSingleToken("a1b2c3d4e5f6g7h8i9", IDENTIFIER("a1b2c3d4e5f6g7h8i9"));
   MatchSingleToken("a123456789", IDENTIFIER("a123456789"));
+  MatchSingleToken("print0123", IDENTIFIER("print0123"));
+  MatchSingleToken("bool11", IDENTIFIER("bool11"));
 
   MatchSingleToken("1", NUMBER("1"));
   MatchSingleToken("9999999999999", NUMBER("9999999999999"));
