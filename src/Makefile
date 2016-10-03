@@ -31,9 +31,9 @@ eoftoken.o:	eoftoken.h eoftoken.cc token.h
 buffer.o:	buffer.h buffer.cc
 	g++ -c $(CFLAGS) buffer.cc
 
-scanner.o:	scanner.h scanner.cc buffer.h \
-		token.h keywordtoken.h punctoken.h reloptoken.h \
-		addoptoken.h muloptoken.h idtoken.h numtoken.h eoftoken.h
+scanner.o:	scanner.h scanner.cc buffer.h token.h keywordtoken.h \
+		punctoken.h reloptoken.h addoptoken.h muloptoken.h \
+		idtoken.h numtoken.h eoftoken.h
 	g++ -c $(CFLAGS) scanner.cc	
 
 test_scanner.o:	test_scanner.cc scanner.h token.h keywordtoken.h \
@@ -41,11 +41,11 @@ test_scanner.o:	test_scanner.cc scanner.h token.h keywordtoken.h \
 		idtoken.h numtoken.h eoftoken.h
 	g++ -c $(CFLAGS) test_scanner.cc
 
-test_scanner:	test_scanner.o scanner.o buffer.o \
-		token.o keywordtoken.o punctoken.o reloptoken.o addoptoken.o \
+test_scanner:	test_scanner.o scanner.o buffer.o token.o keywordtoken.o \
+		punctoken.o reloptoken.o addoptoken.o \
 		muloptoken.o idtoken.o numtoken.o eoftoken.o
-	g++ -o test_scanner $(CFLAGS) scanner.o buffer.o \
-		eoftoken.o numtoken.o idtoken.o muloptoken.o \
+	g++ -o test_scanner $(CFLAGS) scanner.o buffer.o eoftoken.o numtoken.o \
+		idtoken.o muloptoken.o \
 		addoptoken.o reloptoken.o punctoken.o keywordtoken.o \
 		token.o test_scanner.o
 
