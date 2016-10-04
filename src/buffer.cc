@@ -145,6 +145,3 @@ void Buffer::unread_char(const char c) {
     buffer_.push_front(c);
   }
 }
-
-
-
