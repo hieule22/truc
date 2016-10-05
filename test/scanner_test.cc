@@ -3,6 +3,7 @@
 
 #include "src/scanner.h"
 
+#include <memory>
 #include <sstream>
 #include <unordered_map>
 #include <utility>
@@ -65,7 +66,7 @@ class ScannerTest : public testing::Test {
  protected:
   // Creates a character buffer from given input string.
   Buffer* CreateBuffer(const std::string& input) {
-    ss = std::make_unique<std::istringstream>(input);
+    ss.reset(new std::istringstream(input));
     return new Buffer(ss.get());
   }
 

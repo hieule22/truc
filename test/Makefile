@@ -44,7 +44,7 @@ SRC_DIR = ../src
 
 INCLUDE_PATH = ..
 
-CXXFLAGS += -std=c++14 --pedantic
+CXXFLAGS += -std=c++11 --pedantic
 
 buffer_test.o: 	buffer_test.cc $(SRC_DIR)/buffer.h \
 		$(SRC_DIR)/buffer.cc $(GTEST_HEADERS)
@@ -61,8 +61,8 @@ scanner_test:	$(SRC_DIR)/scanner.o $(SRC_DIR)/buffer.o $(SRC_DIR)/token.o \
 		$(SRC_DIR)/keywordtoken.o $(SRC_DIR)/punctoken.o \
 		$(SRC_DIR)/reloptoken.o $(SRC_DIR)/addoptoken.o \
 		$(SRC_DIR)/addoptoken.o $(SRC_DIR)/muloptoken.o \
-		$(SRC_DIR)/idtoken.o $(SRC_DIR)/numtoken.o $(SRC_DIR)/eoftoken.o \
-		scanner_test.o gtest_main.a
+		$(SRC_DIR)/idtoken.o $(SRC_DIR)/numtoken.o \
+		$(SRC_DIR)/eoftoken.o scanner_test.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(INCLUDE_PATH) -lpthread $^ -o $@
 
 all : $(TESTS)
