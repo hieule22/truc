@@ -3,7 +3,6 @@
 GTEST_DIR = ../third_party/gtest
 
 CPPFLAGS += -isystem $(GTEST_DIR)/include
-
 CXXFLAGS += -g -Wall -Wextra -pthread
 
 # All tests produced by this Makefile.
@@ -42,20 +41,18 @@ gtest_main.a : gtest-all.o gtest_main.o
 
 SRC_DIR = ../src
 
-INCLUDE_PATH = ..
+PROJECT_ROOT = ..
 
 CXXFLAGS += -std=c++11 --pedantic
 
-buffer_test.o: 	buffer_test.cc $(SRC_DIR)/buffer.h \
-		$(SRC_DIR)/buffer.cc $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(INCLUDE_PATH) -c buffer_test.cc
+buffer_test.o: 	buffer_test.cc $(SRC_DIR)/buffer.h $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(PROJECT_ROOT) -c buffer_test.cc
 
 buffer_test:	$(SRC_DIR)/buffer.o buffer_test.o gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(INCLUDE_PATH) -lpthread $^ -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(PROJECT_ROOT) -lpthread $^ -o $@
 
-scanner_test.o:	scanner_test.cc $(SRC_DIR)/scanner.h \
-		$(SRC_DIR)/scanner.cc $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(INCLUDE_PATH) -c scanner_test.cc
+scanner_test.o:	scanner_test.cc $(SRC_DIR)/scanner.h $(SRC_DIR$(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(PROJECT_ROOT) -c scanner_test.cc
 
 scanner_test:	$(SRC_DIR)/scanner.o $(SRC_DIR)/buffer.o $(SRC_DIR)/token.o \
 		$(SRC_DIR)/keywordtoken.o $(SRC_DIR)/punctoken.o \
@@ -63,7 +60,7 @@ scanner_test:	$(SRC_DIR)/scanner.o $(SRC_DIR)/buffer.o $(SRC_DIR)/token.o \
 		$(SRC_DIR)/addoptoken.o $(SRC_DIR)/muloptoken.o \
 		$(SRC_DIR)/idtoken.o $(SRC_DIR)/numtoken.o \
 		$(SRC_DIR)/eoftoken.o scanner_test.o gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(INCLUDE_PATH) -lpthread $^ -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(PROJECT_ROOT) -lpthread $^ -o $@
 
 all : $(TESTS)
 
