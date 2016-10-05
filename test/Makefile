@@ -67,8 +67,5 @@ scanner_test:	$(SRC_DIR)/scanner.o $(SRC_DIR)/buffer.o $(SRC_DIR)/token.o \
 
 all : $(TESTS)
 
-test:
-	@for test in $(TESTS); do ./$$test; done
-
 clean :
 	rm -f $(TESTS) gtest.a gtest_main.a *.o
