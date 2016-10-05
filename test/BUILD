@@ -108,6 +108,7 @@ cc_test(
        "//src:scanner",
        "//src:buffer",
        "//third_party/gtest:gtest_main",
+       "//util:ptr_util",
   ],
   copts = ["-std=c++14"],
 )
