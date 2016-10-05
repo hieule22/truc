@@ -11,6 +11,7 @@
 
 #include "gtest/gtest.h"
 #include "src/buffer.h"
+#include "util/ptr_util.h"
 
 // Keywords.
 #define PROGRAM   KeywordToken(keyword_attr_type::KW_PROGRAM)
@@ -66,7 +67,7 @@ class ScannerTest : public testing::Test {
  protected:
   // Creates a character buffer from given input string.
   Buffer* CreateBuffer(const std::string& input) {
-    ss.reset(new std::istringstream(input));
+    ss = util::make_unique<std::istringstream>(input);
     return new Buffer(ss.get());
   }
 
@@ -132,7 +133,7 @@ TEST_F(ScannerTest, NextTokenBasic) {
   MatchSingleToken("en", IDENTIFIER("en"));
   MatchSingleToken("end", END);
   MatchSingleToken("end123", IDENTIFIER("end123"));
-  
+
   MatchSingleToken("if", IF);
   MatchSingleToken("iffy", IDENTIFIER("iffy"));
 
@@ -166,7 +167,7 @@ TEST_F(ScannerTest, NextTokenBasic) {
   MatchSingleToken("print", PRINT);
   MatchSingleToken("printend", IDENTIFIER("printend"));
 
-  MatchSingleToken("n", IDENTIFIER("n"));  
+  MatchSingleToken("n", IDENTIFIER("n"));
   MatchSingleToken("no", IDENTIFIER("no"));
   MatchSingleToken("not", NOT);
   MatchSingleToken("not123", IDENTIFIER("not123"));
@@ -218,7 +219,7 @@ TEST_F(ScannerTest, NextTokenBasic) {
   MatchSingleToken("9999999999999", NUMBER("9999999999999"));
   MatchSingleToken("000000000000", NUMBER("000000000000"));
   MatchSingleToken("123456789", NUMBER("123456789"));
-  
+
   MatchSingleToken("", ENDOFFILE);
 }
 
@@ -286,7 +287,7 @@ TEST_F(ScannerTest, EndToEnd) {
                     new IDENTIFIER("progra"), new IDENTIFIER("ints"),
                     new IDENTIFIER("a99999"), new ENDOFFILE });
   MatchTokens("#Helloworld\t\t\t\t\t\t\t#$%^&*&^^^\n\n\n\n\n 123abc",
-	      { new NUMBER("123"), new IDENTIFIER("abc"), new ENDOFFILE });
+              { new NUMBER("123"), new IDENTIFIER("abc"), new ENDOFFILE });
   MatchTokens("1#\n2#\n3", { new NUMBER("1"), new NUMBER("2"),
           new NUMBER("3"), new ENDOFFILE });
   MatchTokens("#ABCXYZ#$%^&*()", { new ENDOFFILE });
