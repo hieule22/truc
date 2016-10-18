@@ -1,0 +1,17 @@
+program a;
+
+   i: int;
+   
+begin
+
+   i := 1;
+   
+   # Calculate the first power of two that is greater
+   # than 100 and print it out.
+   while (i <= 100) loop begin
+      i := i * 2;
+   end;
+   
+   print i;
+   
+end;
