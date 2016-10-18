@@ -1,0 +1,26 @@
+# Can you scanner handle comments at the
+# beginning of the program?
+
+program testcomments;  # This test case will check
+# your handling of comments.
+
+# Ccomments with blank lines can be tricky if
+
+# they are separated by whitespace.
+	foo:int;
+
+	bar  # Can your scanner handle
+	:#comments between
+	int;	# tokens?
+
+	# this comment is preceeded by a tab
+  # this comment is preceeded by spaces
+begin 
+	# trupl comments don't nest # so this should be treated like one comment.  Hope your scanner isn't confused!
+	foo # foo
+	:=# is assigned
+	bar#bar
+	;# semicolon
+end;#Comments at the end are legal,
+
+# but can be tricky
