@@ -45,11 +45,11 @@ CXXFLAGS += -std=c++11 --pedantic
 # All tests produced by this Makefile.
 TESTS = buffer_test scanner_test
 
-buffer_test:	buffer_test.cc $(SRC_DIR)/buffer.o gtest_main.a
+buffer_test:	scanner/buffer_test.cc $(SRC_DIR)/buffer.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(PROJECT_ROOT) -lpthread $^ -o $@ \
 	&& ./$@
 
-scanner_test:	scanner_test.cc $(SRC_DIR)/scanner.o $(SRC_DIR)/buffer.o \
+scanner_test:	scanner/scanner_test.cc $(SRC_DIR)/scanner.o $(SRC_DIR)/buffer.o \
 		$(SRC_DIR)/token.o $(SRC_DIR)/keywordtoken.o \
 		$(SRC_DIR)/punctoken.o $(SRC_DIR)/reloptoken.o \
 		$(SRC_DIR)/addoptoken.o $(SRC_DIR)/addoptoken.o \
