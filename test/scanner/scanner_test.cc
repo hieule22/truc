@@ -81,10 +81,12 @@ class ScannerTest : public testing::Test {
 
   // Tests if the tokens represented in input string matches a list of
   // expected tokens.
-  void MatchTokens(const std::string& input, const std::vector<Token*>& token) {
+  void MatchTokens(const std::string& input,
+                   const std::vector<Token*>& tokens) {
     Scanner scanner(CreateBuffer(input));
-    for (const auto& expected : token) {
+    for (const auto& token : tokens) {
       std::unique_ptr<Token> actual(scanner.next_token());
+      std::unique_ptr<Token> expected(token);
       EXPECT_EQ(*actual->to_string(), *expected->to_string());
     }
   }
@@ -223,7 +225,6 @@ TEST_F(ScannerTest, NextTokenBasic) {
   MatchSingleToken("", ENDOFFILE);
 }
 
-// TODO(hieule22): Fix memory leaks.
 TEST_F(ScannerTest, MultipleNextTokens) {
   MatchTokens("int a = 1;", { new INT, new IDENTIFIER("a"), new EQUAL,
           new NUMBER("1"), new SEMICOLON, new ENDOFFILE });
@@ -260,23 +261,23 @@ TEST_F(ScannerTest, MultipleNextTokens) {
   MatchTokens("looploop", { new IDENTIFIER("looploop"), new ENDOFFILE });
 }
 
-// TODO(hieule22): Fix memory leaks.
 TEST_F(ScannerTest, StressTest) {
   std::string input;
   std::vector<Token*> expected;
-  Token* tokens[] = {new IDENTIFIER("foo"), new EQUAL, new NUMBER("1"), new AND,
-                     new IDENTIFIER("bar"), new NOTEQUAL, new NUMBER("2")};
   for (int i = 0; i < 20000; ++i) {
     input.append("foo = 1 and bar <> 2");
-    for (auto iter = std::begin(tokens); iter != std::end(tokens); ++iter) {
-      expected.push_back(*iter);
-    }
+    expected.push_back(new IDENTIFIER("foo"));
+    expected.push_back(new EQUAL);
+    expected.push_back(new NUMBER("1"));
+    expected.push_back(new AND);
+    expected.push_back(new IDENTIFIER("bar"));
+    expected.push_back(new NOTEQUAL);
+    expected.push_back(new NUMBER("2"));
   }
   expected.push_back(new ENDOFFILE);
   MatchTokens(input, expected);
 }
 
-// TODO(hieule22): Fix memory leaks.
 TEST_F(ScannerTest, EndToEnd) {
   MatchTokens("\n\n##This is a comment.\n"
               "int a=2; #This is another comment\t\t$$$%%%!!!\n"
