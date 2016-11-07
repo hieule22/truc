@@ -34,7 +34,12 @@ buffer.o:	buffer.h buffer.cc
 scanner.o:	scanner.h scanner.cc buffer.h token.h keywordtoken.h \
 		punctoken.h reloptoken.h addoptoken.h muloptoken.h \
 		idtoken.h numtoken.h eoftoken.h
-	g++ -c $(CFLAGS) scanner.cc	
+	g++ -c $(CFLAGS) scanner.cc
+
+parser.o:	parser.h parser.cc scanner.h token.h keywordtoken.h \
+		punctoken.h reloptoken.h addoptoken.h muloptoken.h \
+		idtoken.h numtoken.h eoftoken.h
+	g++ -c $(CFLAGS) parser.cc
 
 test_scanner.o:	test_scanner.cc scanner.h token.h keywordtoken.h \
 		punctoken.h reloptoken.h addoptoken.h muloptoken.h \
