@@ -26,7 +26,7 @@ using namespace std;
 class Parser {
  public:
   // Constructs a Parser for a given Scanner.
-  explicit Parser (Scanner *the_scanner);
+  explicit Parser(Scanner *the_scanner);
   
   ~Parser();
 
@@ -39,7 +39,68 @@ class Parser {
  private:
 
   bool parse_decl_list();
+
   // etc, etc...; one for each non-terminal in TruPL 2.0
+
+  bool parse_variable_decl_list();
+
+  bool parse_variable_decl();
+
+  bool parse_procedure_decl_list();
+
+  bool parse_identifier_list();
+
+  bool parse_identifier_list_prm();
+  
+  bool parse_standard_type();
+
+  bool parse_block();
+
+  bool parse_procedure_decl();
+
+  bool parse_procedure_args();
+
+  bool parse_formal_parm_list();
+
+  bool parse_formal_parm_list_hat();
+
+  bool parse_stmt_list();
+
+  bool parse_stmt_list_prm();
+  
+  bool parse_stmt();
+
+  bool parse_adhoc_as_pc_tail();
+
+  bool parse_if_stmt();
+
+  bool parse_if_stmt_hat();
+
+  bool parse_while_stmt();
+
+  bool parse_print_stmt();
+
+  bool parse_expr_list();
+
+  bool parse_actual_parm_list();
+
+  bool parse_actual_parm_list_hat();
+
+  bool parse_expr();
+
+  bool parse_expr_hat();
+
+  bool parse_simple_expr();
+
+  bool parse_simple_expr_prm();
+
+  bool parse_term();
+
+  bool parse_term_prm();
+
+  bool parse_factor();
+
+  bool parse_sign();
   
   // The lexical analyzer
   Scanner *lex;
