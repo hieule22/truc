@@ -145,12 +145,10 @@ bool Parser::parse_decl_list()
 
 bool Parser::parse_variable_decl_list()
 {
-  /* VARIABLE_DECL_LIST -> VARIABLE_DECL ; VARIABLE_DECL_LIST
-     
+  /* VARIABLE_DECL_LIST -> VARIABLE_DECL ; VARIABLE_DECL_LIST     
      Predict(VARIABLE_DECL ; VARIABLE_DECL_LIST) = First(VARIABLE_DECL)
      = {identifier}
   */
-
   if (word->get_token_type() == TOKEN_ID) {
 
     // Match VARIABLE_DECL.
@@ -166,8 +164,6 @@ bool Parser::parse_variable_decl_list()
 
         // Match VARIABLE_DECL_LIST.
         if (parse_variable_decl_list()) {
-          
-          // parse_variable_decl_list succeeds.
           return true;
 
           // Fail to match VARIABLE_DECL_LIST.
@@ -187,9 +183,7 @@ bool Parser::parse_variable_decl_list()
       return false;
     }
 
-
-    /* VARIABLE_DECL_LIST -> lambda
-       
+    /* VARIABLE_DECL_LIST -> lambda       
        Predict(lambda) = First(lambda) union Follow(VARIABLE_DECL_LIST)
        = {lambda, procedure, begin} */
   } else {
@@ -202,7 +196,6 @@ bool Parser::parse_variable_decl_list()
 bool Parser::parse_variable_decl()
 {
   /* VARIABLE_DECL -> IDENTIFIER_LIST : STANDARD_TYPE
-
      Predict(IDENTIFIER_LIST : STANDARD_TYPE) = First(IDENTIFIER_LIST)
      = {identifier} */
 
@@ -534,6 +527,177 @@ bool Parser::parse_procedure_decl()
   } else {
     parse_error(new string("procedure"), word);
     return false;
+  }
+
+  return false;
+}
+
+bool Parser::parse_procedure_args()
+{
+  /* PROCEDURE_ARGS -> FORMAL_PARM_LIST
+
+     Predict(FORMAL_PARM_LIST) = First(FORMAL_PARM_LIST) = {identifier} */
+  if (word->get_token_type() == TOKEN_ID) {
+
+    // Match FORMAL_PARM_LIST.
+    if (parse_formal_parm_list()) {
+      return true;
+
+      // Fail to match FORMAL_PARM_LIST.
+    } else {
+      return false;
+    }
+
+    /* PROCEDURE_ARGS -> lambda
+
+       Predict(lambda) = First(lambda) union Follow(PROCEDURE_ARGS)
+       = {lambda, )} */
+  } else {
+    return true;
+  }
+
+  return false;
+}
+
+bool Parser::parse_formal_parm_list()
+{
+  /* FORMAL_PARM_LIST -> identifier IDENTIFIER_LIST_PRM : STANDARD_TYPE
+     FORMAL_PARM_LIST_HAT
+
+     Predict(...) = {identifier} */
+  if (word->get_token_type() == TOKEN_ID) {
+
+    // ADVANCE.
+    delete word;
+    word = lex->next_token();
+
+    // Match IDENTIFIER_LIST_PRM.
+    if (parse_identifier_list_prm()) {
+
+      // Match colon (:).
+      if (word->get_token_type() == TOKEN_PUNC
+          && static_cast<PuncToken *>(word)->get_attribute() == PUNC_COLON) {
+
+        // ADVANCE.
+        delete word;
+        word = lex->next_token();
+
+        // Match STANDARD_TYPE.
+        if (parse_standard_type()) {
+          return true;
+
+          // Fail to match STANDARD_TYPE.
+        } else {
+          return false;
+        }
+
+        // Fail to match colon.
+      } else {
+        parse_error(new string("':'"), word);
+        return false;
+      }
+
+      // Fail to match IDENTIFIER_LIST_PRM
+    } else {
+      return false;
+    }
+
+    // Fail to match an identifier.
+  } else {
+    parse_error(new string("identifier"), word);
+    return false;
+  }
+
+  return false;
+}
+
+bool Parser::parse_formal_parm_list_hat()
+{
+  /* FORMAL_PARM_LIST_HAT -> ; FORMAL_PARM_LIST
+
+     Predict(; FORMAL_PARM_LIST) = {;} */
+  if (word->get_token_type() == TOKEN_PUNC
+      && static_cast<PuncToken *>(word)->get_attribute() == PUNC_SEMI) {
+
+    // ADVANCE.
+    delete word;
+    word = lex->next_token();
+    
+    // Match FORMAL_PARM_LIST.
+    if (parse_formal_parm_list()) {
+      return true;
+
+      // Fail to match FORMAL_PARM_LIST.
+    } else {
+      return false;
+    }
+
+    /* FORMAL_PARM_LIST_HAT = lambda
+
+       Predict(lambda) = First(lambda) union Follow(FORMAL_PARM_LIST_HAT)
+       = {lambda, )} */
+  } else {
+    return true;
+  }
+
+  return false;
+}
+
+bool Parser::parse_stmt_list()
+{
+  /* STMT_LIST -> STMT ; STMT_LIST_PRM
+
+     Predict(STMT_LIST) = First(STMT) = {identifier, if, while, print} */
+  if ((word->get_token_type() == TOKEN_ID) ||
+      (word->get_token_type() == TOKEN_KEYWORD && static_cast<KeywordToken *>(word)->get_attribute() == KW_IF) ||
+      (word->get_token_type() == TOKEN_KEYWORD && static_cast<KeywordToken *>(word)->get_attribute() == KW_WHILE) ||
+      (word->get_token_type() == TOKEN_KEYWORD && static_cast<KeywordToken *>(word)->get_attribute() == KW_PRINT)) {
+
+    // ADVANCE.
+    delete word;
+    word = lex->next_token();
+    
+    // Match a semicolon (;).
+    if (word->get_token_type() == TOKEN_PUNC
+        && static_cast<PuncToken *>(word)->get_attribute() == PUNC_SEMI) {
+
+      // ADVANCE.
+      delete word;
+      word = lex->next_token();
+      
+      // Match STMT_LIST_PRM.
+      if (parse_stmt_list_prm()) {
+        return true;
+
+        // Fail to match STMT_LIST_PRM.
+      } else {
+        return false;
+      }
+
+      // Fail to match a semicolon.
+    } else {
+      parse_error(new string("';'"), word);
+      return false;
+    }
+
+    /* STMT_LIST -> ; STMT_LIST_PRM
+
+       Predict(; STMT_LIST_PRM) = {;} */
+  } else if (word->get_token_type() == TOKEN_PUNC
+             || static_cast<PuncToken *>(word)->get_attribute() == PUNC_SEMI) {
+
+    // ADVANCE.
+    delete word;
+    word = lex->next_token();
+
+    // Match STMT_LIST_PRM.
+    if (parse_stmt_list_prm()) {
+      return true;
+
+      // Fail to match STMT_LIST_PRM.
+    } else {
+      return false;
+    }
   }
 
   return false;
