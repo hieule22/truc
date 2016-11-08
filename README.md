@@ -5,18 +5,20 @@
 This repository contains the basic implementation of a compiler for the
 programming language TruPL. As the adopted C++ syntax is somewhat archaic,
 check out [trupl-compiler](https://github.com/hieule22/trupl-compiler) for
-a more updated version of the same compiler,.
+a more updated version of the same compiler.
 
 ## Installation
 
 The source package can be built using [Bazel](http://bazel.io) or GNU-compatible
 Make.
 
-* Obtain a local clone of the repository:
-`git clone https://github.com/hieule22/cs420.git`
+* Obtain a local clone of the repository.
 
-* Run the command `make truc` to build everything necessary for assembling the
-executable binary.
+```bash
+git clone https://github.com/hieule22/cs420.git
+```
+
+* Build the executable binary.
 
 ```bash
 cd cs420/src
