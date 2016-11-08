@@ -116,7 +116,9 @@ class Parser {
   void parse_error (string *expected, Token *found);
 
   // Other helper functions that you may define
-  
+
+  // Advance the current token.
+  void advance();
 };
 
 #endif

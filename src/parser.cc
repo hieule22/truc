@@ -28,34 +28,75 @@ bool Parser::done_with_input()
   return word->get_token_type() == TOKEN_EOF;
 }
 
+void Parser::parse_error(string *expected, Token *found) {
+  std::cerr << "Parse error: Expected: " << *expected <<
+      ", found  " << found->to_string() << std::endl;
+  delete expected;
+}
+
+void Parser::advance() {
+  delete word;
+  word = lex->next_token();
+}
+
+namespace {
+
+// Checks if a given token is an identifier.
+inline bool is_identifier(const Token* token) {
+  return token->get_token_type() == TOKEN_ID;
+}
+
+// Checks if a given token is a keyword with the specified attribute.
+inline bool is_keyword(const Token* token, const keyword_attr attr) {
+  return token->get_token_type() == TOKEN_KEYWORD
+      && static_cast<const KeywordToken *>(token)->get_attribute() == attr;
+}
+
+// Checks if a given token is a punctuation with the specified attribute.
+inline bool is_punctuation(const Token* token, const punc_attr attr) {
+  return token->get_token_type() == TOKEN_PUNC
+      && static_cast<const PuncToken *>(token)->get_attribute() == attr;
+}
+
+// Checks if a given token is an addop with the specified attribute.
+inline bool is_addop(const Token* token, const addop_attr attr) {
+  return token->get_token_type() == TOKEN_ADDOP
+      && static_cast<const AddopToken *>(token)->get_attribute() == attr;
+}
+
+// Checks if a given token is a number.
+inline bool is_num(const Token* token) {
+  return token->get_token_type() == TOKEN_NUM;
+}
+
+}
+
 bool Parser::parse_program()
 {
   // PROGRAM -> program identifier ; DECL_LIST BLOCK ;
   // Predict (program identifier ; DECL_LIST BLOCK ;) == {program}
 
   // Match keyword program, first symbol on RHS
-  if (word->get_token_type() == TOKEN_KEYWORD 
-      && static_cast<KeywordToken *>(word)->get_attribute() == KW_PROGRAM) {
+  if (is_keyword(word, KW_PROGRAM)) {
 
     /* ADVANCE - Notice that we only delete a token on an ADVANCE,
        and, if we ADVANCE, it is the ADVANCE code that is responsible
        for getting the next token.
     */
-    delete word; 
-    word = lex->next_token();
+    advance(); 
+    
 
     // Match identifier, 2nd symbol on RHS
     if (word->get_token_type() == TOKEN_ID) {		
       // ADVANCE
-      delete word; 
-      word = lex->next_token();
+      advance(); 
+      
 
       // Match semicolon(;), 3rd symbol on RHS
-      if (word->get_token_type() == TOKEN_PUNC 
-          && static_cast<PuncToken *>(word)->get_attribute() == PUNC_SEMI) {
+      if (is_punctuation(word, PUNC_SEMI)) {
         // ADVANCE
-        delete word; 
-        word = lex->next_token();
+        advance(); 
+        
 
         /* Match DECL_LIST, 4th bymbol on RHS.  This is an ACTION,
            not an advance, so we don't grab another token if we
@@ -67,13 +108,12 @@ bool Parser::parse_program()
           // Match BLOCK, 5th on RHS - ACTION
           if (parse_block()) {
 	      
-            // Match semicolon(;), 6th and last on RHS -  
-            if (word->get_token_type() == TOKEN_PUNC
-                && static_cast<PuncToken *>(word)->get_attribute() == PUNC_SEMI) {
+            // Match semicolon(;), 6th and last on RHS -
+            if (is_punctuation(word, PUNC_SEMI)) {
               // ADVANCE
               // Since we advanced, we matched a token so we get the next one.
-              delete word;
-              word = lex->next_token();
+              advance();
+              
 
               // Parse_program succeeded.
               return true;
@@ -149,18 +189,17 @@ bool Parser::parse_variable_decl_list()
      Predict(VARIABLE_DECL ; VARIABLE_DECL_LIST) = First(VARIABLE_DECL)
      = {identifier}
   */
-  if (word->get_token_type() == TOKEN_ID) {
+  if (is_identifier(word)) {
 
     // Match VARIABLE_DECL.
     if (parse_variable_decl()) {
       
       // Match semicolon(;).
-      if (word->get_token_type() == TOKEN_PUNC
-          && static_cast<PuncToken *>(word)->get_attribute() == PUNC_SEMI) {
+      if (is_punctuation(word, PUNC_SEMI)) {
         
         // ADVANCE
-        delete word;
-        word = lex->next_token();
+        advance();
+        
 
         // Match VARIABLE_DECL_LIST.
         if (parse_variable_decl_list()) {
@@ -198,19 +237,17 @@ bool Parser::parse_variable_decl()
   /* VARIABLE_DECL -> IDENTIFIER_LIST : STANDARD_TYPE
      Predict(IDENTIFIER_LIST : STANDARD_TYPE) = First(IDENTIFIER_LIST)
      = {identifier} */
-
-  if (word->get_token_type() == TOKEN_ID) {
+  if (is_identifier(word)) {
 
     // Match IDENTIFIER_LIST
     if (parse_identifier_list()) {
 
       // Match colon(:).
-      if (word->get_token_type() == TOKEN_PUNC
-          && static_cast<PuncToken *>(word)->get_attribute() == PUNC_COLON) {
+      if (is_punctuation(word, PUNC_COLON)) {
 
         // ADVANCE
-        delete word;
-        word = lex->next_token();
+        advance();
+        
 
         // Match STANDARD_TYPE
         if (parse_standard_type()) {
@@ -251,20 +288,17 @@ bool Parser::parse_procedure_decl_list()
 
      Predict(PROCEDURE_DECL ; PROCEDURE_DECL_LIST) = First(PROCEDURE_DECL)
      = {procedure} */
-
-  if (word->get_token_type() == TOKEN_KEYWORD
-      && static_cast<KeywordToken *>(word)->get_attribute() == KW_PROCEDURE) {
+  if (is_keyword(word, KW_PROCEDURE)) {
 
     // Match PROCEDURE_DECL.
     if (parse_procedure_decl()) {
 
       // Match semicolon (;).
-      if (word->get_token_type() == TOKEN_PUNC
-          && static_cast<PuncToken *>(word)->get_attribute() == PUNC_SEMI) {
+      if (is_punctuation(word, PUNC_SEMI)) {
 
         // ADVANCE.
-        delete word;
-        word = lex->next_token();
+        advance();
+        
 
         // Match PROCEDURE_DECL_LIST.
         if (parse_procedure_decl_list()) {
@@ -304,7 +338,7 @@ bool Parser::parse_identifier_list()
 
      Predict(identifier IDENTIFIER_LIST_PRM) = {identifier} */
 
-  if (word->get_token_type() == TOKEN_ID) {
+  if (is_identifier(word)) {
 
     // Match IDENTIFIER_LIST_PRM.
     if (parse_identifier_list_prm()) {
@@ -333,15 +367,14 @@ bool Parser::parse_identifier_list_prm()
 
      Predict(, identifier IDENTIFIER_LIST_PRM) = {,} */
 
-  if (word->get_token_type() == TOKEN_PUNC
-      && static_cast<PuncToken *>(word)->get_attribute() == PUNC_COMMA) {
+  if (is_punctuation(word, PUNC_COMMA)) {
 
     // ADVANCE
-    delete word;
-    word = lex->next_token();
+    advance();
+    
 
     // Match an identifier.
-    if (word->get_token_type() == TOKEN_ID) {
+    if (is_identifier(word)) {
 
       // Match IDENTIFIER_LIST_PRM.
       if (parse_identifier_list_prm()) {
@@ -376,23 +409,22 @@ bool Parser::parse_standard_type()
   /* STANDARD_TYPE -> int
 
      Predict(int) = {int} */
-  if (word->get_token_type() == TOKEN_KEYWORD
-      && static_cast<KeywordToken *>(word)->get_attribute() == KW_INT) {
+  if (is_keyword(word, KW_INT)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
+    
     return true;
 
     /* STANDARD_TYPE -> bool
        
        Predict(bool) = {bool} */
-  } else if (word->get_token_type() == TOKEN_KEYWORD
-             && static_cast<KeywordToken *>(word)->get_attribute() == KW_BOOL) {
+  
+  } else if (is_keyword(word, KW_BOOL)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
+    
     return true;
   }
 
@@ -404,23 +436,21 @@ bool Parser::parse_block()
   /* BLOCK -> begin STMT_LIST end
 
      Predict(begin STMT_LIST end) = {begin} */
-  if (word->get_token_type() == TOKEN_KEYWORD
-      && static_cast<KeywordToken *>(word)->get_attribute() == KW_BEGIN) {
+  if (is_keyword(word, KW_BEGIN)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
+    
 
     // Match STMT_LIST.
     if (parse_stmt_list()) {
 
       // Match keyword end.
-      if (word->get_token_type() == TOKEN_KEYWORD
-          && static_cast<KeywordToken *>(word)->get_attribute() == KW_END) {
+      if (is_keyword(word, KW_END)) {
 
         // ADVANCE.
-        delete word;
-        word = lex->next_token();
+        advance();
+        
 
         return true;
 
@@ -450,38 +480,35 @@ bool Parser::parse_procedure_decl()
      procedure identifier ( PROCEDURE_ARGS ) VARIABLE_DECL_LIST BLOCK
 
      Predict(PROCEDURE_DECL) = {procedure} */
-  if (word->get_token_type() == TOKEN_KEYWORD
-      && static_cast<KeywordToken *>(word)->get_attribute() == KW_PROCEDURE) {
+  if (is_keyword(word, KW_PROCEDURE)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
+    
 
     // Match an identifier.
     if (word->get_token_type() == TOKEN_ID) {
 
       // ADVANCE.
-      delete word;
-      word = lex->next_token();
+      advance();
+      
 
       // Match an opening bracket.
-      if (word->get_token_type() == TOKEN_PUNC
-          && static_cast<PuncToken *>(word)->get_attribute() == PUNC_OPEN) {
+      if (is_punctuation(word, PUNC_OPEN)) {
 
         // ADVANCE.
-        delete word;
-        word = lex->next_token();
+        advance();
+        
 
         // Match PROCEDURE_ARGS.
         if (parse_procedure_args()) {
 
           // Match a closing bracket.
-          if (word->get_token_type() == TOKEN_PUNC
-              && static_cast<PuncToken *>(word)->get_attribute() == PUNC_CLOSE) {
+          if (is_punctuation(word, PUNC_CLOSE)) {
 
             // ADVANCE.
-            delete word;
-            word = lex->next_token();
+            advance();
+            
 
             // Match VARIABLE_DECL_LIST.
             if (parse_variable_decl_list()) {
@@ -537,7 +564,7 @@ bool Parser::parse_procedure_args()
   /* PROCEDURE_ARGS -> FORMAL_PARM_LIST
 
      Predict(FORMAL_PARM_LIST) = First(FORMAL_PARM_LIST) = {identifier} */
-  if (word->get_token_type() == TOKEN_ID) {
+  if (is_identifier(word)) {
 
     // Match FORMAL_PARM_LIST.
     if (parse_formal_parm_list()) {
@@ -565,22 +592,21 @@ bool Parser::parse_formal_parm_list()
      FORMAL_PARM_LIST_HAT
 
      Predict(...) = {identifier} */
-  if (word->get_token_type() == TOKEN_ID) {
+  if (is_identifier(word)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
+    
 
     // Match IDENTIFIER_LIST_PRM.
     if (parse_identifier_list_prm()) {
 
-      // Match colon (:).
-      if (word->get_token_type() == TOKEN_PUNC
-          && static_cast<PuncToken *>(word)->get_attribute() == PUNC_COLON) {
+      // Match colon(:).
+      if (is_punctuation(word, PUNC_COLON)) {
 
         // ADVANCE.
-        delete word;
-        word = lex->next_token();
+        advance();
+        
 
         // Match STANDARD_TYPE.
         if (parse_standard_type()) {
@@ -616,12 +642,11 @@ bool Parser::parse_formal_parm_list_hat()
   /* FORMAL_PARM_LIST_HAT -> ; FORMAL_PARM_LIST
 
      Predict(; FORMAL_PARM_LIST) = {;} */
-  if (word->get_token_type() == TOKEN_PUNC
-      && static_cast<PuncToken *>(word)->get_attribute() == PUNC_SEMI) {
+  if (is_punctuation(word, PUNC_SEMI)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
+    
     
     // Match FORMAL_PARM_LIST.
     if (parse_formal_parm_list()) {
@@ -648,25 +673,19 @@ bool Parser::parse_stmt_list()
   /* STMT_LIST -> STMT ; STMT_LIST_PRM
 
      Predict(STMT_LIST) = First(STMT) = {identifier, if, while, print} */
-  if ((word->get_token_type() == TOKEN_ID) ||
-      (word->get_token_type() == TOKEN_KEYWORD
-       && static_cast<KeywordToken *>(word)->get_attribute() == KW_IF) ||
-      (word->get_token_type() == TOKEN_KEYWORD
-       && static_cast<KeywordToken *>(word)->get_attribute() == KW_WHILE) ||
-      (word->get_token_type() == TOKEN_KEYWORD
-       && static_cast<KeywordToken *>(word)->get_attribute() == KW_PRINT)) {
+  if (is_identifier(word) || is_keyword(word, KW_IF)
+      || is_keyword(word, KW_WHILE), is_keyword(word, KW_PRINT)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
     
-    // Match a semicolon (;).
-    if (word->get_token_type() == TOKEN_PUNC
-        && static_cast<PuncToken *>(word)->get_attribute() == PUNC_SEMI) {
+    
+    // Match a semicolon(;).
+    if (is_punctuation(word, PUNC_SEMI)) {
 
       // ADVANCE.
-      delete word;
-      word = lex->next_token();
+      advance();
+      
       
       // Match STMT_LIST_PRM.
       if (parse_stmt_list_prm()) {
@@ -686,12 +705,11 @@ bool Parser::parse_stmt_list()
     /* STMT_LIST -> ; STMT_LIST_PRM
 
        Predict(; STMT_LIST_PRM) = {;} */
-  } else if (word->get_token_type() == TOKEN_PUNC
-             || static_cast<PuncToken *>(word)->get_attribute() == PUNC_SEMI) {
+  } else if (is_punctuation(word, PUNC_SEMI)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
+    
 
     // Match STMT_LIST_PRM.
     if (parse_stmt_list_prm()) {
@@ -711,21 +729,15 @@ bool Parser::parse_stmt_list_prm()
   /* STMT_LIST_PRM -> STMT ; STMT_LIST_PRM
      Predict(STMT ; STMT_LIST_PRM) = First(STMT)
      = {identifier, if, while, print} */
-  if ((word->get_token_type() == TOKEN_ID) ||
-      (word->get_token_type() == TOKEN_KEYWORD
-       && static_cast<KeywordToken *>(word)->get_attribute() == KW_IF) ||
-      (word->get_token_type() == TOKEN_KEYWORD
-       && static_cast<KeywordToken *>(word)->get_attribute() == KW_WHILE) ||
-      (word->get_token_type() == TOKEN_KEYWORD
-       && static_cast<KeywordToken *>(word)->get_attribute() == KW_PRINT)) {
+  if (is_identifier(word) || is_keyword(word, KW_IF)
+      || is_keyword(word, KW_WHILE) || is_keyword(word, KW_PRINT)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
+    
 
     // Match semicolon(;).
-    if (word->get_token_type() == TOKEN_PUNC
-        && static_cast<PuncToken *>(word)->get_attribute() == PUNC_SEMI) {
+    if (is_punctuation(word, PUNC_SEMI)) {
 
       // Match STMT_LIST_PRM.
       if (parse_stmt_list_prm()) {
@@ -756,8 +768,7 @@ bool Parser::parse_stmt()
 {
   /* STMT -> IF_STMT
      Predict(IF_STMT) = First(IF_STMT) = {if} */
-  if (word->get_token_type() == TOKEN_KEYWORD
-      && static_cast<KeywordToken *>(word)->get_attribute() == KW_IF) {
+  if (is_keyword(word, KW_IF)) {
 
     // Match IF_STMT.
     if (parse_if_stmt()) {
@@ -770,8 +781,7 @@ bool Parser::parse_stmt()
 
     /* STMT -> WHILE_STMT
        Predict(WHILE_STMT) = First(WHILE_STMT) = {while} */
-  } else if (word->get_token_type() == TOKEN_KEYWORD
-             && static_cast<KeywordToken *>(word)->get_attribute() == KW_WHILE) {
+  } else if (is_keyword(word, KW_WHILE)) {
 
     // Match WHILE_STMT.
     if (parse_while_stmt()) {
@@ -784,8 +794,7 @@ bool Parser::parse_stmt()
 
     /* STMT -> PRINT_STMT
        Predict(PRINT_STMT) = First(PRINT_STMT) = {print} */
-  } else if (word->get_token_type() == TOKEN_KEYWORD
-             && static_cast<KeywordToken *>(word)->get_attribute() == KW_PRINT) {
+  } else if (is_keyword(word, KW_PRINT)) {
 
     // Match PRINT_STMT.
     if (parse_print_stmt()) {
@@ -798,11 +807,11 @@ bool Parser::parse_stmt()
 
     /* STMT -> identifier ADHOC_AS_PC_TAIL
        Predict(identifier ADHOC_AS_PC_TAIL) = {identifier} */
-  } else if (word->get_token_type() == TOKEN_ID) {
+  } else if (is_identifier(word)) {
 
     // ADVANCE
-    delete word;
-    word = lex->next_token();
+    advance();
+    
 
     // Match ADHOC_AS_PC_TAIL.
     if (parse_adhoc_as_pc_tail()) {
@@ -821,12 +830,11 @@ bool Parser::parse_adhoc_as_pc_tail()
 {
   /* ADHOC_AS_PC_TAIL -> := EXPR
      Predict(:= EXPR) = {:=} */
-  if (word->get_token_type() == TOKEN_PUNC
-      && static_cast<PuncToken *>(word)->get_attribute() == PUNC_ASSIGN) {
+  if (is_punctuation(word, PUNC_ASSIGN)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
+    
 
     // Match EXPR.
     if (parse_expr()) {
@@ -839,23 +847,21 @@ bool Parser::parse_adhoc_as_pc_tail()
 
     /* ADHOC_AS_PC_TAIL -> ( EXPR_LIST )
        Predict( ( EXPR_LIST ) ) = { ( } */
-  } else if (word->get_token_type() == TOKEN_PUNC
-             && static_cast<PuncToken *>(word)->get_attribute() == PUNC_OPEN) {
+  } else if (is_punctuation(word, PUNC_OPEN)) {
 
     // ADVANCE
-    delete word;
-    word = lex->next_token();
+    advance();
+    
 
     // Match EXPR_LIST.
     if (parse_expr_list()) {
 
       // Match closing bracket.
-      if (word->get_token_type() == TOKEN_PUNC
-          && static_cast<PuncToken *>(word)->get_attribute() == PUNC_CLOSE) {
+      if (is_punctuation(word, PUNC_CLOSE)) {
 
         // ADVANCE
-        delete word;
-        word = lex->next_token();
+        advance();
+        
 
         return true;
 
@@ -878,23 +884,21 @@ bool Parser::parse_if_stmt()
 {
   /* IF_STMT -> if EXPR then BLOCK IF_STMT_HAT
      Predict(...) = {if} */
-  if (word->get_token_type() == TOKEN_KEYWORD
-      && static_cast<KeywordToken *>(word)->get_attribute() == KW_IF) {
+  if (is_keyword(word, KW_IF)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
+    
 
     // Match EXPR.
     if (parse_expr()) {
 
       // Match keyword then.
-      if (word->get_token_type() == TOKEN_KEYWORD
-          && static_cast<KeywordToken *>(word)->get_attribute() == KW_THEN) {
+      if (is_keyword(word, KW_THEN)) {
 
         // ADVANCE
-        delete word;
-        word = lex->next_token();
+        advance();
+        
 
         // Match BLOCK.
         if (parse_block()) {
@@ -937,12 +941,11 @@ bool Parser::parse_if_stmt_hat()
 {
   /* IF_STMT_HAT -> else BLOCK
      Predict(else BLOCK) = {else} */
-  if (word->get_token_type() == TOKEN_KEYWORD
-      && static_cast<KeywordToken *>(word)->get_attribute() == KW_ELSE) {
+  if (is_keyword(word, KW_ELSE)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
+    
 
     // Match BLOCK.
     if (parse_block()) {
@@ -967,23 +970,21 @@ bool Parser::parse_while_stmt()
 {
   /* WHILE_STMT -> while EXPR loop BLOCK
      Predict(while EXPR loop BLOCK) = {while} */
-  if (word->get_token_type() == TOKEN_KEYWORD
-      && static_cast<KeywordToken *>(word)->get_attribute() == KW_WHILE) {
+  if (is_keyword(word, KW_WHILE)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
+    
 
     // Match EXPR.
     if (parse_expr()) {
 
       // Match keyword loop.
-      if (word->get_token_type() == TOKEN_KEYWORD
-          && static_cast<KeywordToken *>(word)->get_attribute() == KW_LOOP) {
+      if (is_keyword(word, KW_LOOP)) {
 
         // ADVANCE
-        delete word;
-        word = lex->next_token();
+        advance();
+        
 
         // Match BLOCK.
         if (parse_block()) {
@@ -1018,12 +1019,10 @@ bool Parser::parse_print_stmt()
 {
   /* PRINT_STMT -> print EXPR
      Predict(print EXPR) = {print} */
-  if (word->get_token_type() == TOKEN_KEYWORD
-      && static_cast<KeywordToken *>(word)->get_attribute() == KW_PRINT) {
+  if (is_keyword(word, KW_PRINT)) {
 
     // ADVANCE.
-    delete word;
-    word = lex->next_token();
+    advance();
 
     // Match EXPR.
     if (parse_expr()) {
@@ -1048,16 +1047,9 @@ bool Parser::parse_expr_list()
   /* EXPR_LIST -> ACTUAL_PARM_LIST
      Predict(ACTUAL_PARM_LIST) = First(ACTUAL_PARM_LIST)
      = {identifier, num, (, +, -, not} */
-  if ((word->get_token_type() == TOKEN_ID) ||
-      (word->get_token_type() == TOKEN_NUM) ||
-      (word->get_token_type() == TOKEN_PUNC
-       && static_cast<PuncToken *>(word)->get_attribute() == PUNC_OPEN) ||
-      (word->get_token_type() == TOKEN_ADDOP
-       && static_cast<AddopToken *>(word)->get_attribute() == ADDOP_ADD) ||
-      (word->get_token_type() == TOKEN_ADDOP
-       && static_cast<AddopToken *>(word)->get_attribute() == ADDOP_SUB) ||
-      (word->get_token_type() == TOKEN_KEYWORD
-       && static_cast<KeywordToken *>(word)->get_attribute() == KW_NOT)) {
+  if (is_identifier(word) || is_num(word) || is_punctuation(word, PUNC_OPEN)
+      || is_addop(word, ADDOP_ADD) || is_addop(word, ADDOP_SUB)
+      || is_keyword(word, KW_NOT)) {
 
     // Match ACTUAL_PARM_LIST.
     if (parse_actual_parm_list()) {
@@ -1075,10 +1067,4 @@ bool Parser::parse_expr_list()
   }
 
   return false;
-}
-
-void Parser::parse_error(string *expected, Token *found) {
-  std::cerr << "Parse error: Expected: " << *expected <<
-      ", found  " << found->to_string() << std::endl;
-  delete expected;
 }
