@@ -86,6 +86,23 @@ cc_library(
   ],
 )
 
+cc_library(
+  name = "parser",
+  srcs = ["parser.cc"],
+  hdrs = ["parser.h"],
+  deps = [
+       ":scanner",
+       ":keywordtoken",
+       ":punctoken",
+       ":reloptoken",
+       ":addoptoken",
+       ":muloptoken",
+       ":idtoken",
+       ":numtoken",
+       ":eoftoken"
+  ],
+)
+
 cc_binary(
   name = "test_scanner",
   srcs = ["test_scanner.cc"],
