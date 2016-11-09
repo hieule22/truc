@@ -239,9 +239,7 @@ bool Parser::parse_variable_decl_list()
 
     /* VARIABLE_DECL_LIST -> lambda */
   } else {
-
     std::cerr << "VARIABLE_DECL_LIST -> lambda" << std::endl;
-    
     return true;
   }
 
@@ -263,7 +261,7 @@ bool Parser::parse_variable_decl()
       // Match colon(:).
       if (is_punctuation(word, PUNC_COLON)) {
 
-        // ADVANCE
+        // ADVANCE.
         advance();        
 
         // Match STANDARD_TYPE - ACTION.
@@ -323,9 +321,7 @@ bool Parser::parse_procedure_decl_list()
 
     /* PROCEDURE_DECL_LIST -> lambda */
   } else {
-
     std::cerr << "PROCEDURE_DECL_LIST -> lambda" << std::endl;
-    
     return true;
   }
 
@@ -383,9 +379,7 @@ bool Parser::parse_identifier_list_prm()
 
     /* IDENTIFIER_LIST_PRM = lambda */
   } else {
-
     std::cerr << "IDENTIFIER_LIST_PRM -> lambda" << std::endl;
-    
     return true;
   }
   
@@ -476,7 +470,7 @@ bool Parser::parse_procedure_decl()
     advance();
 
     // Match an identifier.
-    if (word->get_token_type() == TOKEN_ID) {
+    if (is_identifier(word)) {
 
       // ADVANCE.
       advance();
@@ -558,8 +552,8 @@ bool Parser::parse_formal_parm_list()
      Predict(...) = {identifier} */
   if (is_identifier(word)) {
 
-    std::cerr << "FORMAL_PARM_LIST -> identifier IDENTIFIER_LIST_PRM : STANDARD_TYPE "
-        "FORMAL_PARM_LIST_HAT" << std::endl;
+    std::cerr << "FORMAL_PARM_LIST -> identifier IDENTIFIER_LIST_PRM : "
+        "STANDARD_TYPE FORMAL_PARM_LIST_HAT" << std::endl;
 
     // ADVANCE.
     advance();
@@ -599,7 +593,7 @@ bool Parser::parse_formal_parm_list()
 bool Parser::parse_formal_parm_list_hat()
 {
   /* FORMAL_PARM_LIST_HAT -> ; FORMAL_PARM_LIST
-     Predict(; FORMAL_PARM_LIST) = {;} */
+     Predict(; FORMAL_PARM_LIST) == {;} */
   if (is_punctuation(word, PUNC_SEMI)) {
 
     std::cerr << "FORMAL_PARM_LIST_HAT -> ; FORMAL_PARM_LIST" << std::endl;
@@ -622,7 +616,7 @@ bool Parser::parse_formal_parm_list_hat()
 bool Parser::parse_stmt_list()
 {
   /* STMT_LIST -> STMT ; STMT_LIST_PRM
-     Predict(STMT_LIST) = First(STMT) = {identifier, if, while, print} */
+     Predict(STMT_LIST) == First(STMT) == {identifier, if, while, print} */
   if (is_identifier(word)
       || is_keyword(word, KW_IF)
       || is_keyword(word, KW_WHILE)
@@ -654,7 +648,7 @@ bool Parser::parse_stmt_list()
     }
 
     /* STMT_LIST -> ; STMT_LIST_PRM
-       Predict(; STMT_LIST_PRM) = {;} */
+       Predict(; STMT_LIST_PRM) == {;} */
   } else if (is_punctuation(word, PUNC_SEMI)) {
 
     // ADVANCE.
@@ -670,8 +664,8 @@ bool Parser::parse_stmt_list()
 bool Parser::parse_stmt_list_prm()
 {
   /* STMT_LIST_PRM -> STMT ; STMT_LIST_PRM
-     Predict(STMT ; STMT_LIST_PRM) = First(STMT)
-     = {identifier, if, while, print} */
+     Predict(STMT ; STMT_LIST_PRM) == First(STMT)
+     == {identifier, if, while, print} */
   if (is_identifier(word)
       || is_keyword(word, KW_IF)
       || is_keyword(word, KW_WHILE)
@@ -705,7 +699,6 @@ bool Parser::parse_stmt_list_prm()
     /* STMT_LIST_PRM -> lambda */
   } else {
     std::cerr << "STMT_LIST_PRM -> lambda" << std::endl;
-    
     return true;
   }
   
@@ -715,7 +708,7 @@ bool Parser::parse_stmt_list_prm()
 bool Parser::parse_stmt()
 {
   /* STMT -> IF_STMT
-     Predict(IF_STMT) = First(IF_STMT) = {if} */
+     Predict(IF_STMT) == First(IF_STMT) == {if} */
   if (is_keyword(word, KW_IF)) {
 
     std::cerr << "STMT -> IF_STMT" << std::endl;
@@ -747,7 +740,7 @@ bool Parser::parse_stmt()
 
     std::cerr << "STMT -> identifier ADHOC_AS_PC_TAIL" << std::endl;
 
-    // ADVANCE
+    // ADVANCE.
     advance();
 
     // Match ADHOC_AS_PC_TAIL - ACTION.
@@ -760,7 +753,7 @@ bool Parser::parse_stmt()
 bool Parser::parse_adhoc_as_pc_tail()
 {
   /* ADHOC_AS_PC_TAIL -> := EXPR
-     Predict(:= EXPR) = {:=} */
+     Predict(:= EXPR) == {:=} */
   if (is_punctuation(word, PUNC_ASSIGN)) {
 
     std::cerr << "ADHOC_AS_PC_TAIL -> := EXPR" << std::endl;
@@ -768,7 +761,7 @@ bool Parser::parse_adhoc_as_pc_tail()
     // ADVANCE.
     advance();
 
-    // Match EXPR.
+    // Match EXPR - ACTION.
     return parse_expr();
 
     /* ADHOC_AS_PC_TAIL -> ( EXPR_LIST )
@@ -777,16 +770,16 @@ bool Parser::parse_adhoc_as_pc_tail()
 
     std::cerr << "ADHOC_AS_PC_TAIL -> ( EXPR_LIST )" << std::endl;
 
-    // ADVANCE
+    // ADVANCE.
     advance();
 
-    // Match EXPR_LIST.
+    // Match EXPR_LIST - ACTION.
     if (parse_expr_list()) {
 
       // Match closing bracket.
       if (is_punctuation(word, PUNC_CLOSE)) {
 
-        // ADVANCE
+        // ADVANCE.
         advance();
 
         return true;
@@ -817,16 +810,16 @@ bool Parser::parse_if_stmt()
     // ADVANCE.
     advance();
 
-    // Match EXPR.
+    // Match EXPR - ACTION.
     if (parse_expr()) {
 
       // Match keyword then.
       if (is_keyword(word, KW_THEN)) {
 
-        // ADVANCE
+        // ADVANCE.
         advance();
 
-        // Match BLOCK and IF_STMT_HAT.
+        // Match BLOCK and IF_STMT_HAT - ACTION.
         return parse_block() && parse_if_stmt_hat();
 
         // Fail to match keyword then.
@@ -852,7 +845,7 @@ bool Parser::parse_if_stmt()
 bool Parser::parse_if_stmt_hat()
 {
   /* IF_STMT_HAT -> else BLOCK
-     Predict(else BLOCK) = {else} */
+     Predict(else BLOCK) == {else} */
   if (is_keyword(word, KW_ELSE)) {
 
     std::cerr << "IF_STMT_HAT -> else BLOCK" << std::endl;
@@ -860,14 +853,12 @@ bool Parser::parse_if_stmt_hat()
     // ADVANCE.
     advance();
 
-    // Match BLOCK.
+    // Match BLOCK - ACTION.
     return parse_block();
 
     /* IF_STMT_HAT -> lambda */
   } else {
-
     std::cerr << "IF_STMT_HAT -> lambda" << std::endl;
-    
     return true;
   }
 
@@ -885,16 +876,16 @@ bool Parser::parse_while_stmt()
     // ADVANCE.
     advance();
 
-    // Match EXPR.
+    // Match EXPR - ACTION.
     if (parse_expr()) {
 
       // Match keyword loop.
       if (is_keyword(word, KW_LOOP)) {
 
-        // ADVANCE
+        // ADVANCE.
         advance();
 
-        // Match BLOCK.
+        // Match BLOCK - ACTION.
         return parse_block();
 
         // Fail to match keyword loop.
@@ -920,7 +911,7 @@ bool Parser::parse_while_stmt()
 bool Parser::parse_print_stmt()
 {
   /* PRINT_STMT -> print EXPR
-     Predict(print EXPR) = {print} */
+     Predict(print EXPR) == {print} */
   if (is_keyword(word, KW_PRINT)) {
 
     std::cerr << "PRINT -> print EXPR" << std::endl;
@@ -928,7 +919,7 @@ bool Parser::parse_print_stmt()
     // ADVANCE.
     advance();
 
-    // Match EXPR.
+    // Match EXPR - ACTION.
     return parse_expr();
 
     // Fail to match keyword print.
@@ -943,8 +934,8 @@ bool Parser::parse_print_stmt()
 bool Parser::parse_expr_list()
 {
   /* EXPR_LIST -> ACTUAL_PARM_LIST
-     Predict(ACTUAL_PARM_LIST) = First(ACTUAL_PARM_LIST)
-     = {identifier, num, (, +, -, not} */
+     Predict(ACTUAL_PARM_LIST) == First(ACTUAL_PARM_LIST)
+     == {identifier, num, (, +, -, not} */
   if (is_identifier(word)
       || is_number(word)
       || is_punctuation(word, PUNC_OPEN)
@@ -954,14 +945,12 @@ bool Parser::parse_expr_list()
 
     std::cerr << "EXPR_LIST -> ACTUAL_PARM_LIST" << std::endl;
 
-    // Match ACTUAL_PARM_LIST.
+    // Match ACTUAL_PARM_LIST - ACTION.
     return parse_actual_parm_list();
 
     /* EXPR_LIST -> lambda */
   } else {
-
     std::cerr << "EXPR_LIST -> lambda" << std::endl;
-    
     return true;
   }
 
@@ -974,13 +963,14 @@ bool Parser::parse_actual_parm_list()
   std::cerr << "ACTUAL_PARM_LIST -> EXPR ACTUAL_PARM_LIST_HAT" << std::endl;
   
   /* ACTUAL_PARM_LIST -> EXPR ACTUAL_PARM_LIST_HAT */
+  // Match EXPR and ACTUAL_PARM_LIST_HAT - ACTION.
   return parse_expr() && parse_actual_parm_list_hat();
 }
 
 bool Parser::parse_actual_parm_list_hat()
 {
   /* ACTUAL_PARM_LIST_HAT -> , ACTUAL_PARM_LIST
-     Predict(, ACTUAL_PARM_LIST) = {,} */
+     Predict(, ACTUAL_PARM_LIST) == {,} */
   if (is_punctuation(word, PUNC_COMMA)) {
 
     std::cerr << "ACTUAL_PARM_LIST_HAT -> , ACTUAL_PARM_LIST" << std::endl;
@@ -993,9 +983,7 @@ bool Parser::parse_actual_parm_list_hat()
 
     /* ACTUAL_PARM_LIST_HAT -> lambda */
   } else {
-
     std::cerr << "ACTUAL_PARM_LIST_HAT -> lambda" << std::endl;
-    
     return true;
   }
 
@@ -1007,7 +995,8 @@ bool Parser::parse_expr()
   /* EXPR -> SIMPLE_EXPR EXPR_HAT */
 
   std::cerr << "EXPR -> SIMPLE_EXPR EXPR_HAT" << std::endl;
-  
+
+  // Match SIMPLE_EXPR and EXPR_HAT - ACTION.
   return parse_simple_expr() && parse_expr_hat();
 }
 
@@ -1022,14 +1011,12 @@ bool Parser::parse_expr_hat()
     // ADVANCE.
     advance();
 
-    // Match SIMPLE_EXPR
+    // Match SIMPLE_EXPR - ACTION.
     return parse_simple_expr();
 
-    // EXPR_HAT -> lambda
+    /* EXPR_HAT -> lambda */
   } else {
-
     std::cerr << "EXPR_HAT -> lambda" << std::endl;
-    
     return true;
   }
 
@@ -1040,7 +1027,8 @@ bool Parser::parse_simple_expr()
 {
   std::cerr << "SIMPLE_EXPR -> TERM SIMPLE_EXPR_PRM" << std::endl;
   
-  // SIMPLE_EXPR -> TERM SIMPLE_EXPR_PRM
+  /* SIMPLE_EXPR -> TERM SIMPLE_EXPR_PRM */
+  // Match TERM and SIMPLE_EXPR_PRM - ACTION.
   return parse_term() && parse_simple_expr_prm();
 }
 
@@ -1055,7 +1043,7 @@ bool Parser::parse_simple_expr_prm()
     // ADVANCE.
     advance();
 
-    // Match TERM and SIMPLE_EXPR_PRM.
+    // Match TERM and SIMPLE_EXPR_PRM - ACTION.
     return parse_term() && parse_simple_expr_prm();
 
     /* SIMPLE_EXPR_PRM -> lambda */
@@ -1071,6 +1059,7 @@ bool Parser::parse_term()
 {
   std::cerr << "TERM -> FACTOR TERM_PRM" << std::endl;
   /* TERM -> FACTOR TERM_PRM */
+  // Match FACTOR and TERM_PRM - ACTION.
   return parse_factor() && parse_term_prm();
 }
 
@@ -1085,7 +1074,7 @@ bool Parser::parse_term_prm()
     // ADVANCE.
     advance();
 
-    // Match FACTOR and TERM_PRM.
+    // Match FACTOR and TERM_PRM - ACTION.
     return parse_factor() && parse_term_prm();
 
     /* TERM_PRM -> lambda */
@@ -1153,15 +1142,15 @@ bool Parser::parse_factor()
     }
 
     /* FACTOR -> SIGN FACTOR
-       Predict(SIGN FACTOR) == {+, -, not} */
-  } else if (is_addop(word, ADDOP_ADD) || is_addop(word, ADDOP_SUB)
+       Predict(SIGN FACTOR) == First(SIGN) == {+, -, not} */
+  } else if (is_addop(word, ADDOP_ADD)
+             || is_addop(word, ADDOP_SUB)
              || is_keyword(word, KW_NOT)) {
 
     std::cerr << "FACTOR -> SIGN FACTOR" << std::endl;
 
     // Match SIGN and FACTOR.
     return parse_sign() && parse_factor();
-    
   }
 
   return false;
@@ -1199,7 +1188,7 @@ bool Parser::parse_sign()
 
     // ADVANCE.
     advance();
-    
+
     return true;
   }
 

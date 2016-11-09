@@ -38,6 +38,15 @@ TEST_F(ParserTest, ParseExpression) {
   EXPECT_FALSE(CreateParser("program")->parse_expr());
   EXPECT_FALSE(CreateParser("+")->parse_expr());
   EXPECT_FALSE(CreateParser("(())")->parse_expr());
+  EXPECT_FALSE(CreateParser("((3 + 1)")->parse_expr());
+  EXPECT_FALSE(CreateParser("())")->parse_expr());
+  EXPECT_FALSE(CreateParser("(()")->parse_expr());
+}
+
+TEST_F(ParserTest, ParseTerm) {
+  EXPECT_TRUE(CreateParser("1 * 2")->parse_term());
+  EXPECT_TRUE(CreateParser("1 * (2 + 3)")->parse_term());
+  EXPECT_TRUE(CreateParser("foo * (bar + quoz)")->parse_term());
 }
 
 TEST_F(ParserTest, ParseFactor) {
@@ -49,6 +58,11 @@ TEST_F(ParserTest, ParseFactor) {
   EXPECT_TRUE(CreateParser("not (foo and bar)")->parse_factor());
   EXPECT_FALSE(CreateParser("not")->parse_factor());
   EXPECT_FALSE(CreateParser("program")->parse_factor());
+  EXPECT_FALSE(CreateParser("((1 + 2)")->parse_factor());
+  EXPECT_FALSE(CreateParser("(while)")->parse_factor());
+  EXPECT_FALSE(CreateParser("()")->parse_factor());
+  EXPECT_FALSE(CreateParser("((")->parse_factor());
+  EXPECT_FALSE(CreateParser("")->parse_factor());
 }
 
 TEST_F(ParserTest, ParseSign) {

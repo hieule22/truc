@@ -6,6 +6,10 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+// To print error messages.
+#include <iostream>
+#include <string>
+
 // The parser needs to access token attributes.
 #include "token.h"
 #include "keywordtoken.h"
@@ -18,16 +22,13 @@
 #include "eoftoken.h"
 #include "scanner.h"
 
-// To print error messages.
-#include <iostream>
-
 using namespace std;
 
 class Parser {
  public:
   // Constructs a Parser for a given Scanner.
   explicit Parser(Scanner *the_scanner);
-  
+
   ~Parser();
 
   // Checks if the Scanner output generates a valid TruPL program.
@@ -35,9 +36,8 @@ class Parser {
 
   // Return true if current token is EOF.
   bool done_with_input();
-  
- private:
 
+ private:
   bool parse_decl_list();
 
   // etc, etc...; one for each non-terminal in TruPL 2.0
@@ -51,7 +51,7 @@ class Parser {
   bool parse_identifier_list();
 
   bool parse_identifier_list_prm();
-  
+
   bool parse_standard_type();
 
   bool parse_block();
@@ -67,7 +67,7 @@ class Parser {
   bool parse_stmt_list();
 
   bool parse_stmt_list_prm();
-  
+
   bool parse_stmt();
 
   bool parse_adhoc_as_pc_tail();
@@ -101,19 +101,19 @@ class Parser {
   bool parse_factor();
 
   bool parse_sign();
-  
+
   // The lexical analyzer
   Scanner *lex;
   // The current token the parser is looking at
   Token *word;
-  
+
   /* Print out a parse error message:
 	 
      "Parse error: Expected *expected*, found *found*."
 
      This method should delete the string after it has printed the
      error message. */
-  void parse_error (string *expected, Token *found);
+  void parse_error(string *expected, Token *found);
 
   // Other helper functions that you may define
 
@@ -122,6 +122,7 @@ class Parser {
 
   // Intended for unit tests.
   friend class ParserTest_ParseExpression_Test;
+  friend class ParserTest_ParseTerm_Test;
   friend class ParserTest_ParseFactor_Test;
   friend class ParserTest_ParseSign_Test;
 };
