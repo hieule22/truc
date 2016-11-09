@@ -119,6 +119,10 @@ class Parser {
 
   // Advance the current token.
   void advance();
+
+  friend class ParserTest_ParseExpression_Test;
+  friend class ParserTest_ParseFactor_Test;
+  friend class ParserTest_ParseSign_Test;
 };
 
 #endif

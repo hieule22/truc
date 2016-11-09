@@ -9,47 +9,73 @@
 #include "gtest/gtest.h"
 #include "util/ptr_util.h"
 
-namespace {
-
 class ParserTest : public testing::Test {
  protected:
   // Creates a parser from the given input string.
-  Parser CreateParser(const std::string& input) {
+  std::unique_ptr<Parser> CreateParser(const std::string& input) {
     ss = util::make_unique<std::istringstream>(input);
-    return Parser(new Scanner(new Buffer(ss.get())));
+    return util::make_unique<Parser>(new Scanner(new Buffer(ss.get())));
   }
 
  private:
   std::unique_ptr<std::istringstream> ss;
 };
 
-TEST_F(ParserTest, ParseProgramBasic) {
-  {
-    const std::string program =
-        "program a; "
-        "begin "
-          "print 10; "
-        "end;";
-      
-    Parser parser = CreateParser(program);
-    EXPECT_TRUE(parser.parse_program());
-  }
-
-  {
-    const std::string program =
-      "program a; "
-         "i: int; "
-       "begin "
-         "i := 1; "
-         "while (i <= 100) loop begin "
-           "i := i * 2; "
-         "end; "
-         "print i; "
-       "end;";
-
-    Parser parser = CreateParser(program);
-    EXPECT_TRUE(parser.parse_program());
-  }
+TEST_F(ParserTest, ParseExpression) {
+  EXPECT_TRUE(CreateParser("1")->parse_expr());
+  EXPECT_TRUE(CreateParser("1 * 2")->parse_expr());
+  EXPECT_TRUE(CreateParser("foo")->parse_expr());
+  EXPECT_TRUE(CreateParser("(2 + 3) * a")->parse_expr());
+  EXPECT_TRUE(CreateParser("a = 1")->parse_expr());
+  EXPECT_TRUE(CreateParser("((((((1))))))")->parse_expr());
+  EXPECT_TRUE(CreateParser("-3")->parse_expr());
+  EXPECT_TRUE(CreateParser("-a")->parse_expr());
+  EXPECT_TRUE(CreateParser("+(a + b)")->parse_expr());
+  EXPECT_TRUE(CreateParser("-(a + 1)")->parse_expr());
+  EXPECT_TRUE(CreateParser("not (a = 1)")->parse_expr());
+  EXPECT_TRUE(CreateParser("(not foo and quoz)")->parse_expr());
+  EXPECT_FALSE(CreateParser("+")->parse_expr());
+  EXPECT_FALSE(CreateParser("program")->parse_expr());
+  EXPECT_FALSE(CreateParser("+")->parse_expr());
+  EXPECT_FALSE(CreateParser("(())")->parse_expr());
 }
 
-}  // namespace
+TEST_F(ParserTest, ParseFactor) {
+  EXPECT_TRUE(CreateParser("foo")->parse_factor());
+  EXPECT_TRUE(CreateParser("100")->parse_factor());
+  EXPECT_TRUE(CreateParser("(foo)")->parse_factor());
+  EXPECT_TRUE(CreateParser("(1 + 2)")->parse_factor());
+  EXPECT_TRUE(CreateParser("-(1 + 2)")->parse_factor());
+  EXPECT_TRUE(CreateParser("not (foo and bar)")->parse_factor());
+  EXPECT_FALSE(CreateParser("not")->parse_factor());
+  EXPECT_FALSE(CreateParser("program")->parse_factor());
+}
+
+TEST_F(ParserTest, ParseSign) {
+  EXPECT_TRUE(CreateParser("-")->parse_sign());
+  EXPECT_TRUE(CreateParser("+")->parse_sign());
+  EXPECT_TRUE(CreateParser("not")->parse_sign());
+  EXPECT_FALSE(CreateParser("foo")->parse_sign());
+  EXPECT_FALSE(CreateParser("123")->parse_sign());
+  EXPECT_FALSE(CreateParser("=")->parse_sign());
+  EXPECT_FALSE(CreateParser("")->parse_sign());
+}
+
+TEST_F(ParserTest, ParseProgramBasic) {
+  EXPECT_TRUE(CreateParser(
+      "program a; "
+      "begin "
+        "print 10; "
+      "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program a; "
+        "i: int; "
+      "begin "
+        "i := 1; "
+        "while (i <= 100) loop begin "
+          "i := i * 2; "
+        "end; "
+        "print i; "
+      "end;")->parse_program());
+}
