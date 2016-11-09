@@ -1,3 +1,7 @@
+// Implementation of Parser class.
+// @author Hieu Le
+// @version November 8th, 2016.
+
 #include "parser.h"
 
 #include <string>
@@ -7,7 +11,7 @@ Parser::Parser(Scanner *the_scanner)
   /* Initialize the parser. */
   lex = the_scanner;
   word = lex->next_token();
-  std::cerr << "Parsing: " << *word->to_string() << std::endl;
+  // std::cerr << "Parsing: " << *word->to_string() << std::endl;
 }
 
 Parser::~Parser() 
@@ -38,7 +42,7 @@ void Parser::parse_error(string *expected, Token *found) {
 void Parser::advance() {
   delete word;
   word = lex->next_token();
-  std::cerr << "Parsing: " << *word->to_string() << std::endl;
+  // std::cerr << "Parsing: " << *word->to_string() << std::endl;
 }
 
 namespace {
@@ -86,7 +90,7 @@ inline bool is_number(const Token* token) {
   return token->get_token_type() == TOKEN_NUM;
 }
 
-}
+}  // namespace
 
 bool Parser::parse_program()
 {
@@ -103,8 +107,7 @@ bool Parser::parse_program()
        for getting the next token.
     */
     advance(); 
-    
-
+ 
     // Match identifier, 2nd symbol on RHS
     if (word->get_token_type() == TOKEN_ID) {		
       // ADVANCE
@@ -115,8 +118,7 @@ bool Parser::parse_program()
       if (is_punctuation(word, PUNC_SEMI)) {
         // ADVANCE
         advance(); 
-        
-
+ 
         /* Match DECL_LIST, 4th bymbol on RHS.  This is an ACTION,
            not an advance, so we don't grab another token if we
            succeed.  We are just growing the parse tree at this
@@ -132,8 +134,7 @@ bool Parser::parse_program()
               // ADVANCE
               // Since we advanced, we matched a token so we get the next one.
               advance();
-              
-
+ 
               // Parse_program succeeded.
               return true;
 		
@@ -207,7 +208,7 @@ bool Parser::parse_decl_list()
 bool Parser::parse_variable_decl_list()
 {
   /* VARIABLE_DECL_LIST -> VARIABLE_DECL ; VARIABLE_DECL_LIST     
-     Predict(VARIABLE_DECL ; VARIABLE_DECL_LIST) = First(VARIABLE_DECL)
+     Predict(VARIABLE_DECL ; VARIABLE_DECL_LIST) == First(VARIABLE_DECL)
      == {identifier} */
   if (is_identifier(word)) {
 
@@ -219,9 +220,8 @@ bool Parser::parse_variable_decl_list()
       // Match semicolon(;).
       if (is_punctuation(word, PUNC_SEMI)) {
         
-        // ADVANCE
+        // ADVANCE.
         advance();
-        
 
         // Match VARIABLE_DECL_LIST - ACTION.
 	return parse_variable_decl_list();
@@ -251,13 +251,13 @@ bool Parser::parse_variable_decl_list()
 bool Parser::parse_variable_decl()
 {
   /* VARIABLE_DECL -> IDENTIFIER_LIST : STANDARD_TYPE
-     Predict(IDENTIFIER_LIST : STANDARD_TYPE) = First(IDENTIFIER_LIST)
+     Predict(IDENTIFIER_LIST : STANDARD_TYPE) == First(IDENTIFIER_LIST)
      == {identifier} */
   if (is_identifier(word)) {
 
     std::cerr << "VARIABLE_DECL -> IDENTIFIER_LIST : STANDARD_TYPE" << std::endl;
     
-    // Match IDENTIFIER_LIST
+    // Match IDENTIFIER_LIST - ACTION.
     if (parse_identifier_list()) {
 
       // Match colon(:).
@@ -266,7 +266,7 @@ bool Parser::parse_variable_decl()
         // ADVANCE
         advance();        
 
-        // Match STANDARD_TYPE
+        // Match STANDARD_TYPE - ACTION.
         return parse_standard_type();
 
         // Fail to match colon.
@@ -292,13 +292,13 @@ bool Parser::parse_variable_decl()
 bool Parser::parse_procedure_decl_list()
 {
   /* PROCEDURE_DECL_LIST -> PROCEDURE_DECL ; PROCEDURE_DECL_LIST
-     Predict(PROCEDURE_DECL ; PROCEDURE_DECL_LIST) = First(PROCEDURE_DECL)
+     Predict(PROCEDURE_DECL ; PROCEDURE_DECL_LIST) == First(PROCEDURE_DECL)
      == {procedure} */
   if (is_keyword(word, KW_PROCEDURE)) {
 
     std::cerr << "PROCEDURE_DECL_LIST -> PROCEDURE_DECL ; PROCEDURE_DECL_LIST" << std::endl;
 
-    // Match PROCEDURE_DECL.
+    // Match PROCEDURE_DECL - ACTION.
     if (parse_procedure_decl()) {
 
       // Match semicolon (;).
@@ -307,7 +307,7 @@ bool Parser::parse_procedure_decl_list()
         // ADVANCE.
         advance();  
 
-        // Match PROCEDURE_DECL_LIST.
+        // Match PROCEDURE_DECL_LIST - ACTION.
         return parse_procedure_decl_list();
 
         // Fail to match semicolon.
@@ -343,7 +343,7 @@ bool Parser::parse_identifier_list()
     // ADVANCE.
     advance();
 
-    // Match IDENTIFIER_LIST_PRM.
+    // Match IDENTIFIER_LIST_PRM - ACTION.
     return parse_identifier_list_prm();
 
     // Fail to match an identifier.
@@ -363,13 +363,16 @@ bool Parser::parse_identifier_list_prm()
 
     std::cerr << "IDENTIFIER_LIST_PRM -> , identifier IDENTIFIER_LIST_PRM" << std::endl;
     
-    // ADVANCE
+    // ADVANCE.
     advance();    
 
     // Match an identifier.
     if (is_identifier(word)) {
 
-      // Match IDENTIFIER_LIST_PRM.
+      // ADVANCE.
+      advance();
+
+      // Match IDENTIFIER_LIST_PRM - ACTION.
       return parse_identifier_list_prm();
 
       // Fail to match an identifier.
@@ -411,8 +414,7 @@ bool Parser::parse_standard_type()
     // ADVANCE.
     advance();
     
-    return true;
-    
+    return true;    
   }
 
   return false;
@@ -429,7 +431,7 @@ bool Parser::parse_block()
     // ADVANCE.
     advance();
     
-    // Match STMT_LIST.
+    // Match STMT_LIST - ACTION.
     if (parse_stmt_list()) {
 
       // Match keyword end.
@@ -485,7 +487,7 @@ bool Parser::parse_procedure_decl()
         // ADVANCE.
         advance();
 
-        // Match PROCEDURE_ARGS.
+        // Match PROCEDURE_ARGS - ACTION.
         if (parse_procedure_args()) {
 
           // Match a closing bracket.
@@ -494,7 +496,7 @@ bool Parser::parse_procedure_decl()
             // ADVANCE.
             advance();
 
-            // Match VARIABLE_DECL_LIST and BLOCK.
+            // Match VARIABLE_DECL_LIST and BLOCK - ACTION.
             return parse_variable_decl_list() && parse_block();
 
             // Fail to match a closing bracket.
@@ -532,17 +534,16 @@ bool Parser::parse_procedure_decl()
 bool Parser::parse_procedure_args()
 {
   /* PROCEDURE_ARGS -> FORMAL_PARM_LIST
-     Predict(FORMAL_PARM_LIST) = First(FORMAL_PARM_LIST) = {identifier} */
+     Predict(FORMAL_PARM_LIST) == First(FORMAL_PARM_LIST) == {identifier} */
   if (is_identifier(word)) {
 
     std::cerr << "PROCEDURE_ARGS -> FORMAL_PARM_LIST" << std::endl;
 
-    // Match FORMAL_PARM_LIST.
+    // Match FORMAL_PARM_LIST - ACTION.
     return parse_formal_parm_list();
 
     /* PROCEDURE_ARGS -> lambda */
   } else {
-
     std::cerr << "PROCEDURE_ARGS -> lambda" << std::endl;
     return true;
   }
@@ -563,7 +564,7 @@ bool Parser::parse_formal_parm_list()
     // ADVANCE.
     advance();
 
-    // Match IDENTIFIER_LIST_PRM.
+    // Match IDENTIFIER_LIST_PRM - ACTION.
     if (parse_identifier_list_prm()) {
 
       // Match colon(:).
@@ -572,7 +573,7 @@ bool Parser::parse_formal_parm_list()
         // ADVANCE.
         advance();
 
-        // Match STANDARD_TYPE and FORMAL_PARM_LIST_HAT.
+        // Match STANDARD_TYPE and FORMAL_PARM_LIST_HAT - ACTION.
         return parse_standard_type() && parse_formal_parm_list_hat();
 
         // Fail to match colon.
@@ -581,7 +582,7 @@ bool Parser::parse_formal_parm_list()
         return false;
       }
 
-      // Fail to match IDENTIFIER_LIST_PRM
+      // Fail to match IDENTIFIER_LIST_PRM.
     } else {
       return false;
     }
@@ -611,9 +612,7 @@ bool Parser::parse_formal_parm_list_hat()
 
     /* FORMAL_PARM_LIST_HAT = lambda */
   } else {
-
     std::cerr << "FORMAL_PARM_LIST_HAT -> lambda" << std::endl;
-    
     return true;
   }
 
@@ -631,7 +630,7 @@ bool Parser::parse_stmt_list()
 
     std::cerr << "STM_LIST -> STMT ; STMT_LIST_PRM" << std::endl;
 
-    // Match STMT
+    // Match STMT - ACTION.
     if (parse_stmt()) {
     
       // Match a semicolon(;).
@@ -640,7 +639,7 @@ bool Parser::parse_stmt_list()
         // ADVANCE.
         advance();
       
-        // Match STMT_LIST_PRM.
+        // Match STMT_LIST_PRM - ACTION.
         return parse_stmt_list_prm();
 
         // Fail to match a semicolon.
@@ -661,9 +660,8 @@ bool Parser::parse_stmt_list()
     // ADVANCE.
     advance();
 
-    // Match STMT_LIST_PRM.
-    return parse_stmt_list_prm();
-    
+    // Match STMT_LIST_PRM - ACTION.
+    return parse_stmt_list_prm();    
   }
 
   return false;
@@ -681,7 +679,7 @@ bool Parser::parse_stmt_list_prm()
 
     std::cerr << "STMT_LIST_PRM -> STMT ; STMT_LIST_PRM" << std::endl;
 
-    // Match STMT.
+    // Match STMT - ACTION.
     if (parse_stmt()) {
 
       // Match semicolon(;).
@@ -690,7 +688,7 @@ bool Parser::parse_stmt_list_prm()
         // ADVANCE.
         advance();
 
-        // Match STMT_LIST_PRM.
+        // Match STMT_LIST_PRM - ACTION.
         return parse_stmt_list_prm();
 
         // Fail to match semicolon.
@@ -706,7 +704,6 @@ bool Parser::parse_stmt_list_prm()
 
     /* STMT_LIST_PRM -> lambda */
   } else {
-
     std::cerr << "STMT_LIST_PRM -> lambda" << std::endl;
     
     return true;
@@ -723,7 +720,7 @@ bool Parser::parse_stmt()
 
     std::cerr << "STMT -> IF_STMT" << std::endl;
 
-    // Match IF_STMT.
+    // Match IF_STMT - ACTION.
     return parse_if_stmt();
 
     /* STMT -> WHILE_STMT
@@ -732,7 +729,7 @@ bool Parser::parse_stmt()
 
     std::cerr << "STMT -> WHILE_STMT" << std::endl;
 
-    // Match WHILE_STMT.
+    // Match WHILE_STMT - ACTION.
     return parse_while_stmt();
 
     /* STMT -> PRINT_STMT
@@ -741,7 +738,7 @@ bool Parser::parse_stmt()
 
     std::cerr << "STMT -> PRINT_STMT" << std::endl;
     
-    // Match PRINT_STMT.
+    // Match PRINT_STMT - ACTION.
     return parse_print_stmt();
 
     /* STMT -> identifier ADHOC_AS_PC_TAIL
@@ -753,9 +750,8 @@ bool Parser::parse_stmt()
     // ADVANCE
     advance();
 
-    // Match ADHOC_AS_PC_TAIL.
-    return parse_adhoc_as_pc_tail();
-    
+    // Match ADHOC_AS_PC_TAIL - ACTION.
+    return parse_adhoc_as_pc_tail();    
   }
 
   return false;

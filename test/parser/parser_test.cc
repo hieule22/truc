@@ -78,4 +78,43 @@ TEST_F(ParserTest, ParseProgramBasic) {
         "end; "
         "print i; "
       "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program a; "
+        "a, b: int; "
+      "begin "
+        "a := 2; "
+        "b := 3; "
+      "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program a; "
+        "a, b: int; "
+      "begin "
+        "if (a < b) then begin "
+          "print a; "
+        "end "
+        "else begin "
+          "print b; "
+        "end; "
+      "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program looper; "
+        "a: int; "
+        "b: bool; "
+      "begin "
+        "a := 0; "
+        "b := 0 = 0; "
+        "while b loop begin "
+           "if a <= 2 then begin "
+             "a := (a + 1) * 3; "
+           "end "
+           "else begin "
+             "a := (a - 1) * 2; "
+           "end; "
+           "b := a > 1; "
+           "print a; "
+         "end; "
+      "end;")->parse_program());
 }
