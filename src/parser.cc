@@ -687,6 +687,9 @@ bool Parser::parse_stmt_list_prm()
       // Match semicolon(;).
       if (is_punctuation(word, PUNC_SEMI)) {
 
+        // ADVANCE.
+        advance();
+
         // Match STMT_LIST_PRM.
         return parse_stmt_list_prm();
 

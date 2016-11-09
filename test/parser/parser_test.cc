@@ -35,7 +35,6 @@ TEST_F(ParserTest, ParseProgramBasic) {
     EXPECT_TRUE(parser.parse_program());
   }
 
-  // TODO(hieule): Fix failing tests.
   {
     const std::string program =
       "program a; "
