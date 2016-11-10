@@ -108,3 +108,9 @@ cc_binary(
   srcs = ["test_scanner.cc"],
   deps = [":scanner"],
 )
+
+cc_binary(
+  name = "truc",
+  srcs = ["truc.cc"],
+  deps = [":parser"],
+)

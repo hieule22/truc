@@ -54,6 +54,17 @@ test_scanner:	test_scanner.o scanner.o buffer.o token.o keywordtoken.o \
 		addoptoken.o reloptoken.o punctoken.o keywordtoken.o \
 		token.o test_scanner.o
 
+truc.o:	truc.cc parser.h scanner.h token.h keywordtoken.h punctoken.h \
+	reloptoken.h addoptoken.h muloptoken.h idtoken.h numtoken.h eoftoken.h
+	g++ -c $(CFLAGS) truc.cc
+
+truc:	truc.o parser.o scanner.o buffer.o token.o keywordtoken.o \
+	punctoken.o reloptoken.o addoptoken.o muloptoken.o idtoken.o \
+	numtoken.o eoftoken.o
+	g++ -o truc $(CFLAGS) truc.o parser.o scanner.o buffer.o eoftoken.o \
+	numtoken.o idtoken.o muloptoken.o addoptoken.o reloptoken.o \
+	punctoken.o keywordtoken.o token.o
+
 # A dependancy-less rule.  Always executes target when invoked.
 clean:	
 	rm *.o
@@ -62,4 +73,4 @@ clean:
 # in the dependency list.  
 all:	token.o keywordtoken.o punctoken.o reloptoken.o addoptoken.o \
 	muloptoken.o idtoken.o numtoken.o eoftoken.o \
-	buffer.o scanner.o test_scanner.o test_scanner
+	buffer.o scanner.o parser.o test_scanner.o test_scanner truc.o truc
