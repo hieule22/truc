@@ -12,21 +12,26 @@ a more updated version of the same compiler.
 The source package can be built using [Bazel](http://bazel.io) or GNU-compatible
 Make.
 
-* Obtain a local clone of the repository.
+* Obtain a local clone of the repository:
 
 ```bash
 git clone https://github.com/hieule22/cs420.git
 ```
 
-* Build the executable binary.
+* Build the executable binary:
 
-```bash
-cd cs420/src
-make truc
-```
+   * GNU Make: `cd src/ && make truc`
 
-* Supply the compiler with a full path to the targeted source file.
+   * Bazel: `bazel build src:truc`
 
-```bash
-./truc path/to/source.trupl
-```
+* Supply the compiler with a full path to the targeted source file:
+
+   * GNU Make: `src/truc path/to/source.trupl`
+
+   * Bazel: `bazel-bin/src/truc path/to/source.trupl`
+
+* Execute unit tests:
+
+   * GNU Make: `cd test/ && make all`
+
+   * Bazel: `cd test/ && bazel test parser:all scanner:all tokens:all`
