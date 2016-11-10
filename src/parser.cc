@@ -6,12 +6,17 @@
 
 #include <string>
 
+// Log a message to console for debugging.
+#define DEBUGMODE 1
+#define LOG(output) \
+  if (DEBUGMODE) std::cerr << output << std::endl
+
 Parser::Parser(Scanner *the_scanner) 
 {
   /* Initialize the parser. */
   lex = the_scanner;
   word = lex->next_token();
-  // std::cerr << "Parsing: " << *word->to_string() << std::endl;
+  LOG("Parsing: " << *word->to_string());
 }
 
 Parser::~Parser() 
@@ -35,14 +40,14 @@ bool Parser::done_with_input()
 
 void Parser::parse_error(string *expected, Token *found) {
   std::cerr << "Parse error: Expected: " << *expected <<
-      ", found  " << *found->to_string() << std::endl;
+      ", Found:  " << *found->to_string() << std::endl;
   delete expected;
 }
 
 void Parser::advance() {
   delete word;
   word = lex->next_token();
-  // std::cerr << "Parsing: " << *word->to_string() << std::endl;
+  LOG("Parsing: " << *word->to_string());
 }
 
 namespace {
@@ -99,8 +104,7 @@ bool Parser::parse_program()
 
   // Match keyword program, first symbol on RHS
   if (is_keyword(word, KW_PROGRAM)) {
-
-    std::cerr << "PROGRAM -> program identifier ; DECL_LIST BLOCK ;" << std::endl;
+    LOG("PROGRAM -> program identifier ; DECL_LIST BLOCK ;");
 
     /* ADVANCE - Notice that we only delete a token on an ADVANCE,
        and, if we ADVANCE, it is the ADVANCE code that is responsible
@@ -200,7 +204,7 @@ bool Parser::parse_decl_list()
      In addition, we take advantage of C++'s short circuit
      evaluation of Boolean expressions. */
 
-  std::cerr << "DECL_LIST -> VARIABLE_DECL_LIST PROCEDURE_DECL_LIST" << std::endl;
+  LOG("DECL_LIST -> VARIABLE_DECL_LIST PROCEDURE_DECL_LIST");
   
   return parse_variable_decl_list() && parse_procedure_decl_list();
 }
@@ -211,8 +215,7 @@ bool Parser::parse_variable_decl_list()
      Predict(VARIABLE_DECL ; VARIABLE_DECL_LIST) == First(VARIABLE_DECL)
      == {identifier} */
   if (is_identifier(word)) {
-
-    std::cerr << "VARIABLE_DECL_LIST -> VARIABLE_DECL ; VARIABLE_DECL_LIST" << std::endl;
+    LOG("VARIABLE_DECL_LIST -> VARIABLE_DECL ; VARIABLE_DECL_LIST");
 
     // Match VARIABLE_DECL - ACTION.
     if (parse_variable_decl()) {
@@ -239,7 +242,7 @@ bool Parser::parse_variable_decl_list()
 
     /* VARIABLE_DECL_LIST -> lambda */
   } else {
-    std::cerr << "VARIABLE_DECL_LIST -> lambda" << std::endl;
+    LOG("VARIABLE_DECL_LIST -> lambda");
     return true;
   }
 
@@ -252,8 +255,7 @@ bool Parser::parse_variable_decl()
      Predict(IDENTIFIER_LIST : STANDARD_TYPE) == First(IDENTIFIER_LIST)
      == {identifier} */
   if (is_identifier(word)) {
-
-    std::cerr << "VARIABLE_DECL -> IDENTIFIER_LIST : STANDARD_TYPE" << std::endl;
+    LOG("VARIABLE_DECL -> IDENTIFIER_LIST : STANDARD_TYPE");
     
     // Match IDENTIFIER_LIST - ACTION.
     if (parse_identifier_list()) {
@@ -293,8 +295,7 @@ bool Parser::parse_procedure_decl_list()
      Predict(PROCEDURE_DECL ; PROCEDURE_DECL_LIST) == First(PROCEDURE_DECL)
      == {procedure} */
   if (is_keyword(word, KW_PROCEDURE)) {
-
-    std::cerr << "PROCEDURE_DECL_LIST -> PROCEDURE_DECL ; PROCEDURE_DECL_LIST" << std::endl;
+    LOG("PROCEDURE_DECL_LIST -> PROCEDURE_DECL ; PROCEDURE_DECL_LIST");
 
     // Match PROCEDURE_DECL - ACTION.
     if (parse_procedure_decl()) {
@@ -321,7 +322,7 @@ bool Parser::parse_procedure_decl_list()
 
     /* PROCEDURE_DECL_LIST -> lambda */
   } else {
-    std::cerr << "PROCEDURE_DECL_LIST -> lambda" << std::endl;
+    LOG("PROCEDURE_DECL_LIST -> lambda");
     return true;
   }
 
@@ -333,8 +334,7 @@ bool Parser::parse_identifier_list()
   /* IDENTIFIER_LIST -> identifier IDENTIFIER_LIST_PRM
      Predict(identifier IDENTIFIER_LIST_PRM) == {identifier} */
   if (is_identifier(word)) {
-
-    std::cerr << "IDENTIFIER_LIST -> identifier IDENTIFIER_LIST_PRM" << std::endl;
+    LOG("IDENTIFIER_LIST -> identifier IDENTIFIER_LIST_PRM");
 
     // ADVANCE.
     advance();
@@ -356,8 +356,7 @@ bool Parser::parse_identifier_list_prm()
   /* IDENTIFIER_LIST_PRM = , identifier IDENTIFIER_LIST_PRM
      Predict(, identifier IDENTIFIER_LIST_PRM) == {,} */
   if (is_punctuation(word, PUNC_COMMA)) {
-
-    std::cerr << "IDENTIFIER_LIST_PRM -> , identifier IDENTIFIER_LIST_PRM" << std::endl;
+    LOG("IDENTIFIER_LIST_PRM -> , identifier IDENTIFIER_LIST_PRM");
     
     // ADVANCE.
     advance();    
@@ -379,7 +378,7 @@ bool Parser::parse_identifier_list_prm()
 
     /* IDENTIFIER_LIST_PRM = lambda */
   } else {
-    std::cerr << "IDENTIFIER_LIST_PRM -> lambda" << std::endl;
+    LOG("IDENTIFIER_LIST_PRM -> lambda");
     return true;
   }
   
@@ -391,8 +390,7 @@ bool Parser::parse_standard_type()
   /* STANDARD_TYPE -> int
      Predict(int) = {int} */
   if (is_keyword(word, KW_INT)) {
-
-    std::cerr << "STANDARD_TYPE -> int"  << std::endl;
+    LOG("STANDARD_TYPE -> int");
     
     // ADVANCE.
     advance();
@@ -402,8 +400,7 @@ bool Parser::parse_standard_type()
     /* STANDARD_TYPE -> bool       
        Predict(bool) = {bool} */ 
   } else if (is_keyword(word, KW_BOOL)) {
-
-    std::cerr << "STANDARD_TYPE -> bool" << std::endl;
+    LOG("STANDARD_TYPE -> bool");
     
     // ADVANCE.
     advance();
@@ -419,8 +416,7 @@ bool Parser::parse_block()
   /* BLOCK -> begin STMT_LIST end
      Predict(begin STMT_LIST end) = {begin} */
   if (is_keyword(word, KW_BEGIN)) {
-
-    std::cerr << "BLOCK -> begin STMT_LIST end" << std::endl;
+    LOG("BLOCK -> begin STMT_LIST end");
     
     // ADVANCE.
     advance();
@@ -462,9 +458,8 @@ bool Parser::parse_procedure_decl()
      procedure identifier ( PROCEDURE_ARGS ) VARIABLE_DECL_LIST BLOCK
      Predict(PROCEDURE_DECL) == {procedure} */
   if (is_keyword(word, KW_PROCEDURE)) {
-
-    std::cerr << "PROCEDURE_DECL -> procedure identifier ( PROCEDURE_ARGS ) "
-        "VARIABLE_DECL_LIST BLOCK" << std::endl;
+    LOG("PROCEDURE_DECL -> procedure identifier ( PROCEDURE_ARGS ) "
+        "VARIABLE_DECL_LIST BLOCK");
 
     // ADVANCE.
     advance();
@@ -530,15 +525,14 @@ bool Parser::parse_procedure_args()
   /* PROCEDURE_ARGS -> FORMAL_PARM_LIST
      Predict(FORMAL_PARM_LIST) == First(FORMAL_PARM_LIST) == {identifier} */
   if (is_identifier(word)) {
-
-    std::cerr << "PROCEDURE_ARGS -> FORMAL_PARM_LIST" << std::endl;
+    LOG("PROCEDURE_ARGS -> FORMAL_PARM_LIST");
 
     // Match FORMAL_PARM_LIST - ACTION.
     return parse_formal_parm_list();
 
     /* PROCEDURE_ARGS -> lambda */
   } else {
-    std::cerr << "PROCEDURE_ARGS -> lambda" << std::endl;
+    LOG("PROCEDURE_ARGS -> lambda");
     return true;
   }
 
@@ -551,9 +545,8 @@ bool Parser::parse_formal_parm_list()
      identifier IDENTIFIER_LIST_PRM : STANDARD_TYPE FORMAL_PARM_LIST_HAT
      Predict(...) = {identifier} */
   if (is_identifier(word)) {
-
-    std::cerr << "FORMAL_PARM_LIST -> identifier IDENTIFIER_LIST_PRM : "
-        "STANDARD_TYPE FORMAL_PARM_LIST_HAT" << std::endl;
+    LOG("FORMAL_PARM_LIST -> identifier IDENTIFIER_LIST_PRM : "
+        "STANDARD_TYPE FORMAL_PARM_LIST_HAT");
 
     // ADVANCE.
     advance();
@@ -595,8 +588,7 @@ bool Parser::parse_formal_parm_list_hat()
   /* FORMAL_PARM_LIST_HAT -> ; FORMAL_PARM_LIST
      Predict(; FORMAL_PARM_LIST) == {;} */
   if (is_punctuation(word, PUNC_SEMI)) {
-
-    std::cerr << "FORMAL_PARM_LIST_HAT -> ; FORMAL_PARM_LIST" << std::endl;
+    LOG("FORMAL_PARM_LIST_HAT -> ; FORMAL_PARM_LIST");
 
     // ADVANCE.
     advance();
@@ -606,7 +598,7 @@ bool Parser::parse_formal_parm_list_hat()
 
     /* FORMAL_PARM_LIST_HAT = lambda */
   } else {
-    std::cerr << "FORMAL_PARM_LIST_HAT -> lambda" << std::endl;
+    LOG("FORMAL_PARM_LIST_HAT -> lambda");
     return true;
   }
 
@@ -621,8 +613,7 @@ bool Parser::parse_stmt_list()
       || is_keyword(word, KW_IF)
       || is_keyword(word, KW_WHILE)
       || is_keyword(word, KW_PRINT)) {
-
-    std::cerr << "STM_LIST -> STMT ; STMT_LIST_PRM" << std::endl;
+    LOG("STM_LIST -> STMT ; STMT_LIST_PRM");
 
     // Match STMT - ACTION.
     if (parse_stmt()) {
@@ -650,7 +641,8 @@ bool Parser::parse_stmt_list()
     /* STMT_LIST -> ; STMT_LIST_PRM
        Predict(; STMT_LIST_PRM) == {;} */
   } else if (is_punctuation(word, PUNC_SEMI)) {
-
+    LOG("STMT_LIST -> ; STMT_LIST_PRM");
+    
     // ADVANCE.
     advance();
 
@@ -670,8 +662,7 @@ bool Parser::parse_stmt_list_prm()
       || is_keyword(word, KW_IF)
       || is_keyword(word, KW_WHILE)
       || is_keyword(word, KW_PRINT)) {
-
-    std::cerr << "STMT_LIST_PRM -> STMT ; STMT_LIST_PRM" << std::endl;
+    LOG("STMT_LIST_PRM -> STMT ; STMT_LIST_PRM");
 
     // Match STMT - ACTION.
     if (parse_stmt()) {
@@ -698,7 +689,7 @@ bool Parser::parse_stmt_list_prm()
 
     /* STMT_LIST_PRM -> lambda */
   } else {
-    std::cerr << "STMT_LIST_PRM -> lambda" << std::endl;
+    LOG("STMT_LIST_PRM -> lambda");
     return true;
   }
   
@@ -710,8 +701,7 @@ bool Parser::parse_stmt()
   /* STMT -> IF_STMT
      Predict(IF_STMT) == First(IF_STMT) == {if} */
   if (is_keyword(word, KW_IF)) {
-
-    std::cerr << "STMT -> IF_STMT" << std::endl;
+    LOG("STMT -> IF_STMT");
 
     // Match IF_STMT - ACTION.
     return parse_if_stmt();
@@ -719,8 +709,7 @@ bool Parser::parse_stmt()
     /* STMT -> WHILE_STMT
        Predict(WHILE_STMT) = First(WHILE_STMT) = {while} */
   } else if (is_keyword(word, KW_WHILE)) {
-
-    std::cerr << "STMT -> WHILE_STMT" << std::endl;
+    LOG("STMT -> WHILE_STMT");
 
     // Match WHILE_STMT - ACTION.
     return parse_while_stmt();
@@ -728,8 +717,7 @@ bool Parser::parse_stmt()
     /* STMT -> PRINT_STMT
        Predict(PRINT_STMT) = First(PRINT_STMT) = {print} */
   } else if (is_keyword(word, KW_PRINT)) {
-
-    std::cerr << "STMT -> PRINT_STMT" << std::endl;
+    LOG("STMT -> PRINT_STMT");
     
     // Match PRINT_STMT - ACTION.
     return parse_print_stmt();
@@ -737,8 +725,7 @@ bool Parser::parse_stmt()
     /* STMT -> identifier ADHOC_AS_PC_TAIL
        Predict(identifier ADHOC_AS_PC_TAIL) = {identifier} */
   } else if (is_identifier(word)) {
-
-    std::cerr << "STMT -> identifier ADHOC_AS_PC_TAIL" << std::endl;
+    LOG("STMT -> identifier ADHOC_AS_PC_TAIL");
 
     // ADVANCE.
     advance();
@@ -755,8 +742,7 @@ bool Parser::parse_adhoc_as_pc_tail()
   /* ADHOC_AS_PC_TAIL -> := EXPR
      Predict(:= EXPR) == {:=} */
   if (is_punctuation(word, PUNC_ASSIGN)) {
-
-    std::cerr << "ADHOC_AS_PC_TAIL -> := EXPR" << std::endl;
+    LOG("ADHOC_AS_PC_TAIL -> := EXPR");
 
     // ADVANCE.
     advance();
@@ -767,8 +753,7 @@ bool Parser::parse_adhoc_as_pc_tail()
     /* ADHOC_AS_PC_TAIL -> ( EXPR_LIST )
        Predict( ( EXPR_LIST ) ) = { ( } */
   } else if (is_punctuation(word, PUNC_OPEN)) {
-
-    std::cerr << "ADHOC_AS_PC_TAIL -> ( EXPR_LIST )" << std::endl;
+    LOG("ADHOC_AS_PC_TAIL -> ( EXPR_LIST )");
 
     // ADVANCE.
     advance();
@@ -804,8 +789,7 @@ bool Parser::parse_if_stmt()
   /* IF_STMT -> if EXPR then BLOCK IF_STMT_HAT
      Predict(...) = {if} */
   if (is_keyword(word, KW_IF)) {
-
-    std::cerr << "IF_STMT -> if EXPR then BLOCK IF_STMT_HAT" << std::endl;
+    LOG("IF_STMT -> if EXPR then BLOCK IF_STMT_HAT");
 
     // ADVANCE.
     advance();
@@ -847,8 +831,7 @@ bool Parser::parse_if_stmt_hat()
   /* IF_STMT_HAT -> else BLOCK
      Predict(else BLOCK) == {else} */
   if (is_keyword(word, KW_ELSE)) {
-
-    std::cerr << "IF_STMT_HAT -> else BLOCK" << std::endl;
+    LOG("IF_STMT_HAT -> else BLOCK");
 
     // ADVANCE.
     advance();
@@ -858,7 +841,7 @@ bool Parser::parse_if_stmt_hat()
 
     /* IF_STMT_HAT -> lambda */
   } else {
-    std::cerr << "IF_STMT_HAT -> lambda" << std::endl;
+    LOG("IF_STMT_HAT -> lambda");
     return true;
   }
 
@@ -870,8 +853,7 @@ bool Parser::parse_while_stmt()
   /* WHILE_STMT -> while EXPR loop BLOCK
      Predict(while EXPR loop BLOCK) = {while} */
   if (is_keyword(word, KW_WHILE)) {
-
-    std::cerr << "WHILE_STMT -> while EXPR loop BLOCK" << std::endl;
+    LOG("WHILE_STMT -> while EXPR loop BLOCK");
 
     // ADVANCE.
     advance();
@@ -913,8 +895,7 @@ bool Parser::parse_print_stmt()
   /* PRINT_STMT -> print EXPR
      Predict(print EXPR) == {print} */
   if (is_keyword(word, KW_PRINT)) {
-
-    std::cerr << "PRINT -> print EXPR" << std::endl;
+    LOG("PRINT -> print EXPR");
 
     // ADVANCE.
     advance();
@@ -942,15 +923,14 @@ bool Parser::parse_expr_list()
       || is_addop(word, ADDOP_ADD)
       || is_addop(word, ADDOP_SUB)
       || is_keyword(word, KW_NOT)) {
-
-    std::cerr << "EXPR_LIST -> ACTUAL_PARM_LIST" << std::endl;
+    LOG("EXPR_LIST -> ACTUAL_PARM_LIST");
 
     // Match ACTUAL_PARM_LIST - ACTION.
     return parse_actual_parm_list();
 
     /* EXPR_LIST -> lambda */
   } else {
-    std::cerr << "EXPR_LIST -> lambda" << std::endl;
+    LOG("EXPR_LIST -> lambda");
     return true;
   }
 
@@ -958,11 +938,10 @@ bool Parser::parse_expr_list()
 }
 
 bool Parser::parse_actual_parm_list()
-{
-
-  std::cerr << "ACTUAL_PARM_LIST -> EXPR ACTUAL_PARM_LIST_HAT" << std::endl;
-  
+{ 
   /* ACTUAL_PARM_LIST -> EXPR ACTUAL_PARM_LIST_HAT */
+  LOG("ACTUAL_PARM_LIST -> EXPR ACTUAL_PARM_LIST_HAT");
+  
   // Match EXPR and ACTUAL_PARM_LIST_HAT - ACTION.
   return parse_expr() && parse_actual_parm_list_hat();
 }
@@ -972,8 +951,7 @@ bool Parser::parse_actual_parm_list_hat()
   /* ACTUAL_PARM_LIST_HAT -> , ACTUAL_PARM_LIST
      Predict(, ACTUAL_PARM_LIST) == {,} */
   if (is_punctuation(word, PUNC_COMMA)) {
-
-    std::cerr << "ACTUAL_PARM_LIST_HAT -> , ACTUAL_PARM_LIST" << std::endl;
+    LOG("ACTUAL_PARM_LIST_HAT -> , ACTUAL_PARM_LIST");
 
     // ADVANCE.
     advance();
@@ -983,7 +961,7 @@ bool Parser::parse_actual_parm_list_hat()
 
     /* ACTUAL_PARM_LIST_HAT -> lambda */
   } else {
-    std::cerr << "ACTUAL_PARM_LIST_HAT -> lambda" << std::endl;
+    LOG("ACTUAL_PARM_LIST_HAT -> lambda");
     return true;
   }
 
@@ -993,8 +971,7 @@ bool Parser::parse_actual_parm_list_hat()
 bool Parser::parse_expr()
 {
   /* EXPR -> SIMPLE_EXPR EXPR_HAT */
-
-  std::cerr << "EXPR -> SIMPLE_EXPR EXPR_HAT" << std::endl;
+  LOG("EXPR -> SIMPLE_EXPR EXPR_HAT");
 
   // Match SIMPLE_EXPR and EXPR_HAT - ACTION.
   return parse_simple_expr() && parse_expr_hat();
@@ -1005,8 +982,7 @@ bool Parser::parse_expr_hat()
   /* EXPR_HAT -> relop SIMPLE_EXPR
      Predict(relop SIMPLE_EXPR) = {relop} */
   if (is_relop(word)) {
-
-    std::cerr << "EXPR_HAT -> relop SIMPLE_EXPR" << std::endl;
+    LOG("EXPR_HAT -> relop SIMPLE_EXPR");
     
     // ADVANCE.
     advance();
@@ -1016,7 +992,7 @@ bool Parser::parse_expr_hat()
 
     /* EXPR_HAT -> lambda */
   } else {
-    std::cerr << "EXPR_HAT -> lambda" << std::endl;
+    LOG("EXPR_HAT -> lambda");
     return true;
   }
 
@@ -1024,10 +1000,10 @@ bool Parser::parse_expr_hat()
 }
 
 bool Parser::parse_simple_expr()
-{
-  std::cerr << "SIMPLE_EXPR -> TERM SIMPLE_EXPR_PRM" << std::endl;
-  
+{  
   /* SIMPLE_EXPR -> TERM SIMPLE_EXPR_PRM */
+  LOG("SIMPLE_EXPR -> TERM SIMPLE_EXPR_PRM");
+    
   // Match TERM and SIMPLE_EXPR_PRM - ACTION.
   return parse_term() && parse_simple_expr_prm();
 }
@@ -1037,8 +1013,7 @@ bool Parser::parse_simple_expr_prm()
   /* SIMPLE_EXPR_PRM -> addop TERM SIMPLE_EXPR_PRM
      Predict(addop TERM SIMPLE_EXPR_PRM) == {addop} */
   if (is_addop(word)) {
-
-    std::cerr << "SIMPLE_EXPR_PRM -> addop TERM SIMPLE_EXPR_PRM" << std::endl;
+    LOG("SIMPLE_EXPR_PRM -> addop TERM SIMPLE_EXPR_PRM");
     
     // ADVANCE.
     advance();
@@ -1048,7 +1023,7 @@ bool Parser::parse_simple_expr_prm()
 
     /* SIMPLE_EXPR_PRM -> lambda */
   } else {
-    std::cerr << "SIMPLE_EXPR_PRM -> lambda" << std::endl;
+    LOG("SIMPLE_EXPR_PRM -> lambda");
     return true;
   }
 
@@ -1057,8 +1032,9 @@ bool Parser::parse_simple_expr_prm()
 
 bool Parser::parse_term()
 {
-  std::cerr << "TERM -> FACTOR TERM_PRM" << std::endl;
   /* TERM -> FACTOR TERM_PRM */
+  LOG("TERM -> FACTOR TERM_PRM");
+  
   // Match FACTOR and TERM_PRM - ACTION.
   return parse_factor() && parse_term_prm();
 }
@@ -1068,8 +1044,7 @@ bool Parser::parse_term_prm()
   /* TERM_PRM -> mulop FACTOR TERM_PRM
      Predict(mulop FACTOR TERM_PRM) = {mulop} */
   if (is_mulop(word)) {
-
-    std::cerr << "TERM_PRM -> mulop FACTOR TERM_PRM" << std::endl;
+    LOG("TERM_PRM -> mulop FACTOR TERM_PRM");
 
     // ADVANCE.
     advance();
@@ -1079,7 +1054,7 @@ bool Parser::parse_term_prm()
 
     /* TERM_PRM -> lambda */
   } else {
-    std::cerr << "TERM_PRM -> lambda" << std::endl;
+    LOG("TERM_PRM -> lambda");
     return true;
   }
 
@@ -1091,8 +1066,7 @@ bool Parser::parse_factor()
   /* FACTOR -> identifier
      Predict(identifier) = {identifier} */
   if (is_identifier(word)) {
-
-    std::cerr << "FACTOR -> identifier" << std::endl;
+    LOG("FACTOR -> identifier");
 
     // ADVANCE.
     advance();
@@ -1102,8 +1076,7 @@ bool Parser::parse_factor()
     /* FACTOR -> num
        Predict(num) = {num} */
   } else if (is_number(word)) {
-
-    std::cerr << "FACTOR -> number" << std::endl;
+    LOG("FACTOR -> number");
 
     // ADVANCE.
     advance();
@@ -1113,8 +1086,7 @@ bool Parser::parse_factor()
     /* FACTOR -> ( EXPR )
        Predict( ( EXPR ) ) == { ( } */
   } else if (is_punctuation(word, PUNC_OPEN)) {
-
-    std::cerr << "FACTOR -> ( EXPR )" << std::endl;
+    LOG("FACTOR -> ( EXPR )");
 
     // ADVANCE.
     advance();
@@ -1146,8 +1118,7 @@ bool Parser::parse_factor()
   } else if (is_addop(word, ADDOP_ADD)
              || is_addop(word, ADDOP_SUB)
              || is_keyword(word, KW_NOT)) {
-
-    std::cerr << "FACTOR -> SIGN FACTOR" << std::endl;
+    LOG("FACTOR -> SIGN FACTOR");
 
     // Match SIGN and FACTOR.
     return parse_sign() && parse_factor();
@@ -1161,8 +1132,7 @@ bool Parser::parse_sign()
   /* SIGN -> +
      Predict(SIGN) == {+} */
   if (is_addop(word, ADDOP_ADD)) {
-
-    std::cerr << "SIGN -> +" << std::endl;
+    LOG("SIGN -> +");
 
     // ADVANCE.
     advance();
@@ -1172,8 +1142,7 @@ bool Parser::parse_sign()
     /* SIGN -> -
        Predict(-) == {-) */
   } else if (is_addop(word, ADDOP_SUB)) {
-
-    std::cerr << "SIGN -> -" << std::endl;
+    LOG("SIGN -> -");
 
     // ADVANCE.
     advance();
@@ -1183,8 +1152,7 @@ bool Parser::parse_sign()
     /* SIGN -> not
        Predict(not) == {not} */
   } else if (is_keyword(word, KW_NOT)) {
-
-    std::cerr << "SIGN -> not" << std::endl;
+    LOG("SIGN -> not");
 
     // ADVANCE.
     advance();
