@@ -36,6 +36,9 @@ scanner.o:	scanner.h scanner.cc buffer.h token.h keywordtoken.h \
 		idtoken.h numtoken.h eoftoken.h
 	g++ -c $(CFLAGS) scanner.cc
 
+symbol_table.o:	symbol_table.h symbol_table.cc
+	g++ -c $(CFLAGS) symbol_table.cc
+
 parser.o:	parser.h parser.cc scanner.h token.h keywordtoken.h \
 		punctoken.h reloptoken.h addoptoken.h muloptoken.h \
 		idtoken.h numtoken.h eoftoken.h

@@ -1,18 +1,15 @@
+// Implementation of symbol table.
+// @author Hieu Le
+// @version 11/11/2016
+
 #include "symbol_table.h"
 
-Symbol_Table::Symbol_Table()
-{
-}
+Symbol_Table::Symbol_Table() {}
 
+Symbol_Table::~Symbol_Table() {}
 
-Symbol_Table::~Symbol_Table()
-{
-}
-
-
-void Symbol_Table::install (const string *id, const string *env, 
-			    const expr_type t)
-{
+void Symbol_Table::install(const string *id, const string *env,
+                           const expr_type t) {
   /* Install an identifier from environment env with type t into
      symbol table.  Does not check for duplicates. */
 
@@ -21,13 +18,11 @@ void Symbol_Table::install (const string *id, const string *env,
   new_entry->env = *env;
   new_entry->position = -1;
   new_entry->type = t;
-  stab.push_back (*new_entry);
+  stab.push_back(*new_entry);
 }
 
-
-void Symbol_Table::install (const string *id, const string *env, 
-				 const expr_type t, const int pos)
-{
+void Symbol_Table::install(const string *id, const string *env,
+                           const expr_type t, const int pos) {
   /* Install an identifier from environment env with type t into
      symbol table.  Does not check for duplicates. */
 
@@ -36,11 +31,10 @@ void Symbol_Table::install (const string *id, const string *env,
   new_entry->env = *env;
   new_entry->position = pos;
   new_entry->type = t;
-  stab.push_back (*new_entry);
+  stab.push_back(*new_entry);
 }
 
-bool Symbol_Table::is_decl (const string *id, const string *env)
-{
+bool Symbol_Table::is_decl(const string *id, const string *env) {
   vector<STAB_ENTRY>::iterator it;
   for (it = stab.begin(); it != stab.end(); ++it) {
     if (it->id.compare(*id) == 0 && it->env.compare(*env) == 0) {
@@ -50,9 +44,7 @@ bool Symbol_Table::is_decl (const string *id, const string *env)
   return false;
 }
 
-
-expr_type Symbol_Table::get_type (string *id, string *env)
-{
+expr_type Symbol_Table::get_type(string *id, string *env) {
   // Return the type of identifier id of environment env.  Results in
   // garbage garbage type if (*id, *env) are not in the table.
   vector<STAB_ENTRY>::iterator it;
@@ -61,20 +53,19 @@ expr_type Symbol_Table::get_type (string *id, string *env)
       return it->type;
     }
   }
-  
+
   return GARBAGE_T;
 }
 
-
-expr_type Symbol_Table::get_type (string *proc_id, string *environment, const int pos)
-{
+expr_type Symbol_Table::get_type(string *proc_id, string *environment,
+                                 const int pos) {
   /* Get the type of the formal parameter in the indicated position of
      the procedure proc_id declared in the indicated environment. */
   vector<STAB_ENTRY>::iterator it;
   for (it = stab.begin(); it != stab.end(); ++it) {
     if (it->id.compare(*proc_id) == 0
-	&& it->env.compare(*environment) == 0
-	&& it->position == pos) {
+        && it->env.compare(*environment) == 0
+        && it->position == pos) {
       return it->type;
     }
   }
@@ -82,8 +73,7 @@ expr_type Symbol_Table::get_type (string *proc_id, string *environment, const in
   return GARBAGE_T;
 }
 
-void Symbol_Table::update_type (expr_type standard_type_type)
-{
+void Symbol_Table::update_type(expr_type standard_type_type) {
   /* Change the type of all symbol table variables with type UNKNOWN_T
      to standard_type_type. */
   vector<STAB_ENTRY>::iterator it;
@@ -94,9 +84,7 @@ void Symbol_Table::update_type (expr_type standard_type_type)
   }
 }
 
-
-string *Symbol_Table::type_to_string (const expr_type t) const
-{
+string *Symbol_Table::type_to_string(const expr_type t) const {
   string *result;
 
   switch (t) {

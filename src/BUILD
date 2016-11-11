@@ -87,6 +87,12 @@ cc_library(
 )
 
 cc_library(
+  name = "symbol_table",
+  srcs = ["symbol_table.cc"],
+  hdrs = ["symbol_table.h"],
+)
+
+cc_library(
   name = "parser",
   srcs = ["parser.cc"],
   hdrs = ["parser.h"],
