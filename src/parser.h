@@ -121,6 +121,9 @@ class Parser {
   void advance();
 
   // Intended for unit tests.
+  friend class ParserTest_ParseVariableDecl_Test;
+  friend class ParserTest_ParseBlock_Test;
+  friend class ParserTest_ParseProcedureDecl_Test;
   friend class ParserTest_ParseStmt_Test;
   friend class ParserTest_ParseIfStmt_Test;
   friend class ParserTest_ParseWhileStmt_Test;

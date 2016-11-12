@@ -21,60 +21,6 @@ class ParserTest : public testing::Test {
   std::unique_ptr<std::istringstream> ss;
 };
 
-TEST_F(ParserTest, ParseExpression) {
-  EXPECT_TRUE(CreateParser("1")->parse_expr());
-  EXPECT_TRUE(CreateParser("1 * 2")->parse_expr());
-  EXPECT_TRUE(CreateParser("foo")->parse_expr());
-  EXPECT_TRUE(CreateParser("(2 + 3) * a")->parse_expr());
-  EXPECT_TRUE(CreateParser("a = 1")->parse_expr());
-  EXPECT_TRUE(CreateParser("((((((1))))))")->parse_expr());
-  EXPECT_TRUE(CreateParser("-3")->parse_expr());
-  EXPECT_TRUE(CreateParser("-a")->parse_expr());
-  EXPECT_TRUE(CreateParser("+(a + b)")->parse_expr());
-  EXPECT_TRUE(CreateParser("-(a + 1)")->parse_expr());
-  EXPECT_TRUE(CreateParser("not (a = 1)")->parse_expr());
-  EXPECT_TRUE(CreateParser("(not foo and quoz)")->parse_expr());
-  EXPECT_FALSE(CreateParser("+")->parse_expr());
-  EXPECT_FALSE(CreateParser("program")->parse_expr());
-  EXPECT_FALSE(CreateParser("+")->parse_expr());
-  EXPECT_FALSE(CreateParser("(())")->parse_expr());
-  EXPECT_FALSE(CreateParser("((3 + 1)")->parse_expr());
-  EXPECT_FALSE(CreateParser("())")->parse_expr());
-  EXPECT_FALSE(CreateParser("(()")->parse_expr());
-}
-
-TEST_F(ParserTest, ParseTerm) {
-  EXPECT_TRUE(CreateParser("1 * 2")->parse_term());
-  EXPECT_TRUE(CreateParser("1 * (2 + 3)")->parse_term());
-  EXPECT_TRUE(CreateParser("foo * (bar + quoz)")->parse_term());
-}
-
-TEST_F(ParserTest, ParseFactor) {
-  EXPECT_TRUE(CreateParser("foo")->parse_factor());
-  EXPECT_TRUE(CreateParser("100")->parse_factor());
-  EXPECT_TRUE(CreateParser("(foo)")->parse_factor());
-  EXPECT_TRUE(CreateParser("(1 + 2)")->parse_factor());
-  EXPECT_TRUE(CreateParser("-(1 + 2)")->parse_factor());
-  EXPECT_TRUE(CreateParser("not (foo and bar)")->parse_factor());
-  EXPECT_FALSE(CreateParser("not")->parse_factor());
-  EXPECT_FALSE(CreateParser("program")->parse_factor());
-  EXPECT_FALSE(CreateParser("((1 + 2)")->parse_factor());
-  EXPECT_FALSE(CreateParser("(while)")->parse_factor());
-  EXPECT_FALSE(CreateParser("()")->parse_factor());
-  EXPECT_FALSE(CreateParser("((")->parse_factor());
-  EXPECT_FALSE(CreateParser("")->parse_factor());
-}
-
-TEST_F(ParserTest, ParseSign) {
-  EXPECT_TRUE(CreateParser("-")->parse_sign());
-  EXPECT_TRUE(CreateParser("+")->parse_sign());
-  EXPECT_TRUE(CreateParser("not")->parse_sign());
-  EXPECT_FALSE(CreateParser("foo")->parse_sign());
-  EXPECT_FALSE(CreateParser("123")->parse_sign());
-  EXPECT_FALSE(CreateParser("=")->parse_sign());
-  EXPECT_FALSE(CreateParser("")->parse_sign());
-}
-
 TEST_F(ParserTest, ParseProgramBasic) {
   EXPECT_TRUE(CreateParser(
       "program a; "
@@ -131,4 +77,259 @@ TEST_F(ParserTest, ParseProgramBasic) {
            "print a; "
          "end; "
       "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program prog; "
+        "a, b, c: int; "
+        "d, e, f: bool; "
+
+        "procedure add(p,q: int; r: bool) "
+          "m, n: int; "
+        "begin print(p + q + m + n); end; "
+
+      "begin "
+        "a := 1; "
+        "add(b, c, d); "
+        "while d loop begin print(a); end; "
+        "if e then begin print(b); end; "
+        "if a > 0 then begin "
+          "print(b); "
+        "end else begin "
+          "print(c); "
+        "end; "
+        "foo(a - b, b * c); "
+      "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program foo; "
+        "procedure bar(a, b: int; c, d: bool) "
+          "e: int; "
+        "begin "
+          "c := c and d; "
+          "e := a + b; "
+        "end; "
+      "begin "
+        "bar(1, 2, true, false); "
+      "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program foo; "
+        "procedure add(a, b: int) "
+        "begin "
+          "print(a + b); "
+        "end; "
+
+        "procedure subtract(a, b: int) "
+        "begin "
+          "print(a - b); "
+        "end; "
+      "begin "
+        "add(1, 2); "
+        "subtract(1, 2); "
+      "end;")->parse_program());
+
+  EXPECT_TRUE(
+      CreateParser("program foo; begin print(1); end;")->parse_program());
+  EXPECT_FALSE(CreateParser("program foo; begin end;")->parse_program());
+}
+
+TEST_F(ParserTest, ParseBlock) {
+  EXPECT_TRUE(CreateParser("begin a := 1; end")->parse_block());
+  EXPECT_TRUE(CreateParser("begin a := 1; b := 2; end")->parse_block());
+  EXPECT_TRUE(CreateParser(
+      "begin "
+        "a := 1; "
+        "while a loop begin print(a); end; "
+        "if a = 1 then begin print(a); end; "
+        "print(10); foo(10); "
+      "end")->parse_block());
+
+  EXPECT_FALSE(CreateParser("begin a := 1;")->parse_block());
+  EXPECT_FALSE(CreateParser("a := 1; end")->parse_block());
+  EXPECT_FALSE(CreateParser("begin foo end")->parse_block());
+  EXPECT_FALSE(CreateParser("begin end")->parse_block());
+}
+
+TEST_F(ParserTest, ParseVariableDecl) {
+  EXPECT_TRUE(CreateParser("a: int")->parse_variable_decl());
+  EXPECT_TRUE(CreateParser("a: bool")->parse_variable_decl());
+  EXPECT_TRUE(CreateParser("a, b: int")->parse_variable_decl());
+  EXPECT_TRUE(CreateParser("a, b: bool")->parse_variable_decl());
+  EXPECT_FALSE(CreateParser("1: int")->parse_variable_decl());
+}
+
+TEST_F(ParserTest, ParseProcedureDecl) {
+  EXPECT_TRUE(CreateParser(
+      "procedure multiply(a, b: int) "
+      "begin "
+        "print(a * b); "
+      "end")->parse_procedure_decl());
+
+  EXPECT_TRUE(CreateParser(
+      "procedure bar(a, b: int; condition: bool) "
+      "begin "
+        "if condition then begin print(a + b); end "
+        "else begin print(a - b); end; "
+      "end")->parse_procedure_decl());
+
+  EXPECT_FALSE(CreateParser(
+      "procedure bar(a: int begin print(a); end")->parse_procedure_decl());
+
+  EXPECT_FALSE(CreateParser(
+      "procedure 123(a: int) begin print(a); end")->parse_procedure_decl());
+}
+
+TEST_F(ParserTest, ParseStmt) {
+  EXPECT_TRUE(CreateParser("a := b + 1")->parse_stmt());
+  EXPECT_TRUE(CreateParser("foo(1)")->parse_stmt());
+  EXPECT_TRUE(CreateParser("if (a) then begin print(a); end")->parse_stmt());
+
+  // TODO(hieule): Fix linking errors.
+  // EXPECT_TRUE(
+  //     CreateParser("while (a) loop begin print(b); end")->parse_stmt());
+}
+
+TEST_F(ParserTest, ParseIfStmt) {
+  EXPECT_TRUE(CreateParser(
+      "if (a < b) then "
+      "begin "
+        "print(a); "
+      "end")->parse_if_stmt());
+
+  EXPECT_TRUE(CreateParser(
+      "if (a < b) then begin "
+        "print(a); "
+      "end "
+      "else begin "
+        "print(b); "
+      "end")->parse_if_stmt());
+
+  EXPECT_TRUE(CreateParser(
+      "if (a < b) then begin "
+        "if (a < c) then begin "
+          "print(a); "
+        "end "
+        "else begin "
+           "print(c); "
+        "end; "
+      "end "
+      "else begin "
+        "if (b < c) then begin "
+          "print(b); "
+        "end "
+        "else begin "
+          "print(c); "
+        "end; "
+      "end")->parse_if_stmt());
+
+  EXPECT_FALSE(CreateParser(
+      "if (a < b) then "
+        "print(a); "
+      "end")->parse_if_stmt());
+
+  EXPECT_FALSE(CreateParser(
+      "if (a < b) then begin "
+        "print(a); "
+      "end "
+      "else begin "
+        "print(b); "
+      "en")->parse_if_stmt());
+}
+
+TEST_F(ParserTest, ParseWhileStmt) {
+  EXPECT_TRUE(CreateParser(
+      "while (a > 0) loop begin "
+        "print(a); "
+        "a := a - 1; "
+      "end")->parse_while_stmt());
+
+  EXPECT_TRUE(CreateParser(
+      "while (a > 0) loop begin "
+        "b := 5; "
+        "while (b > 0) loop begin "
+          "print(b); "
+          "b := b - 1; "
+        "end; "
+        "a := a - 1; "
+      "end")->parse_while_stmt());
+
+  EXPECT_TRUE(CreateParser(
+      "while (a > 0) loop begin "
+        "if ((a and 1) = 0) then begin "
+          "a := a / 2; "
+        "end "
+        "else begin "
+          "a := a + 1; "
+        "end; "
+      "end")->parse_while_stmt());
+
+  EXPECT_FALSE(CreateParser(
+      "while b begin "
+        "print(a); "
+      "end")->parse_while_stmt());
+
+  EXPECT_FALSE(CreateParser(
+      "while b loop begin print(a); ")->parse_while_stmt());
+}
+
+TEST_F(ParserTest, ParsePrintStmt) {
+  EXPECT_TRUE(CreateParser("print(1)")->parse_print_stmt());
+  EXPECT_TRUE(CreateParser("print(((foo)))")->parse_print_stmt());
+  EXPECT_TRUE(CreateParser("print(a = b)")->parse_print_stmt());
+  EXPECT_FALSE(CreateParser("print((a)")->parse_print_stmt());
+  EXPECT_FALSE(CreateParser("prin(a)")->parse_print_stmt());
+}
+
+TEST_F(ParserTest, ParseExpression) {
+  EXPECT_TRUE(CreateParser("1")->parse_expr());
+  EXPECT_TRUE(CreateParser("1 * 2")->parse_expr());
+  EXPECT_TRUE(CreateParser("foo")->parse_expr());
+  EXPECT_TRUE(CreateParser("(2 + 3) * a")->parse_expr());
+  EXPECT_TRUE(CreateParser("a = 1")->parse_expr());
+  EXPECT_TRUE(CreateParser("((((((1))))))")->parse_expr());
+  EXPECT_TRUE(CreateParser("-3")->parse_expr());
+  EXPECT_TRUE(CreateParser("-a")->parse_expr());
+  EXPECT_TRUE(CreateParser("+(a + b)")->parse_expr());
+  EXPECT_TRUE(CreateParser("-(a + 1)")->parse_expr());
+  EXPECT_TRUE(CreateParser("not (a = 1)")->parse_expr());
+  EXPECT_TRUE(CreateParser("(not foo and quoz)")->parse_expr());
+  EXPECT_FALSE(CreateParser("+")->parse_expr());
+  EXPECT_FALSE(CreateParser("program")->parse_expr());
+  EXPECT_FALSE(CreateParser("+")->parse_expr());
+  EXPECT_FALSE(CreateParser("(())")->parse_expr());
+  EXPECT_FALSE(CreateParser("((3 + 1)")->parse_expr());
+  EXPECT_FALSE(CreateParser("())")->parse_expr());
+  EXPECT_FALSE(CreateParser("(()")->parse_expr());
+}
+
+TEST_F(ParserTest, ParseTerm) {
+  EXPECT_TRUE(CreateParser("1 * 2")->parse_term());
+  EXPECT_TRUE(CreateParser("1 * (2 + 3)")->parse_term());
+  EXPECT_TRUE(CreateParser("foo * (bar + quoz)")->parse_term());
+}
+
+TEST_F(ParserTest, ParseFactor) {
+  EXPECT_TRUE(CreateParser("foo")->parse_factor());
+  EXPECT_TRUE(CreateParser("100")->parse_factor());
+  EXPECT_TRUE(CreateParser("(foo)")->parse_factor());
+  EXPECT_TRUE(CreateParser("(1 + 2)")->parse_factor());
+  EXPECT_TRUE(CreateParser("-(1 + 2)")->parse_factor());
+  EXPECT_TRUE(CreateParser("not (foo and bar)")->parse_factor());
+  EXPECT_FALSE(CreateParser("not")->parse_factor());
+  EXPECT_FALSE(CreateParser("program")->parse_factor());
+  EXPECT_FALSE(CreateParser("((1 + 2)")->parse_factor());
+  EXPECT_FALSE(CreateParser("(while)")->parse_factor());
+  EXPECT_FALSE(CreateParser("()")->parse_factor());
+  EXPECT_FALSE(CreateParser("((")->parse_factor());
+  EXPECT_FALSE(CreateParser("")->parse_factor());
+}
+
+TEST_F(ParserTest, ParseSign) {
+  EXPECT_TRUE(CreateParser("-")->parse_sign());
+  EXPECT_TRUE(CreateParser("+")->parse_sign());
+  EXPECT_TRUE(CreateParser("not")->parse_sign());
+  EXPECT_FALSE(CreateParser("foo")->parse_sign());
+  EXPECT_FALSE(CreateParser("123")->parse_sign());
+  EXPECT_FALSE(CreateParser("=")->parse_sign());
+  EXPECT_FALSE(CreateParser("")->parse_sign());
 }
