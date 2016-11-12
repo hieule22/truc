@@ -34,8 +34,8 @@ class Parser {
   // Checks if the Scanner output generates a valid TruPL program.
   bool parse_program();
 
-  // Return true if current token is EOF.
-  bool done_with_input();
+  // Returns true if current token is EOF.
+  bool done_with_input() const;
 
  private:
   bool parse_decl_list();
@@ -113,7 +113,7 @@ class Parser {
 
      This method should delete the string after it has printed the
      error message. */
-  void parse_error(string *expected, Token *found);
+  void parse_error(string *expected, Token *found) const;
 
   // Other helper functions that you may define
 
@@ -121,6 +121,10 @@ class Parser {
   void advance();
 
   // Intended for unit tests.
+  friend class ParserTest_ParseStmt_Test;
+  friend class ParserTest_ParseIfStmt_Test;
+  friend class ParserTest_ParseWhileStmt_Test;
+  friend class ParserTest_ParsePrintStmt_Test;
   friend class ParserTest_ParseExpression_Test;
   friend class ParserTest_ParseTerm_Test;
   friend class ParserTest_ParseFactor_Test;

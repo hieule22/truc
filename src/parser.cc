@@ -11,16 +11,14 @@
 #define LOG(output) \
   if (DEBUGMODE) std::cerr << output << std::endl
 
-Parser::Parser(Scanner *the_scanner) 
-{
+Parser::Parser(Scanner *the_scanner) {
   /* Initialize the parser. */
   lex = the_scanner;
   word = lex->next_token();
   LOG("Parsing: " << *word->to_string());
 }
 
-Parser::~Parser() 
-{
+Parser::~Parser() {
   /* Delete the parser. */
   if (lex != nullptr) {
     delete lex;
@@ -33,12 +31,11 @@ Parser::~Parser()
 // If we have parsed the entire program, then word
 // should be the EOF Token.  This function tests
 // that condition.
-bool Parser::done_with_input()
-{
+bool Parser::done_with_input() const {
   return word->get_token_type() == TOKEN_EOF;
 }
 
-void Parser::parse_error(string *expected, Token *found) {
+void Parser::parse_error(string *expected, Token *found) const {
   std::cerr << "Parse error: Expected: " << *expected <<
       ", Found:  " << *found->to_string() << std::endl;
   delete expected;
@@ -97,8 +94,7 @@ inline bool is_number(const Token* token) {
 
 }  // namespace
 
-bool Parser::parse_program()
-{
+bool Parser::parse_program() {
   // PROGRAM -> program identifier ; DECL_LIST BLOCK ;
   // Predict (program identifier ; DECL_LIST BLOCK ;) == {program}
 
@@ -110,86 +106,84 @@ bool Parser::parse_program()
        and, if we ADVANCE, it is the ADVANCE code that is responsible
        for getting the next token.
     */
-    advance(); 
- 
+    advance();
+
     // Match identifier, 2nd symbol on RHS
-    if (word->get_token_type() == TOKEN_ID) {		
+    if (word->get_token_type() == TOKEN_ID) {
       // ADVANCE
-      advance(); 
-      
+      advance();
 
       // Match semicolon(;), 3rd symbol on RHS
       if (is_punctuation(word, PUNC_SEMI)) {
         // ADVANCE
-        advance(); 
- 
+        advance();
+
         /* Match DECL_LIST, 4th bymbol on RHS.  This is an ACTION,
            not an advance, so we don't grab another token if we
            succeed.  We are just growing the parse tree at this
            point.
         */
         if (parse_decl_list()) {
-	    
+
           // Match BLOCK, 5th on RHS - ACTION
           if (parse_block()) {
-	      
+
             // Match semicolon(;), 6th and last on RHS -
             if (is_punctuation(word, PUNC_SEMI)) {
               // ADVANCE
               // Since we advanced, we matched a token so we get the next one.
               advance();
- 
+
               // Parse_program succeeded.
               return true;
-		
+
               // We failed to match the second semicolon
             } else {
               string *expected = new string ("';'");
               // Variable expected should be deleted in parse_error()
-              parse_error (expected, word);
+              parse_error(expected, word);
               return false;
             }
-	      
+
             /* We failed to parse BLOCK.  Don't print an error here;
                instead, print the error when you discover it,
                i.e. when you are trying to advance. */
           } else {
             return false;
           }
-	    
+
           // We failed to parse DECL_LIST
         } else {
           return false;
         }
-	  
+
         // We failed to match the first semicolon
       } else {
         string *expected = new string ("';'");
-        parse_error (expected, word);
+        parse_error(expected, word);
         return false;
       }
-	
+
       // We failed to match an identifier
     } else {
-      string *expected = new string ("identifier");
-      parse_error (expected, word);
+      string *expected = new string("identifier");
+      parse_error(expected, word);
       return false;
     }
-     
+
     // We failed to match the keyword program
   } else {
-    string *expected = new string ("keyword program");
-    parse_error (expected, word);
+    string *expected = new string("keyword program");
+    parse_error(expected, word);
     return false;
   }
-   
+
   /* We shouldn't reach this statement, but it is here as a defensive
      programming measure. */
   return false;
 }
 
-bool Parser::parse_decl_list()
-{
+bool Parser::parse_decl_list() {
   /* DECL_LIST -> VARIABLE_DECL_LIST PROCEDURE_DECL_LIST 
 
      Predict(VARIABLE_DECL_LIST PROCEDURE_DECL_LIST) 
@@ -205,12 +199,11 @@ bool Parser::parse_decl_list()
      evaluation of Boolean expressions. */
 
   LOG("DECL_LIST -> VARIABLE_DECL_LIST PROCEDURE_DECL_LIST");
-  
+
   return parse_variable_decl_list() && parse_procedure_decl_list();
 }
 
-bool Parser::parse_variable_decl_list()
-{
+bool Parser::parse_variable_decl_list() {
   /* VARIABLE_DECL_LIST -> VARIABLE_DECL ; VARIABLE_DECL_LIST     
      Predict(VARIABLE_DECL ; VARIABLE_DECL_LIST) == First(VARIABLE_DECL)
      == {identifier} */
@@ -219,15 +212,15 @@ bool Parser::parse_variable_decl_list()
 
     // Match VARIABLE_DECL - ACTION.
     if (parse_variable_decl()) {
-      
+
       // Match semicolon(;).
       if (is_punctuation(word, PUNC_SEMI)) {
-        
+
         // ADVANCE.
         advance();
 
         // Match VARIABLE_DECL_LIST - ACTION.
-	return parse_variable_decl_list();
+        return parse_variable_decl_list();
 
         // Fail to match semicolon.
       } else {
@@ -235,7 +228,7 @@ bool Parser::parse_variable_decl_list()
         return false;
       }
 
-      // Fail to match VARIABLE_DECL.      
+      // Fail to match VARIABLE_DECL.
     } else {
       return false;
     }
@@ -249,14 +242,13 @@ bool Parser::parse_variable_decl_list()
   return false;
 }
 
-bool Parser::parse_variable_decl()
-{
+bool Parser::parse_variable_decl() {
   /* VARIABLE_DECL -> IDENTIFIER_LIST : STANDARD_TYPE
      Predict(IDENTIFIER_LIST : STANDARD_TYPE) == First(IDENTIFIER_LIST)
      == {identifier} */
   if (is_identifier(word)) {
     LOG("VARIABLE_DECL -> IDENTIFIER_LIST : STANDARD_TYPE");
-    
+
     // Match IDENTIFIER_LIST - ACTION.
     if (parse_identifier_list()) {
 
@@ -264,7 +256,7 @@ bool Parser::parse_variable_decl()
       if (is_punctuation(word, PUNC_COLON)) {
 
         // ADVANCE.
-        advance();        
+        advance();
 
         // Match STANDARD_TYPE - ACTION.
         return parse_standard_type();
@@ -289,8 +281,7 @@ bool Parser::parse_variable_decl()
   return false;
 }
 
-bool Parser::parse_procedure_decl_list()
-{
+bool Parser::parse_procedure_decl_list() {
   /* PROCEDURE_DECL_LIST -> PROCEDURE_DECL ; PROCEDURE_DECL_LIST
      Predict(PROCEDURE_DECL ; PROCEDURE_DECL_LIST) == First(PROCEDURE_DECL)
      == {procedure} */
@@ -304,7 +295,7 @@ bool Parser::parse_procedure_decl_list()
       if (is_punctuation(word, PUNC_SEMI)) {
 
         // ADVANCE.
-        advance();  
+        advance();
 
         // Match PROCEDURE_DECL_LIST - ACTION.
         return parse_procedure_decl_list();
@@ -329,8 +320,7 @@ bool Parser::parse_procedure_decl_list()
   return false;
 }
 
-bool Parser::parse_identifier_list()
-{
+bool Parser::parse_identifier_list() {
   /* IDENTIFIER_LIST -> identifier IDENTIFIER_LIST_PRM
      Predict(identifier IDENTIFIER_LIST_PRM) == {identifier} */
   if (is_identifier(word)) {
@@ -351,15 +341,14 @@ bool Parser::parse_identifier_list()
   return false;
 }
 
-bool Parser::parse_identifier_list_prm()
-{
+bool Parser::parse_identifier_list_prm() {
   /* IDENTIFIER_LIST_PRM = , identifier IDENTIFIER_LIST_PRM
      Predict(, identifier IDENTIFIER_LIST_PRM) == {,} */
   if (is_punctuation(word, PUNC_COMMA)) {
     LOG("IDENTIFIER_LIST_PRM -> , identifier IDENTIFIER_LIST_PRM");
-    
+
     // ADVANCE.
-    advance();    
+    advance();
 
     // Match an identifier.
     if (is_identifier(word)) {
@@ -381,46 +370,44 @@ bool Parser::parse_identifier_list_prm()
     LOG("IDENTIFIER_LIST_PRM -> lambda");
     return true;
   }
-  
+
   return false;
 }
 
-bool Parser::parse_standard_type()
-{
+bool Parser::parse_standard_type() {
   /* STANDARD_TYPE -> int
      Predict(int) = {int} */
   if (is_keyword(word, KW_INT)) {
     LOG("STANDARD_TYPE -> int");
-    
+
     // ADVANCE.
     advance();
-    
+
     return true;
 
     /* STANDARD_TYPE -> bool       
        Predict(bool) = {bool} */ 
   } else if (is_keyword(word, KW_BOOL)) {
     LOG("STANDARD_TYPE -> bool");
-    
+
     // ADVANCE.
     advance();
-    
-    return true;    
+
+    return true;
   }
 
   return false;
 }
 
-bool Parser::parse_block()
-{
+bool Parser::parse_block() {
   /* BLOCK -> begin STMT_LIST end
      Predict(begin STMT_LIST end) = {begin} */
   if (is_keyword(word, KW_BEGIN)) {
     LOG("BLOCK -> begin STMT_LIST end");
-    
+
     // ADVANCE.
     advance();
-    
+
     // Match STMT_LIST - ACTION.
     if (parse_stmt_list()) {
 
@@ -428,7 +415,7 @@ bool Parser::parse_block()
       if (is_keyword(word, KW_END)) {
 
         // ADVANCE.
-        advance();    
+        advance();
 
         return true;
 
@@ -452,8 +439,7 @@ bool Parser::parse_block()
   return false;
 }
 
-bool Parser::parse_procedure_decl()
-{
+bool Parser::parse_procedure_decl() {
   /* PROCEDURE_DECL ->
      procedure identifier ( PROCEDURE_ARGS ) VARIABLE_DECL_LIST BLOCK
      Predict(PROCEDURE_DECL) == {procedure} */
@@ -520,8 +506,7 @@ bool Parser::parse_procedure_decl()
   return false;
 }
 
-bool Parser::parse_procedure_args()
-{
+bool Parser::parse_procedure_args() {
   /* PROCEDURE_ARGS -> FORMAL_PARM_LIST
      Predict(FORMAL_PARM_LIST) == First(FORMAL_PARM_LIST) == {identifier} */
   if (is_identifier(word)) {
@@ -539,11 +524,10 @@ bool Parser::parse_procedure_args()
   return false;
 }
 
-bool Parser::parse_formal_parm_list()
-{
+bool Parser::parse_formal_parm_list() {
   /* FORMAL_PARM_LIST ->
      identifier IDENTIFIER_LIST_PRM : STANDARD_TYPE FORMAL_PARM_LIST_HAT
-     Predict(...) = {identifier} */
+     Predict(LHS) = {identifier} */
   if (is_identifier(word)) {
     LOG("FORMAL_PARM_LIST -> identifier IDENTIFIER_LIST_PRM : "
         "STANDARD_TYPE FORMAL_PARM_LIST_HAT");
@@ -583,8 +567,7 @@ bool Parser::parse_formal_parm_list()
   return false;
 }
 
-bool Parser::parse_formal_parm_list_hat()
-{
+bool Parser::parse_formal_parm_list_hat() {
   /* FORMAL_PARM_LIST_HAT -> ; FORMAL_PARM_LIST
      Predict(; FORMAL_PARM_LIST) == {;} */
   if (is_punctuation(word, PUNC_SEMI)) {
@@ -592,7 +575,7 @@ bool Parser::parse_formal_parm_list_hat()
 
     // ADVANCE.
     advance();
-    
+
     // Match FORMAL_PARM_LIST.
     return parse_formal_parm_list();
 
@@ -605,8 +588,7 @@ bool Parser::parse_formal_parm_list_hat()
   return false;
 }
 
-bool Parser::parse_stmt_list()
-{
+bool Parser::parse_stmt_list() {
   /* STMT_LIST -> STMT ; STMT_LIST_PRM
      Predict(STMT_LIST) == First(STMT) == {identifier, if, while, print} */
   if (is_identifier(word)
@@ -617,13 +599,13 @@ bool Parser::parse_stmt_list()
 
     // Match STMT - ACTION.
     if (parse_stmt()) {
-    
+
       // Match a semicolon(;).
       if (is_punctuation(word, PUNC_SEMI)) {
 
         // ADVANCE.
         advance();
-      
+
         // Match STMT_LIST_PRM - ACTION.
         return parse_stmt_list_prm();
 
@@ -642,19 +624,18 @@ bool Parser::parse_stmt_list()
        Predict(; STMT_LIST_PRM) == {;} */
   } else if (is_punctuation(word, PUNC_SEMI)) {
     LOG("STMT_LIST -> ; STMT_LIST_PRM");
-    
+
     // ADVANCE.
     advance();
 
     // Match STMT_LIST_PRM - ACTION.
-    return parse_stmt_list_prm();    
+    return parse_stmt_list_prm();
   }
 
   return false;
 }
 
-bool Parser::parse_stmt_list_prm()
-{
+bool Parser::parse_stmt_list_prm() {
   /* STMT_LIST_PRM -> STMT ; STMT_LIST_PRM
      Predict(STMT ; STMT_LIST_PRM) == First(STMT)
      == {identifier, if, while, print} */
@@ -692,12 +673,11 @@ bool Parser::parse_stmt_list_prm()
     LOG("STMT_LIST_PRM -> lambda");
     return true;
   }
-  
+
   return false;
 }
 
-bool Parser::parse_stmt()
-{
+bool Parser::parse_stmt() {
   /* STMT -> IF_STMT
      Predict(IF_STMT) == First(IF_STMT) == {if} */
   if (is_keyword(word, KW_IF)) {
@@ -718,7 +698,7 @@ bool Parser::parse_stmt()
        Predict(PRINT_STMT) = First(PRINT_STMT) = {print} */
   } else if (is_keyword(word, KW_PRINT)) {
     LOG("STMT -> PRINT_STMT");
-    
+
     // Match PRINT_STMT - ACTION.
     return parse_print_stmt();
 
@@ -731,14 +711,13 @@ bool Parser::parse_stmt()
     advance();
 
     // Match ADHOC_AS_PC_TAIL - ACTION.
-    return parse_adhoc_as_pc_tail();    
+    return parse_adhoc_as_pc_tail();
   }
 
   return false;
 }
 
-bool Parser::parse_adhoc_as_pc_tail()
-{
+bool Parser::parse_adhoc_as_pc_tail() {
   /* ADHOC_AS_PC_TAIL -> := EXPR
      Predict(:= EXPR) == {:=} */
   if (is_punctuation(word, PUNC_ASSIGN)) {
@@ -784,8 +763,7 @@ bool Parser::parse_adhoc_as_pc_tail()
   return false;
 }
 
-bool Parser::parse_if_stmt()
-{
+bool Parser::parse_if_stmt() {
   /* IF_STMT -> if EXPR then BLOCK IF_STMT_HAT
      Predict(...) = {if} */
   if (is_keyword(word, KW_IF)) {
@@ -826,8 +804,7 @@ bool Parser::parse_if_stmt()
   return false;
 }
 
-bool Parser::parse_if_stmt_hat()
-{
+bool Parser::parse_if_stmt_hat() {
   /* IF_STMT_HAT -> else BLOCK
      Predict(else BLOCK) == {else} */
   if (is_keyword(word, KW_ELSE)) {
@@ -848,8 +825,7 @@ bool Parser::parse_if_stmt_hat()
   return false;
 }
 
-bool Parser::parse_while_stmt()
-{
+bool Parser::parse_while_stmt() {
   /* WHILE_STMT -> while EXPR loop BLOCK
      Predict(while EXPR loop BLOCK) = {while} */
   if (is_keyword(word, KW_WHILE)) {
@@ -890,8 +866,7 @@ bool Parser::parse_while_stmt()
   return false;
 }
 
-bool Parser::parse_print_stmt()
-{
+bool Parser::parse_print_stmt() {
   /* PRINT_STMT -> print EXPR
      Predict(print EXPR) == {print} */
   if (is_keyword(word, KW_PRINT)) {
@@ -912,8 +887,7 @@ bool Parser::parse_print_stmt()
   return false;
 }
 
-bool Parser::parse_expr_list()
-{
+bool Parser::parse_expr_list() {
   /* EXPR_LIST -> ACTUAL_PARM_LIST
      Predict(ACTUAL_PARM_LIST) == First(ACTUAL_PARM_LIST)
      == {identifier, num, (, +, -, not} */
@@ -937,17 +911,15 @@ bool Parser::parse_expr_list()
   return false;
 }
 
-bool Parser::parse_actual_parm_list()
-{ 
+bool Parser::parse_actual_parm_list() {
   /* ACTUAL_PARM_LIST -> EXPR ACTUAL_PARM_LIST_HAT */
   LOG("ACTUAL_PARM_LIST -> EXPR ACTUAL_PARM_LIST_HAT");
-  
+
   // Match EXPR and ACTUAL_PARM_LIST_HAT - ACTION.
   return parse_expr() && parse_actual_parm_list_hat();
 }
 
-bool Parser::parse_actual_parm_list_hat()
-{
+bool Parser::parse_actual_parm_list_hat() {
   /* ACTUAL_PARM_LIST_HAT -> , ACTUAL_PARM_LIST
      Predict(, ACTUAL_PARM_LIST) == {,} */
   if (is_punctuation(word, PUNC_COMMA)) {
@@ -968,8 +940,7 @@ bool Parser::parse_actual_parm_list_hat()
   return false;
 }
 
-bool Parser::parse_expr()
-{
+bool Parser::parse_expr() {
   /* EXPR -> SIMPLE_EXPR EXPR_HAT */
   LOG("EXPR -> SIMPLE_EXPR EXPR_HAT");
 
@@ -977,13 +948,12 @@ bool Parser::parse_expr()
   return parse_simple_expr() && parse_expr_hat();
 }
 
-bool Parser::parse_expr_hat()
-{
+bool Parser::parse_expr_hat() {
   /* EXPR_HAT -> relop SIMPLE_EXPR
      Predict(relop SIMPLE_EXPR) = {relop} */
   if (is_relop(word)) {
     LOG("EXPR_HAT -> relop SIMPLE_EXPR");
-    
+
     // ADVANCE.
     advance();
 
@@ -999,22 +969,20 @@ bool Parser::parse_expr_hat()
   return false;
 }
 
-bool Parser::parse_simple_expr()
-{  
+bool Parser::parse_simple_expr() {
   /* SIMPLE_EXPR -> TERM SIMPLE_EXPR_PRM */
   LOG("SIMPLE_EXPR -> TERM SIMPLE_EXPR_PRM");
-    
+
   // Match TERM and SIMPLE_EXPR_PRM - ACTION.
   return parse_term() && parse_simple_expr_prm();
 }
 
-bool Parser::parse_simple_expr_prm()
-{
+bool Parser::parse_simple_expr_prm() {
   /* SIMPLE_EXPR_PRM -> addop TERM SIMPLE_EXPR_PRM
      Predict(addop TERM SIMPLE_EXPR_PRM) == {addop} */
   if (is_addop(word)) {
     LOG("SIMPLE_EXPR_PRM -> addop TERM SIMPLE_EXPR_PRM");
-    
+
     // ADVANCE.
     advance();
 
@@ -1030,17 +998,15 @@ bool Parser::parse_simple_expr_prm()
   return false;
 }
 
-bool Parser::parse_term()
-{
+bool Parser::parse_term() {
   /* TERM -> FACTOR TERM_PRM */
   LOG("TERM -> FACTOR TERM_PRM");
-  
+
   // Match FACTOR and TERM_PRM - ACTION.
   return parse_factor() && parse_term_prm();
 }
 
-bool Parser::parse_term_prm()
-{
+bool Parser::parse_term_prm() {
   /* TERM_PRM -> mulop FACTOR TERM_PRM
      Predict(mulop FACTOR TERM_PRM) = {mulop} */
   if (is_mulop(word)) {
@@ -1061,8 +1027,7 @@ bool Parser::parse_term_prm()
   return false;
 }
 
-bool Parser::parse_factor()
-{
+bool Parser::parse_factor() {
   /* FACTOR -> identifier
      Predict(identifier) = {identifier} */
   if (is_identifier(word)) {
@@ -1127,8 +1092,7 @@ bool Parser::parse_factor()
   return false;
 }
 
-bool Parser::parse_sign()
-{
+bool Parser::parse_sign() {
   /* SIGN -> +
      Predict(SIGN) == {+} */
   if (is_addop(word, ADDOP_ADD)) {
