@@ -23,34 +23,129 @@ class SemanticAnalyzerTest : public testing::Test {
 
 TEST_F(SemanticAnalyzerTest, ParseValidProgram) {
   EXPECT_TRUE(CreateParser(
-      "program foo; "
+      "program foo0; "
       "begin "
         "print 10; "
       "end;")->parse_program());
 
   EXPECT_TRUE(CreateParser(
-      "program bar; "
+      "program foo1; "
         "i: int; "
       "begin "
         "print i; "
       "end;")->parse_program());
 
   EXPECT_TRUE(CreateParser(
-      "program quoz; "
+      "program foo2; "
         "procedure add(a: int; b: int) "
         "begin "
-          "print (a + b); "
+          "print(a + b); "
         "end; "
       "begin "
         "add(1, 2); "
       "end;")->parse_program());
 
   EXPECT_TRUE(CreateParser(
-      "program foo; "
+      "program foo3; "
         "a, b: int; "
       "begin "
         "a := 1; "
         "b := a + 1; "
         "print(a + b); "
       "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program foo4; "
+        "a, b: int; "
+
+        "procedure max(a, b: int) "
+        "begin "
+          "if (a > b) then begin "
+            "print a; "
+          "end "
+          "else begin "
+            "print b; "
+          "end; "
+        "end; "
+
+      "begin "
+        "a := 1; "
+        "b := 2; "
+        "max(a, b); "
+      "end; ")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program foo5; "
+        "a, c: int; "
+
+        "procedure increment(a: int) "
+          "c: int; "
+        "begin "
+          "c := 1; "
+          "a := a + c; "
+          "print a; "
+        "end; "
+
+      "begin "
+        "a := 0; "
+        "increment(a); "
+        "c := 1; "
+        "increment(c); "
+      "end; ")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program foo6; "
+        "a: bool; "
+        "b: int; "
+      "begin "
+        "while (a) loop begin "
+          "print a; "
+        "end; "
+
+        "while (b = 1) loop begin "
+          "print b; "
+        "end; "
+
+        "if (not a) then begin "
+          "print a; "
+        "end; "
+
+        "if (b < 1) then begin "
+          "print b; "
+        "end; "
+      "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program foo7; "
+        "a: bool; "
+        "b: int; "
+      "begin "
+        "while (a or (b > 1)) loop begin "
+          "if not a then begin "
+            "print(b > 1); "
+          "end "
+          "else begin "
+            "if b = 0 then begin "
+              "print a; "
+            "end; "
+          "end; "
+        "end; "
+      "end; ")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program foo8; "
+        "a, b, c, d: int; "
+        "m, n, p, q: bool; "
+
+        "procedure bar() "
+          "a, b, c, d: int; "
+          "m, n, p, q: bool; "
+        "begin "
+          "print(a + b + c + d); "
+          "print(m and n and not p or q); "
+        "end; "
+
+      "begin "
+        "bar(); "
+      "end; ")->parse_program());
 }
