@@ -1,0 +1,5 @@
+program b;
+  # No declaration.
+begin
+  print 10;
+end;
