@@ -57,14 +57,12 @@ expr_type Symbol_Table::get_type(string *id, string *env) {
   return GARBAGE_T;
 }
 
-expr_type Symbol_Table::get_type(string *proc_id, string *environment,
-                                 const int pos) {
+expr_type Symbol_Table::get_type(string *proc_id, const int pos) {
   /* Get the type of the formal parameter in the indicated position of
-     the procedure proc_id declared in the indicated environment. */
+     the procedure proc_id. */
   vector<STAB_ENTRY>::iterator it;
   for (it = stab.begin(); it != stab.end(); ++it) {
-    if (it->id.compare(*proc_id) == 0
-        && it->env.compare(*environment) == 0
+    if (it->env.compare(*proc_id) == 0
         && it->position == pos) {
       return it->type;
     }
@@ -112,4 +110,18 @@ string *Symbol_Table::type_to_string(const expr_type t) const {
   }
 
   return result;
+}
+
+void Symbol_Table::dump_entry(const STAB_ENTRY& entry) const {
+    cerr << "ID: " << entry.id << endl;
+    cerr << "ENV: " << entry.env << endl;
+    cerr << "POS: " << entry.position << endl;
+    cerr << "TYPE: " << *type_to_string(entry.type) << endl;
+    cerr << endl;
+}
+
+void Symbol_Table::dump() const {
+  for (auto iter = stab.begin(); iter != stab.end(); ++iter) {
+    dump_entry(*iter);
+  }
 }

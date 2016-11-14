@@ -56,9 +56,8 @@ class Symbol_Table {
   expr_type get_type(string *id, string *environment);
 
   /* Get the type of the formal parameter in the indicated position of
-     the procedure proc_id declared in the indicated environment. */
-  expr_type get_type(string *proc_id, string *environment,
-                     const int position);
+     the procedure proc_id. */
+  expr_type get_type(string *proc_id, const int position);
 
   /* Iterate over symbol table, updating all entries with
      type == UNKNOWN_T to standard_type_type. */
@@ -66,6 +65,9 @@ class Symbol_Table {
 
   // Convert an expr_type to a string - useful for debugging.
   string *type_to_string(const expr_type t) const;
+
+  // Dump the content of symbol to console - useful for debugging.
+  void dump() const;
 
  private:
   // One symbol table entry.
@@ -76,6 +78,9 @@ class Symbol_Table {
                    // this id is a parm.  Undefined otherwise.
     expr_type type;  // Data type of this id.
   } STAB_ENTRY;
+
+  // Dump an entry from symbol table.
+  void dump_entry(const STAB_ENTRY& entry) const;
 
   // The storage for the symbol table itself.
   vector<STAB_ENTRY> stab;
