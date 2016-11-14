@@ -41,7 +41,7 @@ symbol_table.o:	symbol_table.h symbol_table.cc
 
 parser.o:	parser.h parser.cc scanner.h token.h keywordtoken.h \
 		punctoken.h reloptoken.h addoptoken.h muloptoken.h \
-		idtoken.h numtoken.h eoftoken.h
+		idtoken.h numtoken.h eoftoken.h symbol_table.h
 	g++ -c $(CFLAGS) parser.cc
 
 test_scanner.o:	test_scanner.cc scanner.h token.h keywordtoken.h \
@@ -63,10 +63,10 @@ truc.o:	truc.cc parser.h scanner.h token.h keywordtoken.h punctoken.h \
 
 truc:	truc.o parser.o scanner.o buffer.o token.o keywordtoken.o \
 	punctoken.o reloptoken.o addoptoken.o muloptoken.o idtoken.o \
-	numtoken.o eoftoken.o
+	numtoken.o eoftoken.o symbol_table.o
 	g++ -o truc $(CFLAGS) truc.o parser.o scanner.o buffer.o eoftoken.o \
 	numtoken.o idtoken.o muloptoken.o addoptoken.o reloptoken.o \
-	punctoken.o keywordtoken.o token.o
+	punctoken.o keywordtoken.o token.o symbol_table.o
 
 # A dependancy-less rule.  Always executes target when invoked.
 clean:	

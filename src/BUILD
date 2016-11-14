@@ -98,6 +98,7 @@ cc_library(
   hdrs = ["parser.h"],
   deps = [
        ":scanner",
+       ":symbol_table",
        ":keywordtoken",
        ":punctoken",
        ":reloptoken",
