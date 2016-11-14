@@ -149,3 +149,90 @@ TEST_F(SemanticAnalyzerTest, ParseValidProgram) {
         "bar(); "
       "end; ")->parse_program());
 }
+
+TEST_F(SemanticAnalyzerTest, ParseInvalidProgram) {
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+        "a: int; "
+        "a: bool; "
+      "begin "
+        "print(a); "
+      "end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "The identifier a has already been declared.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+      "begin "
+        "print(a); "
+      "end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "The identifier a has not been declared.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+      "begin "
+        "if 1 then begin print(1); end; "
+      "end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "Type error: expected BOOL_T found INT_T.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+      "begin "
+        "while 1 loop begin print(1); end; "
+      "end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "Type error: expected BOOL_T found INT_T.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+      "begin "
+        "print((1 + (1 = 1))); end; "
+      "end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "Type error: expected INT_T found BOOL_T.");
+
+  // TODO(hieule): Fix failing test.
+  // ASSERT_EXIT(CreateParser(
+  //     "program foo; "
+  //     "begin "
+  //       "print(((1 = 1) and 1)); end; "
+  //     "end;")->parse_program(),
+  //             ::testing::ExitedWithCode(EXIT_FAILURE),
+  //             "Type error: expected BOOL_T found INT_T.");
+
+  // ASSERT_EXIT(CreateParser(
+  //     "program foo; "
+  //     "begin "
+  //       "if (1 = 1) and 2 then begin "
+  //         "print(1); "
+  //       "end; "
+  //     "end;")->parse_program(),
+  //             ::testing::ExitedWithCode(EXIT_FAILURE),
+  //             "Type error: expected BOOL_T found INT_T.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+        "procedure increment(a: int) "
+        "begin "
+          "print(a + 1); "
+        "end; "
+      "begin "
+        "increment(1 = 2); "
+      "end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "Type error: expected INT_T found BOOL_T.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+        "procedure bar() "
+        "begin "
+          "print 1; "
+        "end; "
+      "begin "
+        "print(bar); "
+      "end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "Type error: expected INT_T or BOOL_T, found PROCEDURE_T.");
+}
