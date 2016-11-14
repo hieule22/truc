@@ -66,7 +66,7 @@ class Symbol_Table {
   // Convert an expr_type to a string - useful for debugging.
   string *type_to_string(const expr_type t) const;
 
-  // Dump the content of symbol to console - useful for debugging.
+  // Dump the content of symbol table to console - useful for debugging.
   void dump() const;
 
  private:

@@ -19,6 +19,8 @@ void Symbol_Table::install(const string *id, const string *env,
   new_entry->position = -1;
   new_entry->type = t;
   stab.push_back(*new_entry);
+  cout << "Installing new entry in symbol table." << endl;
+  dump_entry(*new_entry);
 }
 
 void Symbol_Table::install(const string *id, const string *env,
@@ -32,6 +34,8 @@ void Symbol_Table::install(const string *id, const string *env,
   new_entry->position = pos;
   new_entry->type = t;
   stab.push_back(*new_entry);
+  cout << "Installing new entry in symbol table." << endl;
+  dump_entry(*new_entry);
 }
 
 bool Symbol_Table::is_decl(const string *id, const string *env) {
@@ -78,6 +82,8 @@ void Symbol_Table::update_type(expr_type standard_type_type) {
   for (it = stab.begin(); it != stab.end(); ++it) {
     if (it->type == UNKNOWN_T) {
       it->type = standard_type_type;
+      cout << "Updating existing entry in symbol table." << endl;
+      dump_entry(*it);
     }
   }
 }
@@ -113,14 +119,15 @@ string *Symbol_Table::type_to_string(const expr_type t) const {
 }
 
 void Symbol_Table::dump_entry(const STAB_ENTRY& entry) const {
-    cerr << "ID: " << entry.id << endl;
-    cerr << "ENV: " << entry.env << endl;
-    cerr << "POS: " << entry.position << endl;
-    cerr << "TYPE: " << *type_to_string(entry.type) << endl;
-    cerr << endl;
+    cout << "ID: " << entry.id << endl;
+    cout << "ENV: " << entry.env << endl;
+    cout << "POS: " << entry.position << endl;
+    cout << "TYPE: " << *type_to_string(entry.type) << endl;
+    cout << endl;
 }
 
 void Symbol_Table::dump() const {
+  cout << "Content of symbol table." << endl;
   for (auto iter = stab.begin(); iter != stab.end(); ++iter) {
     dump_entry(*iter);
   }

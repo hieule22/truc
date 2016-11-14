@@ -9,8 +9,7 @@
 #include "parser.h"
 #include "scanner.h"
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   char *filename;
   if (argc != 2) {
     std::cerr << "Usage: " << argv[0] << " <input file name>" << std::endl;
@@ -29,7 +28,7 @@ int main(int argc, char **argv)
       std::cout << "Extra tokens found at the end of program!" << std::endl;
     }
   } else {
-    std::cout << "Parsing failed" << std::endl;
+    std::cout << "Parsing failed!" << std::endl;
   }
 
   return 0;
