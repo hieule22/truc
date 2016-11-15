@@ -281,55 +281,59 @@ TEST_F(ParserTest, ParsePrintStmt) {
 }
 
 TEST_F(ParserTest, ParseExpression) {
-  EXPECT_TRUE(CreateParser("1")->parse_expr());
-  EXPECT_TRUE(CreateParser("1 * 2")->parse_expr());
-  EXPECT_TRUE(CreateParser("foo")->parse_expr());
-  EXPECT_TRUE(CreateParser("(2 + 3) * a")->parse_expr());
-  EXPECT_TRUE(CreateParser("a = 1")->parse_expr());
-  EXPECT_TRUE(CreateParser("((((((1))))))")->parse_expr());
-  EXPECT_TRUE(CreateParser("-3")->parse_expr());
-  EXPECT_TRUE(CreateParser("-a")->parse_expr());
-  EXPECT_TRUE(CreateParser("+(a + b)")->parse_expr());
-  EXPECT_TRUE(CreateParser("-(a + 1)")->parse_expr());
-  EXPECT_TRUE(CreateParser("not (a = 1)")->parse_expr());
-  EXPECT_TRUE(CreateParser("(not foo and quoz)")->parse_expr());
-  EXPECT_FALSE(CreateParser("+")->parse_expr());
-  EXPECT_FALSE(CreateParser("program")->parse_expr());
-  EXPECT_FALSE(CreateParser("+")->parse_expr());
-  EXPECT_FALSE(CreateParser("(())")->parse_expr());
-  EXPECT_FALSE(CreateParser("((3 + 1)")->parse_expr());
-  EXPECT_FALSE(CreateParser("())")->parse_expr());
-  EXPECT_FALSE(CreateParser("(()")->parse_expr());
+  expr_type expr_type_result = GARBAGE_T;
+  EXPECT_TRUE(CreateParser("1")->parse_expr(expr_type_result));
+  EXPECT_TRUE(CreateParser("1 * 2")->parse_expr(expr_type_result));
+  EXPECT_TRUE(CreateParser("foo")->parse_expr(expr_type_result));
+  EXPECT_TRUE(CreateParser("(2 + 3) * a")->parse_expr(expr_type_result));
+  EXPECT_TRUE(CreateParser("a = 1")->parse_expr(expr_type_result));
+  EXPECT_TRUE(CreateParser("((((((1))))))")->parse_expr(expr_type_result));
+  EXPECT_TRUE(CreateParser("-3")->parse_expr(expr_type_result));
+  EXPECT_TRUE(CreateParser("-a")->parse_expr(expr_type_result));
+  EXPECT_TRUE(CreateParser("+(a + b)")->parse_expr(expr_type_result));
+  EXPECT_TRUE(CreateParser("-(a + 1)")->parse_expr(expr_type_result));
+  EXPECT_TRUE(CreateParser("not (a = 1)")->parse_expr(expr_type_result));
+  EXPECT_TRUE(CreateParser("(not foo and quoz)")->parse_expr(expr_type_result));
+  EXPECT_FALSE(CreateParser("+")->parse_expr(expr_type_result));
+  EXPECT_FALSE(CreateParser("program")->parse_expr(expr_type_result));
+  EXPECT_FALSE(CreateParser("+")->parse_expr(expr_type_result));
+  EXPECT_FALSE(CreateParser("(())")->parse_expr(expr_type_result));
+  EXPECT_FALSE(CreateParser("((3 + 1)")->parse_expr(expr_type_result));
+  EXPECT_FALSE(CreateParser("())")->parse_expr(expr_type_result));
+  EXPECT_FALSE(CreateParser("(()")->parse_expr(expr_type_result));
 }
 
 TEST_F(ParserTest, ParseTerm) {
-  EXPECT_TRUE(CreateParser("1 * 2")->parse_term());
-  EXPECT_TRUE(CreateParser("1 * (2 + 3)")->parse_term());
-  EXPECT_TRUE(CreateParser("foo * (bar + quoz)")->parse_term());
+  expr_type term_type = GARBAGE_T;
+  EXPECT_TRUE(CreateParser("1 * 2")->parse_term(term_type));
+  EXPECT_TRUE(CreateParser("1 * (2 + 3)")->parse_term(term_type));
+  EXPECT_TRUE(CreateParser("foo * (bar + quoz)")->parse_term(term_type));
 }
 
 TEST_F(ParserTest, ParseFactor) {
-  EXPECT_TRUE(CreateParser("foo")->parse_factor());
-  EXPECT_TRUE(CreateParser("100")->parse_factor());
-  EXPECT_TRUE(CreateParser("(foo)")->parse_factor());
-  EXPECT_TRUE(CreateParser("(1 + 2)")->parse_factor());
-  EXPECT_TRUE(CreateParser("-(1 + 2)")->parse_factor());
-  EXPECT_TRUE(CreateParser("not (foo and bar)")->parse_factor());
-  EXPECT_FALSE(CreateParser("not")->parse_factor());
-  EXPECT_FALSE(CreateParser("program")->parse_factor());
-  EXPECT_FALSE(CreateParser("((1 + 2)")->parse_factor());
-  EXPECT_FALSE(CreateParser("(while)")->parse_factor());
-  EXPECT_FALSE(CreateParser("()")->parse_factor());
-  EXPECT_FALSE(CreateParser("((")->parse_factor());
-  EXPECT_FALSE(CreateParser("")->parse_factor());
+  expr_type factor_type = GARBAGE_T;
+  EXPECT_TRUE(CreateParser("foo")->parse_factor(factor_type));
+  EXPECT_TRUE(CreateParser("100")->parse_factor(factor_type));
+  EXPECT_TRUE(CreateParser("(foo)")->parse_factor(factor_type));
+  EXPECT_TRUE(CreateParser("(1 + 2)")->parse_factor(factor_type));
+  EXPECT_TRUE(CreateParser("-(1 + 2)")->parse_factor(factor_type));
+  EXPECT_TRUE(CreateParser("not (foo and bar)")->parse_factor(factor_type));
+  EXPECT_FALSE(CreateParser("not")->parse_factor(factor_type));
+  EXPECT_FALSE(CreateParser("program")->parse_factor(factor_type));
+  EXPECT_FALSE(CreateParser("((1 + 2)")->parse_factor(factor_type));
+  EXPECT_FALSE(CreateParser("(while)")->parse_factor(factor_type));
+  EXPECT_FALSE(CreateParser("()")->parse_factor(factor_type));
+  EXPECT_FALSE(CreateParser("((")->parse_factor(factor_type));
+  EXPECT_FALSE(CreateParser("")->parse_factor(factor_type));
 }
 
 TEST_F(ParserTest, ParseSign) {
-  EXPECT_TRUE(CreateParser("-")->parse_sign());
-  EXPECT_TRUE(CreateParser("+")->parse_sign());
-  EXPECT_TRUE(CreateParser("not")->parse_sign());
-  EXPECT_FALSE(CreateParser("foo")->parse_sign());
-  EXPECT_FALSE(CreateParser("123")->parse_sign());
-  EXPECT_FALSE(CreateParser("=")->parse_sign());
-  EXPECT_FALSE(CreateParser("")->parse_sign());
+  expr_type sign_type = GARBAGE_T;
+  EXPECT_TRUE(CreateParser("-")->parse_sign(sign_type));
+  EXPECT_TRUE(CreateParser("+")->parse_sign(sign_type));
+  EXPECT_TRUE(CreateParser("not")->parse_sign(sign_type));
+  EXPECT_FALSE(CreateParser("foo")->parse_sign(sign_type));
+  EXPECT_FALSE(CreateParser("123")->parse_sign(sign_type));
+  EXPECT_FALSE(CreateParser("=")->parse_sign(sign_type));
+  EXPECT_FALSE(CreateParser("")->parse_sign(sign_type));
 }
