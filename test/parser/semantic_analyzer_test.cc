@@ -1,4 +1,5 @@
 // Unit tests for Semantic Analyzer.
+// NOTE: PARSER_TEST_MODE flag must be disabled before testing.
 // Copyright 2016 Hieu Le.
 
 #include "src/parser.h"
@@ -83,6 +84,15 @@ TEST_F(SemanticAnalyzerTest, ParseValidProgram) {
       "begin "
         "a := b; "
         "m := n; "
+      "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program foo; "
+        "a, b: int; "
+        "c: bool; "
+      "begin "
+        "c := (a = b) or (a <= b); "
+        "c := (a > b) and not (a < b); "
       "end;")->parse_program());
 
   EXPECT_TRUE(CreateParser(
@@ -284,7 +294,7 @@ TEST_F(SemanticAnalyzerTest, ParseValidProgram) {
       "end;")->parse_program());
 }
 
-TEST_F(SemanticAnalyzerTest, ParseInvalidProgram) {
+TEST_F(SemanticAnalyzerTest, MultiplyDefinedIdentifierError) {
   ASSERT_EXIT(CreateParser(
       "program foo; "
         "a: int; "
@@ -322,7 +332,9 @@ TEST_F(SemanticAnalyzerTest, ParseInvalidProgram) {
       "begin print 0; end;")->parse_program(),
               ::testing::ExitedWithCode(EXIT_FAILURE),
               "The identifier a has already been declared.");
+}
 
+TEST_F(SemanticAnalyzerTest, UndeclaredIdentifierError) {
   ASSERT_EXIT(CreateParser(
       "program foo; "
       "begin "
@@ -365,6 +377,35 @@ TEST_F(SemanticAnalyzerTest, ParseInvalidProgram) {
       "begin bar(10); end;")->parse_program(),
               ::testing::ExitedWithCode(EXIT_FAILURE),
               "The identifier a has not been declared.");
+}
+
+TEST_F(SemanticAnalyzerTest, TypeError) {
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+        "a: int; b: bool; "
+      "begin "
+        "a := (a + 1) * (a - 1) + b; "
+      "end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "Type error: expected INT_T found BOOL_T.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+        "a: int; b: bool; "
+      "begin "
+        "b := not b and b or a; "
+      "end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "Type error: expected BOOL_T found INT_T.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+        "a: int; "
+      "begin "
+        "a := (a + 1) * (a - 10) and (a + 1); "
+      "end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "Type error: expected BOOL_T found INT_T");
 
   ASSERT_EXIT(CreateParser(
       "program foo; "
@@ -394,6 +435,14 @@ TEST_F(SemanticAnalyzerTest, ParseInvalidProgram) {
       "program foo; "
       "begin "
         "print(((1 = 1) and 1)); end; "
+      "end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "Type error: expected BOOL_T found INT_T.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+      "begin "
+        "print(1 and 2); "
       "end;")->parse_program(),
               ::testing::ExitedWithCode(EXIT_FAILURE),
               "Type error: expected BOOL_T found INT_T.");
@@ -449,4 +498,21 @@ TEST_F(SemanticAnalyzerTest, ParseInvalidProgram) {
       "end;")->parse_program(),
               ::testing::ExitedWithCode(EXIT_FAILURE),
               "Type error: expected INT_T or BOOL_T, found PROCEDURE_T.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+        "procedure bar() "
+        "begin print 1; end; "
+      "begin bar := 1; end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "Type error: expected PROCEDURE_T found INT_T.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+        "a: int; "
+        "procedure bar() "
+        "begin print 1; end; "
+      "begin a := bar; end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "Type error: expected INT_T found PROCEDURE_T.");
 }

@@ -6,11 +6,7 @@
 
 #include <string>
 
-// Disable semantic analysis. Useful for testing parser.
-#define PARSER_TEST_MODE 0
-
 // Log a message to console for debugging.
-#define DEBUGMODE 0
 #define LOG(output) \
   if (DEBUGMODE) std::cerr << output << std::endl
 

@@ -1,4 +1,5 @@
 // Unit tests for Parser class.
+// NOTE: PARSER_TEST_MODE flag must be enabled before testing.
 // Copyright 2016 Hieu Le.
 
 #include "src/parser.h"

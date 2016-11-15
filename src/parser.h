@@ -23,6 +23,12 @@
 #include "scanner.h"
 #include "symbol_table.h"
 
+// Disable semantic analysis. Useful for testing syntax analysis.
+#define PARSER_TEST_MODE 0
+
+// Enable descriptive logging. Useful for debugging.
+#define DEBUGMODE 0
+
 using namespace std;
 
 class Parser {
