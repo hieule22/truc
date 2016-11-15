@@ -298,6 +298,12 @@ TEST_F(SemanticAnalyzerTest, ParseValidProgram) {
       "begin "
         "; "
       "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program redundant; "
+      "begin "
+        "print 10; "
+      "end; foobarquoz")->parse_program());
 }
 
 TEST_F(SemanticAnalyzerTest, MultiplyDefinedIdentifierError) {
@@ -383,6 +389,21 @@ TEST_F(SemanticAnalyzerTest, UndeclaredIdentifierError) {
       "begin bar(10); end;")->parse_program(),
               ::testing::ExitedWithCode(EXIT_FAILURE),
               "The identifier a has not been declared.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+        "procedure bar(a: int) begin print a; end; "
+        "procedure quoz(a: int) begin bar(a); end; "
+      "begin quoz(10); end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "The identifier bar has not been declared.");
+
+  ASSERT_EXIT(CreateParser(
+      "program norecursion; "
+        "procedure foo(a: int) begin foo(10); end; "
+      "begin foo(10); end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "The identifier foo has not been declared.");
 }
 
 TEST_F(SemanticAnalyzerTest, TypeError) {

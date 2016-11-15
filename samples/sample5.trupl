@@ -1,0 +1,35 @@
+# This program computes the sums of odd and even numbers between 1 and 100.
+
+program sumcalculator;
+	# Even and odd sums keep track of the sums of even and odd numbers
+	# respectively. current stores the current value in the sequence.
+	evensum, oddsum, current: int;
+
+	# isodd keeps track of the parity of the current value.
+	isodd: bool;
+begin
+	# Initializations.
+	evensum := 0;
+	oddsum := 0;
+	current := 1;
+	# Common trick to replicate the Boolean literal true in TruPL.
+	isodd := (1 = 1);
+
+	# Iterate through each values between 1 and 100.
+	while current <= 100 loop begin
+	      if isodd then begin # If current is odd, update oddsum.
+	      	 oddsum := oddsum + current;
+	      end
+	      else begin # If current is even, update evensum.
+	      	 evensum := evensum + current;
+	      end;
+
+	      # Increment current and revert isodd.
+	      current := current + 1;
+	      isodd := not isodd;
+	end;
+
+	# Print the results.
+	print evensum;
+	print oddsum;
+end;

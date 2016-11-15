@@ -1,0 +1,33 @@
+# This program computes the nth Fibonacci number.
+
+program fibonaccicalculator;
+
+	# max stores the maximum value of n.
+	max, i: int;
+
+	# fib accepts a positive integer n and prints
+	# the nth Fibonacci number.
+	procedure fib(n: int)
+		  previous, result, i: int;
+	begin
+		i := 1;
+		previous := 0;
+		result := 1; # The first Fibonacci number.
+
+		while i < n loop begin
+		      result := result + previous;
+		      previous := result - previous;
+		end;
+
+		# Print the result.
+		print result;
+	end;
+begin
+	max := 20;
+	i := 1;
+
+	while i <= max loop begin
+	      fib(i);
+	      i := i + 1;  # Increment i.
+	end;
+end;

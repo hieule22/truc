@@ -1,0 +1,6 @@
+# This constitutes the minimal TruPL program.
+
+program minimal;
+begin
+	; # The program body consists of a single no-op statement.
+end;
