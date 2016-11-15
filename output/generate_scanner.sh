@@ -12,7 +12,9 @@ if [ $# -eq 1 ] && [ $1 == "bazel" ]; then
    cd $DIR/../src/
    bazel build :all
    # Run all tests
-   cd $DIR/../test/
+   cd $DIR/../test/tokens/
+   bazel test :all
+   cd $DIR/../test/scanner/
    bazel test :all
 fi
 
