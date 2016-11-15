@@ -21,6 +21,7 @@
 #include "numtoken.h"
 #include "eoftoken.h"
 #include "scanner.h"
+#include "symbol_table.h"
 
 using namespace std;
 
@@ -38,9 +39,8 @@ class Parser {
   bool done_with_input() const;
 
  private:
+  // Parsers for each non-terminal in TruPL.
   bool parse_decl_list();
-
-  // etc, etc...; one for each non-terminal in TruPL 2.0
 
   bool parse_variable_decl_list();
 
@@ -52,7 +52,7 @@ class Parser {
 
   bool parse_identifier_list_prm();
 
-  bool parse_standard_type();
+  bool parse_standard_type(expr_type& standard_type_type);
 
   bool parse_block();
 
@@ -70,7 +70,7 @@ class Parser {
 
   bool parse_stmt();
 
-  bool parse_adhoc_as_pc_tail();
+  bool parse_adhoc_as_pc_tail(expr_type& adhoc_as_pc_tail_type);
 
   bool parse_if_stmt();
 
@@ -86,21 +86,21 @@ class Parser {
 
   bool parse_actual_parm_list_hat();
 
-  bool parse_expr();
+  bool parse_expr(expr_type& expr_type_result);
 
-  bool parse_expr_hat();
+  bool parse_expr_hat(expr_type& expr_hat_type);
 
-  bool parse_simple_expr();
+  bool parse_simple_expr(expr_type& simple_expr_type);
 
-  bool parse_simple_expr_prm();
+  bool parse_simple_expr_prm(expr_type& simple_expr_prm_type);
 
-  bool parse_term();
+  bool parse_term(expr_type& term_type);
 
-  bool parse_term_prm();
+  bool parse_term_prm(expr_type& term_prm_type);
 
-  bool parse_factor();
+  bool parse_factor(expr_type& factor_type);
 
-  bool parse_sign();
+  bool parse_sign(expr_type& sign_type);
 
   // The lexical analyzer
   Scanner *lex;
@@ -119,6 +119,40 @@ class Parser {
 
   // Advance the current token.
   void advance();
+
+  /*********** Semantial Analysis **********/
+  // Name of the environment we are currently parsing.
+  string *current_env;
+  // Name of the environment of the main program.
+  string *main_env;
+  // Potential procedure name when examining a procedure call.
+  string *procedure_name;
+  // Position of an actual parameter in a procedure call.
+  int actual_parm_position;
+  // Position of a formal paramter in a procedure definition.
+  int formal_parm_position;
+  // A Boolean value that is true only when parsing a formal parameter list.
+  bool parsing_formal_parm_list;
+
+  // Symbol table.
+  Symbol_Table stab;
+
+  /* These functions are for signalling semantic errors.  None of
+     them return - they exit and terminate the compilation.
+
+     Identifier has been define twice.
+  */
+  void multiply_defined_identifier(string *id) const;
+
+  // Identifier is undeclared.
+  void undeclared_identifier(string *id) const;
+
+  // Type error:  a single type was expected.
+  void type_error(const expr_type expected,  const expr_type found) const;
+
+  // Type error: one of two types was expected.
+  void type_error(const expr_type expected1, const expr_type expected2,
+                  const expr_type found) const;
 
   // Intended for unit tests.
   friend class ParserTest_ParseVariableDecl_Test;

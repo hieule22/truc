@@ -7,13 +7,14 @@
 #include <string>
 
 // Log a message to console for debugging.
-#define DEBUGMODE 1
+#define DEBUGMODE 0
 #define LOG(output) \
   if (DEBUGMODE) std::cerr << output << std::endl
 
 Parser::Parser(Scanner *the_scanner) {
   /* Initialize the parser. */
   lex = the_scanner;
+  parsing_formal_parm_list = false;
   word = lex->next_token();
   LOG("Parsing: " << *word->to_string());
 }
@@ -37,7 +38,7 @@ bool Parser::done_with_input() const {
 
 void Parser::parse_error(string *expected, Token *found) const {
   std::cerr << "Parse error: Expected: " << *expected <<
-      ", Found:  " << *found->to_string() << std::endl;
+      ", Found:  " << *(found->to_string()) << std::endl;
   delete expected;
 }
 
@@ -45,6 +46,30 @@ void Parser::advance() {
   delete word;
   word = lex->next_token();
   LOG("Parsing: " << *word->to_string());
+}
+
+void Parser::multiply_defined_identifier(string *id) const {
+  cerr << "The identifier " << *id << " has already been declared. " << endl;
+  exit(EXIT_FAILURE);
+}
+
+void Parser::undeclared_identifier(string *id) const {
+  cerr << "The identifier " << *id << " has not been declared. " << endl;
+  exit(EXIT_FAILURE);
+}
+
+void Parser::type_error(const expr_type expected, const expr_type found) const {
+  cerr << "Type error: expected " << *(stab.type_to_string(expected))
+       << " found " << *(stab.type_to_string(found)) << "." << endl;
+  exit(EXIT_FAILURE);
+}
+
+void Parser::type_error(const expr_type expected1, const expr_type expected2,
+                        const expr_type found) const {
+  cerr << "Type error: expected " << *(stab.type_to_string(expected1))
+       << " or " << *(stab.type_to_string(expected2))
+       << ", found " << *(stab.type_to_string(found)) << "." << endl;
+  exit(EXIT_FAILURE);
 }
 
 namespace {
@@ -109,7 +134,16 @@ bool Parser::parse_program() {
     advance();
 
     // Match identifier, 2nd symbol on RHS
-    if (word->get_token_type() == TOKEN_ID) {
+    if (is_identifier(word)) {
+      // Semantic analysis.
+      string *id_name = static_cast<IdToken *>(word)->get_attribute();
+      string *global_env_name = new string("_EXTERNAL");
+      stab.install(id_name, global_env_name, PROGRAM_T);
+      current_env = new string(*id_name);
+      main_env = new string(*id_name);
+      delete global_env_name;
+      delete id_name;
+
       // ADVANCE
       advance();
 
@@ -124,6 +158,9 @@ bool Parser::parse_program() {
            point.
         */
         if (parse_decl_list()) {
+
+          // Dump the content of symbol table.
+          if (DEBUGMODE) stab.dump();
 
           // Match BLOCK, 5th on RHS - ACTION
           if (parse_block()) {
@@ -184,11 +221,11 @@ bool Parser::parse_program() {
 }
 
 bool Parser::parse_decl_list() {
-  /* DECL_LIST -> VARIABLE_DECL_LIST PROCEDURE_DECL_LIST 
+  /* DECL_LIST -> VARIABLE_DECL_LIST PROCEDURE_DECL_LIST
 
-     Predict(VARIABLE_DECL_LIST PROCEDURE_DECL_LIST) 
-     = First(VARIABLE_DECL_LIST) 
-     union First (PROCEDURE_DECL_LIST) 
+     Predict(VARIABLE_DECL_LIST PROCEDURE_DECL_LIST)
+     = First(VARIABLE_DECL_LIST)
+     union First (PROCEDURE_DECL_LIST)
      union Follow (DECL_LIST) = {identifier, procedure, begin}
 
      Note that we don't actually need to check the predict set
@@ -204,7 +241,7 @@ bool Parser::parse_decl_list() {
 }
 
 bool Parser::parse_variable_decl_list() {
-  /* VARIABLE_DECL_LIST -> VARIABLE_DECL ; VARIABLE_DECL_LIST     
+  /* VARIABLE_DECL_LIST -> VARIABLE_DECL ; VARIABLE_DECL_LIST
      Predict(VARIABLE_DECL ; VARIABLE_DECL_LIST) == First(VARIABLE_DECL)
      == {identifier} */
   if (is_identifier(word)) {
@@ -255,11 +292,21 @@ bool Parser::parse_variable_decl() {
       // Match colon(:).
       if (is_punctuation(word, PUNC_COLON)) {
 
+        expr_type standard_type_type = GARBAGE_T;
+
         // ADVANCE.
         advance();
 
         // Match STANDARD_TYPE - ACTION.
-        return parse_standard_type();
+        if (parse_standard_type(standard_type_type)) {
+          // Semantic analysis.
+          stab.update_type(standard_type_type);
+          return true;
+
+          // Fail to match STANDARD_TYPE.
+        } else {
+          return false;
+        }
 
         // Fail to match colon.
       } else {
@@ -326,6 +373,15 @@ bool Parser::parse_identifier_list() {
   if (is_identifier(word)) {
     LOG("IDENTIFIER_LIST -> identifier IDENTIFIER_LIST_PRM");
 
+    // Semantic analysis.
+    string* identifier_attr = static_cast<IdToken*>(word)->get_attribute();
+    if (stab.is_decl(identifier_attr, current_env)) {
+      multiply_defined_identifier(identifier_attr);
+    } else {
+      stab.install(identifier_attr, current_env, UNKNOWN_T);
+    }
+    // delete identifier_attr;
+
     // ADVANCE.
     advance();
 
@@ -353,6 +409,21 @@ bool Parser::parse_identifier_list_prm() {
     // Match an identifier.
     if (is_identifier(word)) {
 
+      // Semantic analysis.
+      string* identifier_attr = static_cast<IdToken*>(word)->get_attribute();
+      if (stab.is_decl(identifier_attr, current_env)) {
+        multiply_defined_identifier(identifier_attr);
+      } else {
+        if (parsing_formal_parm_list) {
+          stab.install(identifier_attr, current_env, UNKNOWN_T,
+                       formal_parm_position);
+          ++formal_parm_position;
+        } else {
+          stab.install(identifier_attr, current_env, UNKNOWN_T);
+        }
+      }
+      // delete identifier_attr;
+
       // ADVANCE.
       advance();
 
@@ -374,21 +445,29 @@ bool Parser::parse_identifier_list_prm() {
   return false;
 }
 
-bool Parser::parse_standard_type() {
+bool Parser::parse_standard_type(expr_type& standard_type_type) {
   /* STANDARD_TYPE -> int
      Predict(int) = {int} */
   if (is_keyword(word, KW_INT)) {
     LOG("STANDARD_TYPE -> int");
+
+    // Semantic analysis.
+    standard_type_type = INT_T;
+    LOG("standard_type_type: " << *stab.type_to_string(standard_type_type));
 
     // ADVANCE.
     advance();
 
     return true;
 
-    /* STANDARD_TYPE -> bool       
-       Predict(bool) = {bool} */ 
+    /* STANDARD_TYPE -> bool
+       Predict(bool) = {bool} */
   } else if (is_keyword(word, KW_BOOL)) {
     LOG("STANDARD_TYPE -> bool");
+
+    // Semantic analysis.
+    standard_type_type = BOOL_T;
+    LOG("standard_type_type: " << *stab.type_to_string(standard_type_type));
 
     // ADVANCE.
     advance();
@@ -453,6 +532,16 @@ bool Parser::parse_procedure_decl() {
     // Match an identifier.
     if (is_identifier(word)) {
 
+      // Semantic analysis.
+      string* identifier_attr = static_cast<IdToken*>(word)->get_attribute();
+      if (stab.is_decl(identifier_attr, current_env)) {
+        multiply_defined_identifier(identifier_attr);
+      } else {
+        stab.install(identifier_attr, current_env, PROCEDURE_T);
+        current_env = identifier_attr;
+        formal_parm_position = 0;
+      }
+
       // ADVANCE.
       advance();
 
@@ -472,7 +561,15 @@ bool Parser::parse_procedure_decl() {
             advance();
 
             // Match VARIABLE_DECL_LIST and BLOCK - ACTION.
-            return parse_variable_decl_list() && parse_block();
+            if (parse_variable_decl_list() && parse_block()) {
+              // Semantic analysis.
+              current_env = main_env;
+              return true;
+
+              // Fail to match VARIABLE_DECL_LIST and BLOCK.
+            } else {
+              return false;
+            }
 
             // Fail to match a closing bracket.
           } else {
@@ -512,8 +609,17 @@ bool Parser::parse_procedure_args() {
   if (is_identifier(word)) {
     LOG("PROCEDURE_ARGS -> FORMAL_PARM_LIST");
 
+    parsing_formal_parm_list = true;
+
     // Match FORMAL_PARM_LIST - ACTION.
-    return parse_formal_parm_list();
+    if (parse_formal_parm_list()) {
+      parsing_formal_parm_list = false;
+      return true;
+
+      // Fail to match FORMAL_PARM_LIST.
+    } else {
+      return false;
+    }
 
     /* PROCEDURE_ARGS -> lambda */
   } else {
@@ -532,6 +638,17 @@ bool Parser::parse_formal_parm_list() {
     LOG("FORMAL_PARM_LIST -> identifier IDENTIFIER_LIST_PRM : "
         "STANDARD_TYPE FORMAL_PARM_LIST_HAT");
 
+    // Semantic analysis.
+    string* identifier_attr = static_cast<IdToken*>(word)->get_attribute();
+    if (stab.is_decl(identifier_attr, current_env)) {
+      multiply_defined_identifier(identifier_attr);
+    } else {
+      stab.install(identifier_attr, current_env, UNKNOWN_T,
+                   formal_parm_position);
+      ++formal_parm_position;
+    }
+    // delete identifier_attr;
+
     // ADVANCE.
     advance();
 
@@ -541,11 +658,23 @@ bool Parser::parse_formal_parm_list() {
       // Match colon(:).
       if (is_punctuation(word, PUNC_COLON)) {
 
+        expr_type standard_type_type = GARBAGE_T;
+
         // ADVANCE.
         advance();
 
-        // Match STANDARD_TYPE and FORMAL_PARM_LIST_HAT - ACTION.
-        return parse_standard_type() && parse_formal_parm_list_hat();
+        // Match STANDARD_TYPE - ACTION.
+        if (parse_standard_type(standard_type_type)) {
+          // Semantic analysis.
+          stab.update_type(standard_type_type);
+
+          // Match FORMAL_PARM_LIST_HAT - ACTION.
+          return parse_formal_parm_list_hat();
+
+          // Fail to match STANDARD_TYPE.
+        } else {
+          return false;
+        }
 
         // Fail to match colon.
       } else {
@@ -707,32 +836,73 @@ bool Parser::parse_stmt() {
   } else if (is_identifier(word)) {
     LOG("STMT -> identifier ADHOC_AS_PC_TAIL");
 
+    // Semantic analysis.
+    string* identifier_attr = static_cast<IdToken*>(word)->get_attribute();
+    if (!stab.is_decl(identifier_attr, current_env)) {
+      undeclared_identifier(identifier_attr);
+    } else {
+      procedure_name = identifier_attr;
+    }
+
     // ADVANCE.
     advance();
 
+    expr_type adhoc_as_pc_tail_type = GARBAGE_T;
+
     // Match ADHOC_AS_PC_TAIL - ACTION.
-    return parse_adhoc_as_pc_tail();
+    if (parse_adhoc_as_pc_tail(adhoc_as_pc_tail_type)) {
+
+      // Semantic analysis.
+      expr_type identifier_type = stab.get_type(identifier_attr, current_env);
+      if (adhoc_as_pc_tail_type != identifier_type) {
+        type_error(identifier_type, adhoc_as_pc_tail_type);
+      }
+      return true;
+
+      // Fail to match ADHOC_AS_PC_TAIL.
+    } else {
+      return false;
+    }
   }
 
   return false;
 }
 
-bool Parser::parse_adhoc_as_pc_tail() {
+bool Parser::parse_adhoc_as_pc_tail(expr_type& adhoc_as_pc_tail_type) {
   /* ADHOC_AS_PC_TAIL -> := EXPR
      Predict(:= EXPR) == {:=} */
   if (is_punctuation(word, PUNC_ASSIGN)) {
     LOG("ADHOC_AS_PC_TAIL -> := EXPR");
 
+    expr_type expr_type_result = GARBAGE_T;
+
     // ADVANCE.
     advance();
 
     // Match EXPR - ACTION.
-    return parse_expr();
+    if (parse_expr(expr_type_result)) {
+      // Semantic analysis.
+      adhoc_as_pc_tail_type = expr_type_result;
+      LOG("adhoc_as_pc_tail_type: "
+          << *stab.type_to_string(adhoc_as_pc_tail_type));
+      return true;
+
+      // Fail to match EXPR.
+    } else {
+      return false;
+    }
 
     /* ADHOC_AS_PC_TAIL -> ( EXPR_LIST )
        Predict( ( EXPR_LIST ) ) = { ( } */
   } else if (is_punctuation(word, PUNC_OPEN)) {
     LOG("ADHOC_AS_PC_TAIL -> ( EXPR_LIST )");
+
+    // Semantic analysis.
+    expr_type procedure_type = stab.get_type(procedure_name, main_env);
+    if (procedure_type != PROCEDURE_T) {
+      type_error(PROCEDURE_T, procedure_type);
+    }
+    actual_parm_position = 0;
 
     // ADVANCE.
     advance();
@@ -742,6 +912,11 @@ bool Parser::parse_adhoc_as_pc_tail() {
 
       // Match closing bracket.
       if (is_punctuation(word, PUNC_CLOSE)) {
+
+        // Semantic analysis.
+        adhoc_as_pc_tail_type = PROCEDURE_T;
+        LOG("adhoc_as_pc_tail_type: "
+            << *stab.type_to_string(adhoc_as_pc_tail_type));
 
         // ADVANCE.
         advance();
@@ -772,8 +947,15 @@ bool Parser::parse_if_stmt() {
     // ADVANCE.
     advance();
 
+    expr_type expr_type_result = GARBAGE_T;
+
     // Match EXPR - ACTION.
-    if (parse_expr()) {
+    if (parse_expr(expr_type_result)) {
+
+      // Semantic analysis.
+      if (expr_type_result != BOOL_T) {
+        type_error(BOOL_T, expr_type_result);
+      }
 
       // Match keyword then.
       if (is_keyword(word, KW_THEN)) {
@@ -834,8 +1016,15 @@ bool Parser::parse_while_stmt() {
     // ADVANCE.
     advance();
 
+    expr_type expr_type_result = GARBAGE_T;
+
     // Match EXPR - ACTION.
-    if (parse_expr()) {
+    if (parse_expr(expr_type_result)) {
+
+      // Semantic analysis.
+      if (expr_type_result != BOOL_T) {
+        type_error(BOOL_T, expr_type_result);
+      }
 
       // Match keyword loop.
       if (is_keyword(word, KW_LOOP)) {
@@ -875,8 +1064,19 @@ bool Parser::parse_print_stmt() {
     // ADVANCE.
     advance();
 
+    expr_type expr_type_result = GARBAGE_T;
+
     // Match EXPR - ACTION.
-    return parse_expr();
+    if (parse_expr(expr_type_result)) {
+      if (expr_type_result != INT_T && expr_type_result != BOOL_T) {
+        type_error(INT_T, BOOL_T, expr_type_result);
+      }
+      return true;
+
+      // Fail to match EXPR.
+    } else {
+      return false;
+    }
 
     // Fail to match keyword print.
   } else {
@@ -915,8 +1115,22 @@ bool Parser::parse_actual_parm_list() {
   /* ACTUAL_PARM_LIST -> EXPR ACTUAL_PARM_LIST_HAT */
   LOG("ACTUAL_PARM_LIST -> EXPR ACTUAL_PARM_LIST_HAT");
 
-  // Match EXPR and ACTUAL_PARM_LIST_HAT - ACTION.
-  return parse_expr() && parse_actual_parm_list_hat();
+  expr_type expr_type_result = GARBAGE_T;
+
+  // Match EXPR - ACTION.
+  if (parse_expr(expr_type_result)) {
+    expr_type expected_type =
+        stab.get_type(procedure_name, actual_parm_position);
+    if (expr_type_result != expected_type) {
+      type_error(expected_type, expr_type_result);
+    }
+    ++actual_parm_position;
+
+    // Match ACTUAL_PARM_LIST_HAT - ACTION.
+    return parse_actual_parm_list_hat();
+  }
+
+  return false;
 }
 
 bool Parser::parse_actual_parm_list_hat() {
@@ -940,16 +1154,33 @@ bool Parser::parse_actual_parm_list_hat() {
   return false;
 }
 
-bool Parser::parse_expr() {
+bool Parser::parse_expr(expr_type& expr_type_result) {
   /* EXPR -> SIMPLE_EXPR EXPR_HAT */
   LOG("EXPR -> SIMPLE_EXPR EXPR_HAT");
 
+  expr_type simple_expr_type = GARBAGE_T;
+  expr_type expr_hat_type = GARBAGE_T;
+
   // Match SIMPLE_EXPR and EXPR_HAT - ACTION.
-  return parse_simple_expr() && parse_expr_hat();
+  if (parse_simple_expr(simple_expr_type) && parse_expr_hat(expr_hat_type)) {
+    // Semantic analysis.
+    if (expr_hat_type == NO_T) {
+      expr_type_result = simple_expr_type;
+    } else if (simple_expr_type == INT_T && expr_hat_type == INT_T) {
+      expr_type_result = BOOL_T;
+    } else {
+      type_error(INT_T, simple_expr_type, expr_hat_type);
+    }
+    LOG("expr_type_result: " << *stab.type_to_string(expr_type_result));
+
+    return true;
+  }
+
+  return false;
 }
 
-bool Parser::parse_expr_hat() {
-  /* EXPR_HAT -> relop SIMPLE_EXPR
+bool Parser::parse_expr_hat(expr_type& expr_hat_type) {
+  /* EXPR_HAT -> relop SIMPLE_EXPnR
      Predict(relop SIMPLE_EXPR) = {relop} */
   if (is_relop(word)) {
     LOG("EXPR_HAT -> relop SIMPLE_EXPR");
@@ -957,81 +1188,219 @@ bool Parser::parse_expr_hat() {
     // ADVANCE.
     advance();
 
+    expr_type simple_expr_type = GARBAGE_T;
+
     // Match SIMPLE_EXPR - ACTION.
-    return parse_simple_expr();
+    if (parse_simple_expr(simple_expr_type)) {
+      // Semantic analysis.
+      if (simple_expr_type == INT_T) {
+        expr_hat_type = INT_T;
+      } else {
+        type_error(INT_T, simple_expr_type);
+      }
+      LOG("EXPR_HAT_TYPE: " << *stab.type_to_string(expr_hat_type));
+      return true;
+
+      // Fail to match SIMPLE_EXPR.
+    } else {
+      return false;
+    }
 
     /* EXPR_HAT -> lambda */
   } else {
     LOG("EXPR_HAT -> lambda");
+    LOG("EXPR_HAT_TYPE: " << *stab.type_to_string(expr_hat_type));
+    expr_hat_type = NO_T;
     return true;
   }
 
   return false;
 }
 
-bool Parser::parse_simple_expr() {
+bool Parser::parse_simple_expr(expr_type& simple_expr_type) {
   /* SIMPLE_EXPR -> TERM SIMPLE_EXPR_PRM */
   LOG("SIMPLE_EXPR -> TERM SIMPLE_EXPR_PRM");
 
+  expr_type term_type = GARBAGE_T;
+  expr_type simple_expr_prm_type = GARBAGE_T;
+
   // Match TERM and SIMPLE_EXPR_PRM - ACTION.
-  return parse_term() && parse_simple_expr_prm();
+  if (parse_term(term_type) && parse_simple_expr_prm(simple_expr_prm_type)) {
+    // Semantic analysis.
+    if (simple_expr_prm_type == NO_T) {
+      simple_expr_type = term_type;
+    } else if (term_type == simple_expr_prm_type) {
+      simple_expr_type = term_type;
+    } else {
+      type_error(term_type, simple_expr_prm_type);
+    }
+    LOG("simple_expr_type: " << *stab.type_to_string(simple_expr_type));
+
+    return true;
+  }
+
+  // Fail to match TERM and SIMPLE_EXPR_PRM.
+  return false;
 }
 
-bool Parser::parse_simple_expr_prm() {
+bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type) {
   /* SIMPLE_EXPR_PRM -> addop TERM SIMPLE_EXPR_PRM
      Predict(addop TERM SIMPLE_EXPR_PRM) == {addop} */
   if (is_addop(word)) {
     LOG("SIMPLE_EXPR_PRM -> addop TERM SIMPLE_EXPR_PRM");
 
+    expr_type addop_type = GARBAGE_T;
+    addop_attr_type addop_attr =
+        static_cast<AddopToken*>(word)->get_attribute();
+    if (addop_attr == ADDOP_ADD || addop_attr == ADDOP_SUB) {
+      addop_type = INT_T;
+    } else {
+      addop_type = BOOL_T;
+    }
+    expr_type term_type = GARBAGE_T;
+    expr_type simple_expr_prm1_type = GARBAGE_T;
+
     // ADVANCE.
     advance();
 
     // Match TERM and SIMPLE_EXPR_PRM - ACTION.
-    return parse_term() && parse_simple_expr_prm();
+    if (parse_term(term_type) && parse_simple_expr_prm(simple_expr_prm1_type)) {
+      // Semantic analysis.
+      if (simple_expr_prm1_type == NO_T) {
+        if (addop_type == term_type) {
+          simple_expr_prm0_type = addop_type;
+        } else {
+          type_error(addop_type, term_type);
+        }
+      } else if (addop_type == term_type &&
+                 term_type == simple_expr_prm1_type) {
+        simple_expr_prm0_type = addop_type;
+      } else {
+        type_error(addop_type, term_type, simple_expr_prm1_type);
+      }
+
+      return true;
+
+      // Fail to match TERM and SIMPLE_EXPR_PRM.
+    } else {
+      return false;
+    }
 
     /* SIMPLE_EXPR_PRM -> lambda */
   } else {
     LOG("SIMPLE_EXPR_PRM -> lambda");
+    simple_expr_prm0_type = NO_T;
+    LOG("simple_expr_prm_type: " <<
+        *stab.type_to_string(simple_expr_prm0_type));
     return true;
   }
 
   return false;
 }
 
-bool Parser::parse_term() {
+bool Parser::parse_term(expr_type& term_type) {
   /* TERM -> FACTOR TERM_PRM */
   LOG("TERM -> FACTOR TERM_PRM");
 
-  // Match FACTOR and TERM_PRM - ACTION.
-  return parse_factor() && parse_term_prm();
+  expr_type factor_type = GARBAGE_T;
+  expr_type term_prm_type = GARBAGE_T;
+
+  // Match FACTOR - ACTION.
+  if (parse_factor(factor_type)) {
+    // Match TERM_PRM - ACTION.
+    if (parse_term_prm(term_prm_type)) {
+
+      // Semantic analysis.
+      if (term_prm_type == NO_T) {
+        term_type = factor_type;
+      } else if (factor_type == term_prm_type) {
+        term_type = factor_type;
+      } else {
+        type_error(factor_type, term_prm_type);
+      }
+      LOG("term_type: " << *stab.type_to_string(term_type));
+
+      return true;
+
+      // Fail to match TERM_PRM.
+    } else {
+      return false;
+    }
+
+    // Fail to match FACTOR.
+  } else {
+    return false;
+  }
+
+  return false;
 }
 
-bool Parser::parse_term_prm() {
+bool Parser::parse_term_prm(expr_type& term_prm0_type) {
   /* TERM_PRM -> mulop FACTOR TERM_PRM
      Predict(mulop FACTOR TERM_PRM) = {mulop} */
   if (is_mulop(word)) {
     LOG("TERM_PRM -> mulop FACTOR TERM_PRM");
 
+    // Semantic analysis.
+    expr_type mulop_type = GARBAGE_T;
+    mulop_attr_type mulop_attr = MULOP_NO_ATTR;
+    mulop_attr = static_cast<MulopToken *>(word)->get_attribute();
+    if (mulop_attr == MULOP_MUL || mulop_attr == MULOP_DIV) {
+      mulop_type = INT_T;
+    } else {
+      mulop_type = BOOL_T;
+    }
+    expr_type factor_type = GARBAGE_T;
+    expr_type term_prm1_type = GARBAGE_T;
+
     // ADVANCE.
     advance();
 
     // Match FACTOR and TERM_PRM - ACTION.
-    return parse_factor() && parse_term_prm();
+    if (parse_factor(factor_type) && parse_term_prm(term_prm1_type)) {
+      // Semantic analysis.
+      if (term_prm1_type == NO_T && mulop_type == factor_type) {
+        term_prm0_type = mulop_type;
+      } else if (mulop_type == factor_type && factor_type == term_prm1_type) {
+        term_prm0_type = mulop_type;
+      } else if (term_prm1_type == NO_T) {
+        type_error(mulop_type, factor_type);
+      } else {
+        type_error(mulop_type, factor_type, term_prm1_type);
+      }
+
+      return true;
+
+      // Fail to match FACTOR and TERM_PRM.
+    } else {
+      return false;
+    }
 
     /* TERM_PRM -> lambda */
   } else {
     LOG("TERM_PRM -> lambda");
+    term_prm0_type = NO_T;
     return true;
   }
 
   return false;
 }
 
-bool Parser::parse_factor() {
+bool Parser::parse_factor(expr_type& factor0_type) {
   /* FACTOR -> identifier
      Predict(identifier) = {identifier} */
   if (is_identifier(word)) {
     LOG("FACTOR -> identifier");
+
+    // Semantic analysis.
+    string* identifier_attr = static_cast<IdToken*>(word)->get_attribute();
+    if (!stab.is_decl(identifier_attr, current_env)) {
+      undeclared_identifier(identifier_attr);
+    } else {
+      factor0_type = stab.get_type(identifier_attr, current_env);
+    }
+    // delete identifier_attr;
+    LOG("factor_type: " << *stab.type_to_string(factor0_type));
 
     // ADVANCE.
     advance();
@@ -1042,6 +1411,10 @@ bool Parser::parse_factor() {
        Predict(num) = {num} */
   } else if (is_number(word)) {
     LOG("FACTOR -> number");
+
+    // Semantic analysis.
+    factor0_type = INT_T;
+    LOG("factor_type: " << *stab.type_to_string(factor0_type));
 
     // ADVANCE.
     advance();
@@ -1056,11 +1429,16 @@ bool Parser::parse_factor() {
     // ADVANCE.
     advance();
 
+    expr_type expr_type_result = GARBAGE_T;
+
     // Match EXPR.
-    if (parse_expr()) {
+    if (parse_expr(expr_type_result)) {
 
       // Match close bracket.
       if (is_punctuation(word, PUNC_CLOSE)) {
+        // Semantic analysis.
+        factor0_type = expr_type_result;
+        LOG("factor_type: " << *stab.type_to_string(factor0_type));
 
         // ADVANCE.
         advance();
@@ -1085,18 +1463,36 @@ bool Parser::parse_factor() {
              || is_keyword(word, KW_NOT)) {
     LOG("FACTOR -> SIGN FACTOR");
 
+    expr_type sign_type = GARBAGE_T;
+    expr_type factor1_type = GARBAGE_T;
+
     // Match SIGN and FACTOR.
-    return parse_sign() && parse_factor();
+    if (parse_sign(sign_type) && parse_factor(factor1_type)) {
+      if (sign_type != factor1_type) {
+        type_error(sign_type, factor1_type);
+      } else {
+        factor0_type = factor1_type;
+      }
+      LOG("factor_type: " << *stab.type_to_string(factor0_type));
+      return true;
+
+      // Fail to match SIGN and FACTOR.
+    } else {
+      return false;
+    }
   }
 
   return false;
 }
 
-bool Parser::parse_sign() {
+bool Parser::parse_sign(expr_type& sign_type) {
   /* SIGN -> +
      Predict(SIGN) == {+} */
   if (is_addop(word, ADDOP_ADD)) {
     LOG("SIGN -> +");
+
+    // Semantic analysis.
+    sign_type = INT_T;
 
     // ADVANCE.
     advance();
@@ -1108,6 +1504,9 @@ bool Parser::parse_sign() {
   } else if (is_addop(word, ADDOP_SUB)) {
     LOG("SIGN -> -");
 
+    // Semantic analysis.
+    sign_type = INT_T;
+
     // ADVANCE.
     advance();
 
@@ -1117,6 +1516,9 @@ bool Parser::parse_sign() {
        Predict(not) == {not} */
   } else if (is_keyword(word, KW_NOT)) {
     LOG("SIGN -> not");
+
+    // Semantic analysis.
+    sign_type = BOOL_T;
 
     // ADVANCE.
     advance();
