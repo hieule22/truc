@@ -292,6 +292,12 @@ TEST_F(SemanticAnalyzerTest, ParseValidProgram) {
           "print a; "
         "end; "
       "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
+      "program minimal; "
+      "begin "
+        "; "
+      "end;")->parse_program());
 }
 
 TEST_F(SemanticAnalyzerTest, MultiplyDefinedIdentifierError) {
