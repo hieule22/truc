@@ -17,6 +17,7 @@ program fibonaccicalculator;
 		while i < n loop begin
 		      result := result + previous;
 		      previous := result - previous;
+		      i := i + 1;
 		end;
 
 		# Print the result.

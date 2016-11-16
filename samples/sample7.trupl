@@ -1,0 +1,9 @@
+program foo;
+  procedure foo()
+    foo: int;
+  begin
+    print foo;
+  end;
+begin
+  foo();
+end;
