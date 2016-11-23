@@ -10,16 +10,18 @@
 #include "gtest/gtest.h"
 #include "util/ptr_util.h"
 
+namespace {
+
 class SemanticAnalyzerTest : public testing::Test {
  protected:
   // Create a parser from given input string.
   std::unique_ptr<Parser> CreateParser(const std::string& input) {
-    ss = util::make_unique<std::istringstream>(input);
-    return util::make_unique<Parser>(new Scanner(new Buffer(ss.get())));
+    ss_ = util::make_unique<std::istringstream>(input);
+    return util::make_unique<Parser>(new Scanner(new Buffer(ss_.get())));
   }
 
  private:
-  std::unique_ptr<std::istringstream> ss;
+  std::unique_ptr<std::istringstream> ss_;
 };
 
 TEST_F(SemanticAnalyzerTest, ParseValidProgram) {
@@ -543,3 +545,5 @@ TEST_F(SemanticAnalyzerTest, TypeError) {
               ::testing::ExitedWithCode(EXIT_FAILURE),
               "Type error: expected INT_T found PROCEDURE_T.");
 }
+
+}  // namespace
