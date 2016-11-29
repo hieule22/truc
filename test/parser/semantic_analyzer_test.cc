@@ -277,6 +277,14 @@ TEST_F(SemanticAnalyzerTest, ParseValidProgram) {
       "end;")->parse_program());
 
   EXPECT_TRUE(CreateParser(
+      "program foo; "
+        "a, b: int; "
+        "c: bool; "
+      "begin "
+        "c := (a < b) and (a = b); "
+      "end;")->parse_program());
+
+  EXPECT_TRUE(CreateParser(
       "program looper; "
         "a: int; "
         "b: bool; "
@@ -482,6 +490,16 @@ TEST_F(SemanticAnalyzerTest, TypeError) {
         "if ((1 = 1) and 2) then begin "
           "print(1); "
         "end; "
+      "end;")->parse_program(),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              "Type error: expected BOOL_T found INT_T.");
+
+  ASSERT_EXIT(CreateParser(
+      "program foo; "
+        "a, b: int; "
+        "c: bool; "
+      "begin "
+        "c := a < b and a = b; "
       "end;")->parse_program(),
               ::testing::ExitedWithCode(EXIT_FAILURE),
               "Type error: expected BOOL_T found INT_T.");
