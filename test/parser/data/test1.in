@@ -1,0 +1,15 @@
+program synt1;
+
+# Syntax test 1. 
+# A syntactically correct program.
+
+   a: int;
+   b: int;
+
+begin
+
+  a := 1;
+  b := 2;
+  print 1 / b * a + 4 - b + (a / 2 * 3 + 4 - 5 + (b - -a));
+
+end;

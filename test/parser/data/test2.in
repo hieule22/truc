@@ -1,0 +1,20 @@
+program synt2;
+
+# Syntax test 2.
+# Shouldn't compiler:
+# Contains := in relop.
+
+   a, b: int;
+
+begin
+
+	# There's a syntax error in the while condition -
+	# You can't use an assignment statement as an expression.  
+	# TruPL isn't C.
+
+	while a := 2 loop begin
+      		print a;
+      		b := b + a;
+   	end;
+
+end;

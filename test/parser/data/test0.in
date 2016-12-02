@@ -1,0 +1,12 @@
+program synt0;
+
+# Syntax test 0.  
+# A syntatically correct program.
+
+   a: int;
+
+begin
+
+   a := 1;
+
+end;

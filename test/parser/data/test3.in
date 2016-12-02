@@ -1,0 +1,42 @@
+program synt3;
+
+# Syntax test 4.
+# Shouldn't compile.
+
+   i1: int;
+   i2: int;
+
+   b1: bool;
+   b2, b3, b4, b5: bool;
+
+begin
+
+  # This large program that is correct, except
+  # that it is missing the final semicolon
+  i1 := 0;
+  i2 := 0;
+
+  b1 := 0 = 1;
+  b2 := 0 <> 1;
+  b3 := b1 and b2;
+  b4 := b1 or b2;
+  b5 := not (b1 and b2) or not (b3 and b4);
+
+  if b1 then 
+  begin
+    if b2 then 
+    begin
+      print i1 * i2;
+    end else 
+    begin
+       print i2 / i1;
+    end; # if b2 else
+  end; # if b1 
+
+  while b1 and ((b2 or b3) and b4) and not b5 loop
+  begin
+    print i1 + i2 - i2 - i1;
+  end;
+
+end
+    
