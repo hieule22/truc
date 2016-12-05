@@ -40,6 +40,7 @@ void Register_Allocator::deallocate_register(Register *reg) {
     // Ooops, your intermediate code generator is broken.
     freeing_unallocated_register(reg);
   }
+  register_set[reg->get_num()]->clear_inuse();
 }
 
 

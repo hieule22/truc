@@ -21,7 +21,6 @@ using namespace std;
 class Register_Allocator {
  public:
   Register_Allocator();
-
   ~Register_Allocator();
 
   // Gets an unused register.
