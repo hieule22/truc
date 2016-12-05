@@ -110,6 +110,12 @@ cc_library(
   ],
 )
 
+cc_library(
+  name = "register",
+  srcs = ["register.cc"],
+  hdrs = ["register.h"],
+)
+
 cc_binary(
   name = "test_scanner",
   srcs = ["test_scanner.cc"],
