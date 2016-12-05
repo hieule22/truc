@@ -130,6 +130,13 @@ cc_library(
   deps = [":register"],
 )
 
+cc_library(
+  name = "emitter",
+  srcs = ["emitter.cc"],
+  hdrs = ["emitter.h"],
+  deps = [":register"],
+)
+
 cc_binary(
   name = "test_scanner",
   srcs = ["test_scanner.cc"],
