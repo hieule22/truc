@@ -123,6 +123,13 @@ cc_library(
   deps = [":register"],
 )
 
+cc_library(
+  name = "operand",
+  srcs = ["operand.cc"],
+  hdrs = ["operand.h"],
+  deps = [":register"],
+)
+
 cc_binary(
   name = "test_scanner",
   srcs = ["test_scanner.cc"],
