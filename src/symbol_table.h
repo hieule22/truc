@@ -11,6 +11,9 @@
 #include <string>
 #include <vector>
 
+// Enable debug logging when installing or updating entries from symbol table.
+#define SYMTABLE_LOG 0
+
 using namespace std;
 
 /* Types of expressions that the semantic analyzer must

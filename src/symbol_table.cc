@@ -19,8 +19,10 @@ void Symbol_Table::install(const string *id, const string *env,
   new_entry->position = -1;
   new_entry->type = t;
   stab.push_back(*new_entry);
+#if SYMTABLE_LOG
   cout << "Installing new entry in symbol table." << endl;
   dump_entry(*new_entry);
+#endif
 }
 
 void Symbol_Table::install(const string *id, const string *env,
@@ -34,8 +36,10 @@ void Symbol_Table::install(const string *id, const string *env,
   new_entry->position = pos;
   new_entry->type = t;
   stab.push_back(*new_entry);
+#if SYMTABLE_LOG
   cout << "Installing new entry in symbol table." << endl;
   dump_entry(*new_entry);
+#endif
 }
 
 bool Symbol_Table::is_decl(const string *id, const string *env) {
@@ -82,8 +86,10 @@ void Symbol_Table::update_type(expr_type standard_type_type) {
   for (it = stab.begin(); it != stab.end(); ++it) {
     if (it->type == UNKNOWN_T) {
       it->type = standard_type_type;
+#if SYMTABLE_LOG
       cout << "Updating existing entry in symbol table." << endl;
       dump_entry(*it);
+#endif
     }
   }
 }
