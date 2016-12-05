@@ -116,6 +116,13 @@ cc_library(
   hdrs = ["register.h"],
 )
 
+cc_library(
+  name = "register_allocator",
+  srcs = ["register_allocator.cc"],
+  hdrs = ["register_allocator.h"],
+  deps = [":register"],
+)
+
 cc_binary(
   name = "test_scanner",
   srcs = ["test_scanner.cc"],
