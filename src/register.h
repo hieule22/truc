@@ -8,7 +8,6 @@
 #include <stdlib.h>
 
 #include <iostream>
-#include <stack>
 #include <string>
 
 using namespace std;
@@ -22,7 +21,6 @@ class Register {
  public:
   // Constructs a register with a specified number.
   explicit Register(int num);
-
   ~Register();
 
   // Returns the number of this register.
@@ -37,23 +35,11 @@ class Register {
   // Checks if this register has been allocated.
   bool is_inuse() const;
 
-  // Pushes a specified memory location onto the register's spill stack.
-  void spill(string *location);
-
-  // Restores the content of the register from the memory relocation
-  // before spilling.
-  string *unspill();
-
-  // Checks if this register has any spilled content in memory.
-  bool has_spilled() const;
-
  private:
   // The register's number.
   int num;
   // The flag indicating if this register is currently in use.
   bool inuse;
-  // The register's spill stack.
-  stack<string *> *spill_stack;
 };
 
 #endif
