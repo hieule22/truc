@@ -93,24 +93,6 @@ cc_library(
 )
 
 cc_library(
-  name = "parser",
-  srcs = ["parser.cc"],
-  hdrs = ["parser.h"],
-  deps = [
-       ":scanner",
-       ":symbol_table",
-       ":keywordtoken",
-       ":punctoken",
-       ":reloptoken",
-       ":addoptoken",
-       ":muloptoken",
-       ":idtoken",
-       ":numtoken",
-       ":eoftoken"
-  ],
-)
-
-cc_library(
   name = "register",
   srcs = ["register.cc"],
   hdrs = ["register.h"],
@@ -135,6 +117,28 @@ cc_library(
   srcs = ["emitter.cc"],
   hdrs = ["emitter.h"],
   deps = [":register"],
+)
+
+cc_library(
+  name = "parser",
+  srcs = ["parser.cc"],
+  hdrs = ["parser.h"],
+  deps = [
+       ":scanner",
+       ":symbol_table",
+       ":keywordtoken",
+       ":punctoken",
+       ":reloptoken",
+       ":addoptoken",
+       ":muloptoken",
+       ":idtoken",
+       ":numtoken",
+       ":eoftoken",
+       ":register",
+       ":register_allocator",
+       ":emitter",
+       ":operand",
+  ],
 )
 
 cc_binary(
