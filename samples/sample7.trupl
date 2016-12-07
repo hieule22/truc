@@ -1,9 +1,9 @@
 program foo;
-  procedure foo()
-    foo: int;
-  begin
-    print foo;
-  end;
+	a, b: int;
 begin
-  foo();
+	a := 10;
+	b := 12;
+	print a + b;
+	print a - b;
+	print a > b;
 end;
