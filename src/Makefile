@@ -39,9 +39,22 @@ scanner.o:	scanner.h scanner.cc buffer.h token.h keywordtoken.h \
 symbol_table.o:	symbol_table.h symbol_table.cc
 	g++ -c $(CFLAGS) symbol_table.cc
 
+register.o:	register.h register.cc
+	g++ -c $(CFLAGS) register.cc
+
+register_allocator.o:	register_allocator.h register_allocator.cc register.h
+	g++ -c $(CFLAGS) register_allocator.cc
+
+operand.o:	operand.h operand.cc register.h
+	g++ -c $(CFLAGS) operand.cc
+
+emitter.o:	emitter.h emitter.cc register.h
+	g++ -c $(CFLAGS) emitter.cc
+
 parser.o:	parser.h parser.cc scanner.h token.h keywordtoken.h \
 		punctoken.h reloptoken.h addoptoken.h muloptoken.h \
-		idtoken.h numtoken.h eoftoken.h symbol_table.h
+		idtoken.h numtoken.h eoftoken.h symbol_table.h \
+		register.h register_allocator.h emitter.h operand.h
 	g++ -c $(CFLAGS) parser.cc
 
 test_scanner.o:	test_scanner.cc scanner.h token.h keywordtoken.h \
@@ -58,15 +71,18 @@ test_scanner:	test_scanner.o scanner.o buffer.o token.o keywordtoken.o \
 		token.o test_scanner.o
 
 truc.o:	truc.cc parser.h scanner.h token.h keywordtoken.h punctoken.h \
-	reloptoken.h addoptoken.h muloptoken.h idtoken.h numtoken.h eoftoken.h
+	reloptoken.h addoptoken.h muloptoken.h idtoken.h numtoken.h eoftoken.h \
+	register.h register_allocator.h emitter.h operand.h
 	g++ -c $(CFLAGS) truc.cc
 
 truc:	truc.o parser.o scanner.o buffer.o token.o keywordtoken.o \
 	punctoken.o reloptoken.o addoptoken.o muloptoken.o idtoken.o \
-	numtoken.o eoftoken.o symbol_table.o
+	numtoken.o eoftoken.o symbol_table.o register.o register_allocator.o \
+	emitter.o operand.o
 	g++ -o truc $(CFLAGS) truc.o parser.o scanner.o buffer.o eoftoken.o \
 	numtoken.o idtoken.o muloptoken.o addoptoken.o reloptoken.o \
-	punctoken.o keywordtoken.o token.o symbol_table.o
+	punctoken.o keywordtoken.o token.o symbol_table.o register.o \
+	register_allocator.o emitter.o operand.o
 
 # A dependancy-less rule.  Always executes target when invoked.
 clean:	
@@ -76,4 +92,5 @@ clean:
 # in the dependency list.  
 all:	token.o keywordtoken.o punctoken.o reloptoken.o addoptoken.o \
 	muloptoken.o idtoken.o numtoken.o eoftoken.o \
+	register.o register_allocator.o emitter.o operand.o \
 	buffer.o scanner.o parser.o test_scanner.o test_scanner truc.o truc
