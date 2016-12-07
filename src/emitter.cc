@@ -34,7 +34,7 @@ string *Emitter::get_new_label(const char prefix[]) {
 
 // Convert an int to its string equivalent.  Idea shamelessly
 // stolen from Java.
-string *Emitter::itos(unsigned int num) {
+string *Emitter::itos(unsigned int num) const {
   stringstream *out = new stringstream();
   *out << num;
   string *label = new string(out->str());
@@ -42,91 +42,95 @@ string *Emitter::itos(unsigned int num) {
   return label;
 }
 
-void Emitter::emit_label(string *label) {
+void Emitter::emit_label(const string *label) const {
   cout << *label << ":" << endl;
 }
 
 // move Ri, #1
-void Emitter::emit_move(Register *reg, int immediate) {
+void Emitter::emit_move(const Register *reg, int immediate) const {
   cout << "\t\t" << "move " << " R" << reg->get_num();
   cout << ", #" << immediate << endl;
 }
 
 // move Ri, Rj
-void Emitter::emit_move(Register *reg, Register *regr) {
+void Emitter::emit_move(const Register *reg, const Register *regr) const {
   cout << "\t\t" << "move " << " R" << reg->get_num();
   cout << ", R" << regr->get_num() << endl;
 }
 
 // move Ri, variable
-void Emitter::emit_move(Register *reg, string *var) {
+void Emitter::emit_move(const Register *reg, const string *var) const {
   cout << "\t\t" << "move " << " R" << reg->get_num();
   cout << ", " << *var << endl;
 }
 
 // move variable, Ri
-void Emitter::emit_move(string *id, Register *reg) {
+void Emitter::emit_move(const string *id, const Register *reg) const {
   cout << "\t\t" << "move " << *id << ", ";
   cout << 'R' << reg->get_num() << endl;
 }
 
-void Emitter::emit_2addr(inst_type inst, Register *reg, int immediate) {
+void Emitter::emit_2addr(inst_type inst, const Register *reg,
+                         int immediate) const {
   cout << "\t\t";
   translate_and_emit(inst);
   cout << " R" << reg->get_num() << ", #" << immediate << endl;
 }
 
-void Emitter::emit_2addr(inst_type inst, Register *reg, Register *src) {
+void Emitter::emit_2addr(inst_type inst, const Register *reg,
+                         const Register *src) const {
   cout << "\t\t";
   translate_and_emit(inst);
   cout << " R" << reg->get_num() << ", R" << src->get_num() << endl;
 }
 
-void Emitter::emit_2addr(inst_type inst, Register *reg, string *var) {
+void Emitter::emit_2addr(inst_type inst, const Register *reg,
+                         const string *var) const {
   cout << "\t\t";
   translate_and_emit(inst);
   cout << " R" << reg->get_num() << ", " << *var << endl;
 }
 
-void Emitter::emit_1addr(inst_type inst, Register *reg) {
+void Emitter::emit_1addr(inst_type inst, const Register *reg) const {
   cout << "\t\t";
   translate_and_emit(inst);
   cout << " R" << reg->get_num() << endl;
 }
 
-void Emitter::emit_branch(string *dest) {
+void Emitter::emit_branch(const string *dest) const {
   cout << "\t\t" << "brun " << *dest << endl;
 }
 
-void Emitter::emit_branch(inst_type inst, Register *reg, int dest) {
+void Emitter::emit_branch(inst_type inst, const Register *reg, int dest) const {
   cout << "\t\t";
   translate_and_emit(inst);
   cout << " R" << reg->get_num() << ", " << dest << endl;
 }
 
-void Emitter::emit_branch(inst_type inst, Register *reg, string *dest) {
+void Emitter::emit_branch(inst_type inst, const Register *reg,
+                          const string *dest) const {
   cout << "\t\t";
   translate_and_emit(inst);
   cout << " R" << reg->get_num() << ", " << *dest << endl;
 }
 
-void Emitter::emit_halt() {
+void Emitter::emit_halt() const {
   cout << "\t\t" << "halt" << endl;
 }
 
-void Emitter::emit_data_directive(string *label, int size) {
+void Emitter::emit_data_directive(const string *label, int size) const {
   cout << *label << ':' << "\t\t" << "data " << size << endl;
 }
 
-void Emitter::emit_data_directive(int size) {
+void Emitter::emit_data_directive(int size) const {
   cout << "\t\t" << "data " << size << endl;
 }
 
-void Emitter::emit_comment(const char comment[]) {
+void Emitter::emit_comment(const char comment[]) const {
   cout << "\t\t" << "; " << comment << endl;
 }
 
-void Emitter::translate_and_emit(inst_type inst) {
+void Emitter::translate_and_emit(inst_type inst) const {
   switch (inst) {
     case INST_MOVE:
       cout << "move";
