@@ -1,0 +1,5 @@
+program foo;
+	a, b, c, d: bool;
+begin
+	a := (b and not c) or (not d and not a) and ((10 = 12) and (not(not c)));
+end;
