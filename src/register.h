@@ -14,13 +14,12 @@ using namespace std;
 
 // This class describes a single register.  You should not manipulate
 // register objects directly.
-//
 // Instead, call the methods in the RegisterAllocator class to
 // allocate and deallocate registers.
 class Register {
  public:
   // Constructs a register with a specified number.
-  explicit Register(int num);
+  explicit Register(int number);
   ~Register();
 
   // Returns the number of this register.
@@ -37,7 +36,7 @@ class Register {
 
  private:
   // The register's number.
-  int num;
+  const int num;
   // The flag indicating if this register is currently in use.
   bool inuse;
 };

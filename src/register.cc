@@ -4,10 +4,7 @@
 
 #include "register.h"
 
-Register::Register(int num) {
-  this->num = num;
-  inuse = false;
-}
+Register::Register(const int number) : num(number), inuse(false) {}
 
 Register::~Register() {}
 
