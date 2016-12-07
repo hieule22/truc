@@ -13,14 +13,22 @@
 Parser::Parser(Scanner *the_scanner) {
   /* Initialize the parser. */
   lex = the_scanner;
-  parsing_formal_parm_list = false;
   word = lex->next_token();
   LOG("Parsing: " << *word->to_string());
+
+  // Semantic analysis initializations.
+  current_env = main_env = procedure_name = nullptr;
+  actual_parm_position = formal_parm_position = -1;
+  parsing_formal_parm_list = false;
 #if PARSER_TEST_MODE
   current_env = new string();
   main_env = new string();
   procedure_name = new string();
 #endif
+
+  // Code generation initializations.
+  e = new Emitter();
+  allocator = new Register_Allocator();
 }
 
 Parser::~Parser() {
@@ -30,6 +38,12 @@ Parser::~Parser() {
   }
   if (word != nullptr) {
     delete word;
+  }
+  if (e != nullptr) {
+    delete e;
+  }
+  if (allocator != nullptr) {
+    delete allocator;
   }
 }
 
@@ -156,6 +170,9 @@ bool Parser::parse_program() {
       delete global_env_name;
       delete id_name;
 
+      // IR - Output a label for the program.
+      e->emit_label(id_name);
+
       // ADVANCE
       advance();
 
@@ -181,6 +198,18 @@ bool Parser::parse_program() {
               // ADVANCE
               // Since we advanced, we matched a token so we get the next one.
               advance();
+
+              // IR - Output halt instruction at the end of the program.
+              e->emit_halt();
+
+              // IR - Generate all data directives.
+              vector<const string*> identifiers = stab.get_identifiers(main_env);
+              if (!identifiers.empty()) {
+                e->emit_comment("Data directives.");
+              }
+              for (const string* identifier : identifiers) {
+                e->emit_data_directive(identifier, 1);
+              }
 
               // Parse_program succeeded.
               return true;
@@ -654,10 +683,8 @@ bool Parser::parse_formal_parm_list() {
 
     // Match IDENTIFIER_LIST_PRM - ACTION.
     if (parse_identifier_list_prm()) {
-
       // Match colon(:).
       if (is_punctuation(word, PUNC_COLON)) {
-
         expr_type standard_type_type = GARBAGE_T;
 
         // ADVANCE.
@@ -728,10 +755,8 @@ bool Parser::parse_stmt_list() {
 
     // Match STMT - ACTION.
     if (parse_stmt()) {
-
       // Match a semicolon(;).
       if (is_punctuation(word, PUNC_SEMI)) {
-
         // ADVANCE.
         advance();
 
@@ -776,10 +801,8 @@ bool Parser::parse_stmt_list_prm() {
 
     // Match STMT - ACTION.
     if (parse_stmt()) {
-
       // Match semicolon(;).
       if (is_punctuation(word, PUNC_SEMI)) {
-
         // ADVANCE.
         advance();
 
@@ -848,14 +871,38 @@ bool Parser::parse_stmt() {
     advance();
 
     expr_type adhoc_as_pc_tail_type = GARBAGE_T;
+    Operand* expression = new Operand(OPTYPE_MEMORY, identifier_attr);
 
     // Match ADHOC_AS_PC_TAIL - ACTION.
-    if (parse_adhoc_as_pc_tail(adhoc_as_pc_tail_type)) {
-
+    if (parse_adhoc_as_pc_tail(adhoc_as_pc_tail_type, expression)) {
       // Semantic analysis.
       expr_type identifier_type = stab.get_type(identifier_attr, current_env);
       if (adhoc_as_pc_tail_type != identifier_type) {
         type_error(identifier_type, adhoc_as_pc_tail_type);
+      }
+
+      // IR - Only generate code for assignment statements.
+      if (identifier_type != PROCEDURE_T) {
+        // Make sure that operand holding expr value is in a register.
+        Register* expression_register = nullptr;
+        if (expression->get_type() == OPTYPE_REGISTER) {
+          expression_register = expression->get_r_value();
+        } else {
+          // Allocate a register for the expression value and move it there.
+          expression_register = allocator->allocate_register();
+          if (expression->get_type() == OPTYPE_IMMEDIATE) {
+            e->emit_move(expression_register, expression->get_i_value());
+          } else if (expression->get_type() == OPTYPE_MEMORY) {
+            e->emit_move(expression_register, expression->get_m_value());
+          }
+        }
+
+        // Move the content of this register to the memory location of id.
+        e->emit_move(identifier_attr, expression_register);
+
+        // Deallocate the expression operand and the containing register.
+        allocator->deallocate_register(expression_register);
+        delete expression;
       }
       return true;
 
@@ -868,7 +915,8 @@ bool Parser::parse_stmt() {
   return false;
 }
 
-bool Parser::parse_adhoc_as_pc_tail(expr_type& adhoc_as_pc_tail_type) {
+bool Parser::parse_adhoc_as_pc_tail(expr_type& adhoc_as_pc_tail_type,
+                                    Operand*& expression) {
   /* ADHOC_AS_PC_TAIL -> := EXPR
      Predict(:= EXPR) == {:=} */
   if (is_punctuation(word, PUNC_ASSIGN)) {
@@ -880,7 +928,7 @@ bool Parser::parse_adhoc_as_pc_tail(expr_type& adhoc_as_pc_tail_type) {
     advance();
 
     // Match EXPR - ACTION.
-    if (parse_expr(expr_type_result)) {
+    if (parse_expr(expr_type_result, expression)) {
       // Semantic analysis.
       adhoc_as_pc_tail_type = expr_type_result;
       return true;
@@ -907,10 +955,8 @@ bool Parser::parse_adhoc_as_pc_tail(expr_type& adhoc_as_pc_tail_type) {
 
     // Match EXPR_LIST - ACTION.
     if (parse_expr_list()) {
-
       // Match closing bracket.
       if (is_punctuation(word, PUNC_CLOSE)) {
-
         // Semantic analysis.
         adhoc_as_pc_tail_type = PROCEDURE_T;
 
@@ -944,23 +990,74 @@ bool Parser::parse_if_stmt() {
     advance();
 
     expr_type expr_type_result = GARBAGE_T;
+    Operand* expression = nullptr;
 
     // Match EXPR - ACTION.
-    if (parse_expr(expr_type_result)) {
-
+    if (parse_expr(expr_type_result, expression)) {
       // Semantic analysis.
       if (expr_type_result != BOOL_T) {
         type_error(BOOL_T, expr_type_result);
       }
 
+      // IR - Make sure that the operand holding expr value is in a register.
+      Register* expression_register = nullptr;
+      if (expression->get_type() == OPTYPE_REGISTER) {
+        expression_register = expression->get_r_value();
+      } else {
+        // Allocate a register for the expression value and move it there.
+        expression_register = allocator->allocate_register();
+        if (expression->get_type() == OPTYPE_IMMEDIATE) {
+          e->emit_move(expression_register, expression->get_i_value());
+        } else if (expression->get_type() == OPTYPE_MEMORY) {
+          e->emit_move(expression_register, expression->get_m_value());
+        }
+      }
+
+      // Generate labels of the 'else' part (even if it doesn't exist) and the
+      // next statement after the 'if'.
+      string* else_part = e->get_new_label("else");
+      string* if_done = e->get_new_label("if_done");
+
+      // Test register that holds the value of the expression.
+      // If it is false, jump to the 'else' part.
+      e->emit_branch(INST_BREZ, expression_register, else_part);
+
+      // We are done with the expression operand and the register in which it
+      // resides. Deallocate both.
+      allocator->deallocate_register(expression_register);
+      delete expression;
+
       // Match keyword then.
       if (is_keyword(word, KW_THEN)) {
-
         // ADVANCE.
         advance();
 
-        // Match BLOCK and IF_STMT_HAT - ACTION.
-        return parse_block() && parse_if_stmt_hat();
+        // Code generation for the 'then' part generated by parse_block().
+
+        // Match BLOCK - ACTION.
+        if (parse_block()) {
+          // IR - Skip over 'else' part.
+          e->emit_branch(if_done);
+          e->emit_label(else_part);
+
+          // IR - If there is an 'else' part to the 'if' statement, the code
+          // for the 'else' part code will be generated by parse_if_stmt_hat().
+
+          // Match IF_STMT_HAT - ACTION.
+          if (parse_if_stmt_hat()) {
+            // IR - Emit label for statement following the 'if' statement.
+            e->emit_label(if_done);
+            return true;
+
+            // Fail to match IF_STMT_HAT.
+          } else {
+            return false;
+          }
+
+          // Fail to match BLOCK.
+        } else {
+          return false;
+        }
 
         // Fail to match keyword then.
       } else {
@@ -992,6 +1089,7 @@ bool Parser::parse_if_stmt_hat() {
     advance();
 
     // Match BLOCK - ACTION.
+    // IR - code for else part is generated here.
     return parse_block();
 
     /* IF_STMT_HAT -> lambda */
@@ -1013,23 +1111,61 @@ bool Parser::parse_while_stmt() {
     advance();
 
     expr_type expr_type_result = GARBAGE_T;
+    Operand* expression = nullptr;
+    string* while_cond = e->get_new_label("while_cond");
+    string* while_done = e->get_new_label("while_done");
+
+    // IR - Emit label for the evaluation the 'while' condition.
+    e->emit_label(while_cond);
 
     // Match EXPR - ACTION.
-    if (parse_expr(expr_type_result)) {
-
+    if (parse_expr(expr_type_result, expression)) {
       // Semantic analysis.
       if (expr_type_result != BOOL_T) {
         type_error(BOOL_T, expr_type_result);
       }
 
+      // IR - Make sure the operand holding expression value is in a register.
+      Register* expression_register = nullptr;
+      if (expression->get_type() == OPTYPE_REGISTER) {
+        expression_register = expression->get_r_value();
+      } else {
+        // Allocate a register for expression value and move it there.
+        expression_register = allocator->allocate_register();
+        if (expression->get_type() == OPTYPE_IMMEDIATE) {
+          e->emit_move(expression_register, expression->get_i_value());
+        } else if (expression->get_type() == OPTYPE_MEMORY) {
+          e->emit_move(expression_register, expression->get_m_value());
+        }
+      }
+
+      // Test the register that holds expression register.
+      // If it is false, skip the body of the loop.
+      e->emit_branch(INST_BREZ, expression_register, while_done);
+
+      // Deallocate the expression operand and the associated register.
+      allocator->deallocate_register(expression_register);
+      delete expression;
+
       // Match keyword loop.
       if (is_keyword(word, KW_LOOP)) {
-
         // ADVANCE.
         advance();
 
         // Match BLOCK - ACTION.
-        return parse_block();
+        // Code generation for the loop body is handled by parse_block().
+        if (parse_block()) {
+          // IR - Loop back to evaluate loop condition.
+          e->emit_branch(while_cond);
+          // IR - Emit label for the statement following the 'while' loop.
+          e->emit_label(while_done);
+
+          return true;
+
+          // Fail to match BLOCK.
+        } else {
+          return false;
+        }
 
         // Fail to match keyword loop.
       } else {
@@ -1061,12 +1197,35 @@ bool Parser::parse_print_stmt() {
     advance();
 
     expr_type expr_type_result = GARBAGE_T;
+    Operand* expression = nullptr;
 
     // Match EXPR - ACTION.
-    if (parse_expr(expr_type_result)) {
+    if (parse_expr(expr_type_result, expression)) {
       if (expr_type_result != INT_T && expr_type_result != BOOL_T) {
         type_error(INT_T, BOOL_T, expr_type_result);
       }
+
+      // IR - Make sure that operand holding expr value is in a register.
+      Register* expression_register = nullptr;
+      if (expression->get_type() == OPTYPE_REGISTER) {
+        expression_register = expression->get_r_value();
+      } else {
+        // Allocate a register for the expression value and move it there.
+        expression_register = allocator->allocate_register();
+        if (expression->get_type() == OPTYPE_IMMEDIATE) {
+          e->emit_move(expression_register, expression->get_i_value());
+        } else if (expression->get_type() == OPTYPE_MEMORY) {
+          e->emit_move(expression_register, expression->get_m_value());
+        }
+      }
+
+      // Generate instruction to print expression.
+      e->emit_1addr(INST_OUTB, expression_register);
+
+      // Deallocate the expression operand and the containing register.
+      allocator->deallocate_register(expression_register);
+      delete expression;
+
       return true;
 
       // Fail to match EXPR.
@@ -1112,9 +1271,10 @@ bool Parser::parse_actual_parm_list() {
   LOG("ACTUAL_PARM_LIST -> EXPR ACTUAL_PARM_LIST_HAT");
 
   expr_type expr_type_result = GARBAGE_T;
+  Operand* expression = nullptr;  // Unimplemented.
 
   // Match EXPR - ACTION.
-  if (parse_expr(expr_type_result)) {
+  if (parse_expr(expr_type_result, expression)) {
     expr_type expected_type =
         stab.get_type(procedure_name, actual_parm_position);
     if (expr_type_result != expected_type) {
@@ -1150,7 +1310,7 @@ bool Parser::parse_actual_parm_list_hat() {
   return false;
 }
 
-bool Parser::parse_expr(expr_type& expr_type_result) {
+bool Parser::parse_expr(expr_type& expr_type_result, Operand*& op) {
   /* EXPR -> SIMPLE_EXPR EXPR_HAT */
   LOG("EXPR -> SIMPLE_EXPR EXPR_HAT");
 
@@ -1158,7 +1318,8 @@ bool Parser::parse_expr(expr_type& expr_type_result) {
   expr_type expr_hat_type = GARBAGE_T;
 
   // Match SIMPLE_EXPR and EXPR_HAT - ACTION.
-  if (parse_simple_expr(simple_expr_type) && parse_expr_hat(expr_hat_type)) {
+  if (parse_simple_expr(simple_expr_type, op)
+      && parse_expr_hat(expr_hat_type, op)) {
     // Semantic analysis.
     if (expr_hat_type == NO_T) {
       expr_type_result = simple_expr_type;
@@ -1174,25 +1335,111 @@ bool Parser::parse_expr(expr_type& expr_type_result) {
   return false;
 }
 
-bool Parser::parse_expr_hat(expr_type& expr_hat_type) {
-  /* EXPR_HAT -> relop SIMPLE_EXPnR
+bool Parser::parse_expr_hat(expr_type& expr_hat_type, Operand*& op) {
+  /* EXPR_HAT -> relop SIMPLE_EXPR
      Predict(relop SIMPLE_EXPR) = {relop} */
   if (is_relop(word)) {
     LOG("EXPR_HAT -> relop SIMPLE_EXPR");
+    relop_attr comparator = static_cast<RelopToken*>(word)->get_attribute();
 
     // ADVANCE.
     advance();
 
     expr_type simple_expr_type = GARBAGE_T;
+    Operand* right_op = nullptr;
 
     // Match SIMPLE_EXPR - ACTION.
-    if (parse_simple_expr(simple_expr_type)) {
+    if (parse_simple_expr(simple_expr_type, right_op)) {
       // Semantic analysis.
       if (simple_expr_type == INT_T) {
         expr_hat_type = INT_T;
       } else {
         type_error(INT_T, simple_expr_type);
       }
+
+      // IR - Generate code for "op relop right_op".
+      // Make sure that op is in a register.
+      Register* left_op_reg;
+      if (op->get_type() == OPTYPE_REGISTER) {
+        left_op_reg = op->get_r_value();
+      } else {
+        left_op_reg = allocator->allocate_register();
+        if (op->get_type() == OPTYPE_IMMEDIATE) {
+          e->emit_move(left_op_reg, op->get_i_value());
+        } else {
+          e->emit_move(left_op_reg, op->get_m_value());
+        }
+        delete op;
+        op = new Operand(OPTYPE_REGISTER, left_op_reg);
+      }
+
+      // Store the value of op - right_op in the register containing op.
+      switch (right_op->get_type()) {
+        case OPTYPE_REGISTER:
+          e->emit_2addr(INST_SUB, op->get_r_value(), right_op->get_r_value());
+          break;
+
+        case OPTYPE_IMMEDIATE:
+          e->emit_2addr(INST_SUB, op->get_r_value(), right_op->get_i_value());
+          break;
+
+        case OPTYPE_MEMORY:
+          e->emit_2addr(INST_SUB, op->get_r_value(), right_op->get_m_value());
+          break;
+
+        default:
+          break;
+      }
+
+      string* false_label = e->get_new_label("false");
+      string* next_label = e->get_new_label();
+
+      // IR - Emit instruction to evaluate the relational expression.
+      switch (comparator) {
+        case RELOP_EQ:
+          e->emit_branch(INST_BRNE, op->get_r_value(), false_label);
+          e->emit_branch(INST_BRPO, op->get_r_value(), false_label);
+          break;
+
+        case RELOP_NE:
+          e->emit_branch(INST_BREZ, op->get_r_value(), false_label);
+          break;
+
+        case RELOP_GT:
+          e->emit_branch(INST_BREZ, op->get_r_value(), false_label);
+          e->emit_branch(INST_BRNE, op->get_r_value(), false_label);
+          break;
+
+        case RELOP_GE:
+          e->emit_branch(INST_BRNE, op->get_r_value(), false_label);
+          break;
+
+        case RELOP_LT:
+          e->emit_branch(INST_BREZ, op->get_r_value(), false_label);
+          e->emit_branch(INST_BRPO, op->get_r_value(), false_label);
+          break;
+
+        case RELOP_LE:
+          e->emit_branch(INST_BRPO, op->get_r_value(), false_label);
+          break;
+
+        default:
+          break;
+      }
+
+      // IR - Emit instructions to populate op.
+      e->emit_move(op->get_r_value(), 1);
+      e->emit_branch(next_label);
+      e->emit_label(false_label);
+      e->emit_move(op->get_r_value(), 0);
+      e->emit_label(next_label);
+
+      // Clean up right operand.
+      if (right_op->get_type() == OPTYPE_REGISTER) {
+        allocator->deallocate_register(right_op->get_r_value());
+      }
+      delete right_op;
+
       return true;
 
       // Fail to match SIMPLE_EXPR.
@@ -1210,7 +1457,7 @@ bool Parser::parse_expr_hat(expr_type& expr_hat_type) {
   return false;
 }
 
-bool Parser::parse_simple_expr(expr_type& simple_expr_type) {
+bool Parser::parse_simple_expr(expr_type& simple_expr_type, Operand*& op) {
   /* SIMPLE_EXPR -> TERM SIMPLE_EXPR_PRM */
   LOG("SIMPLE_EXPR -> TERM SIMPLE_EXPR_PRM");
 
@@ -1218,7 +1465,9 @@ bool Parser::parse_simple_expr(expr_type& simple_expr_type) {
   expr_type simple_expr_prm_type = GARBAGE_T;
 
   // Match TERM and SIMPLE_EXPR_PRM - ACTION.
-  if (parse_term(term_type) && parse_simple_expr_prm(simple_expr_prm_type)) {
+  // IR - Evaluation of operand is delegated to TERM and SIMPLE_EXPR_PRM.
+  if (parse_term(term_type, op)
+      && parse_simple_expr_prm(simple_expr_prm_type, op)) {
     // Semantic analysis.
     if (simple_expr_prm_type == NO_T) {
       simple_expr_type = term_type;
@@ -1235,7 +1484,8 @@ bool Parser::parse_simple_expr(expr_type& simple_expr_type) {
   return false;
 }
 
-bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type) {
+bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type,
+                                   Operand*& op) {
   /* SIMPLE_EXPR_PRM -> addop TERM SIMPLE_EXPR_PRM
      Predict(addop TERM SIMPLE_EXPR_PRM) == {addop} */
   if (is_addop(word)) {
@@ -1255,25 +1505,82 @@ bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type) {
     // ADVANCE.
     advance();
 
-    // Match TERM and SIMPLE_EXPR_PRM - ACTION.
-    if (parse_term(term_type) && parse_simple_expr_prm(simple_expr_prm1_type)) {
-      // Semantic analysis.
-      if (simple_expr_prm1_type == NO_T) {
-        if (addop_type == term_type) {
-          simple_expr_prm0_type = addop_type;
-        } else {
-          type_error(addop_type, term_type);
-        }
-      } else if (addop_type == term_type &&
-                 term_type == simple_expr_prm1_type) {
-        simple_expr_prm0_type = addop_type;
+    Operand* right_op = nullptr;
+
+    // Match TERM - ACTION.
+    if (parse_term(term_type, right_op)) {
+      // IR - Generate code for "op addop right_op".
+      // Make sure that the left operand is stored in a register.
+      Register* left_op_reg;
+      if (op->get_type() == OPTYPE_REGISTER) {
+        left_op_reg = op->get_r_value();
       } else {
-        type_error(addop_type, term_type, simple_expr_prm1_type);
+        left_op_reg = allocator->allocate_register();
+        if (op->get_type() == OPTYPE_IMMEDIATE) {
+          e->emit_move(left_op_reg, op->get_i_value());
+        } else {
+          e->emit_move(left_op_reg, op->get_m_value());
+        }
+        delete op;
+        op = new Operand(OPTYPE_REGISTER, left_op_reg);
       }
 
-      return true;
+      // Output IR to perform the operation.
+      inst_type instruction;
+      if (addop_attr == ADDOP_ADD || addop_attr == ADDOP_OR) {
+        instruction = INST_ADD;
+      } else {
+        instruction = INST_SUB;
+      }
 
-      // Fail to match TERM and SIMPLE_EXPR_PRM.
+      // Output the appropriate instruction.
+      switch (right_op->get_type()) {
+        case OPTYPE_REGISTER:
+          e->emit_2addr(instruction, op->get_r_value(),
+                        right_op->get_r_value());
+          break;
+
+        case OPTYPE_IMMEDIATE:
+          e->emit_2addr(instruction, op->get_r_value(),
+                        right_op->get_i_value());
+          break;
+
+        case OPTYPE_MEMORY:
+          e->emit_2addr(instruction, op->get_r_value(),
+                        right_op->get_m_value());
+          break;
+
+        default:
+          break;
+      }
+
+      // Clean up the right operand.
+      if (right_op->get_type() == OPTYPE_REGISTER) {
+        allocator->deallocate_register(right_op->get_r_value());
+      }
+      delete right_op;
+
+      // Match SIMPLE_EXPR_PRM - ACTION.
+      if (parse_simple_expr_prm(simple_expr_prm1_type, op)) {
+        // Semantic analysis.
+        if (simple_expr_prm1_type == NO_T) {
+          if (addop_type == term_type) {
+            simple_expr_prm0_type = addop_type;
+          } else {
+            type_error(addop_type, term_type);
+          }
+        } else if (addop_type == term_type &&
+                   term_type == simple_expr_prm1_type) {
+          simple_expr_prm0_type = addop_type;
+        } else {
+          type_error(addop_type, term_type, simple_expr_prm1_type);
+        }
+        return true;
+        // Fail to match SIMPLE_EXPR_PRM.
+      } else {
+        return false;
+      }
+      // Fail to match TERM.
     } else {
       return false;
     }
@@ -1288,7 +1595,7 @@ bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type) {
   return false;
 }
 
-bool Parser::parse_term(expr_type& term_type) {
+bool Parser::parse_term(expr_type& term_type, Operand*& op) {
   /* TERM -> FACTOR TERM_PRM */
   LOG("TERM -> FACTOR TERM_PRM");
 
@@ -1296,10 +1603,11 @@ bool Parser::parse_term(expr_type& term_type) {
   expr_type term_prm_type = GARBAGE_T;
 
   // Match FACTOR - ACTION.
-  if (parse_factor(factor_type)) {
+  // IR - Get operand from parse_factor().
+  if (parse_factor(factor_type, op)) {
     // Match TERM_PRM - ACTION.
-    if (parse_term_prm(term_prm_type)) {
-
+    // IR - Send factor operand to parse_term_prm.
+    if (parse_term_prm(term_prm_type, op)) {
       // Semantic analysis.
       if (term_prm_type == NO_T) {
         term_type = factor_type;
@@ -1324,9 +1632,12 @@ bool Parser::parse_term(expr_type& term_type) {
   return false;
 }
 
-bool Parser::parse_term_prm(expr_type& term_prm0_type) {
+bool Parser::parse_term_prm(expr_type& term_prm0_type, Operand*& left_op) {
   /* TERM_PRM -> mulop FACTOR TERM_PRM
      Predict(mulop FACTOR TERM_PRM) = {mulop} */
+
+  Operand *right_op = nullptr;
+
   if (is_mulop(word)) {
     LOG("TERM_PRM -> mulop FACTOR TERM_PRM");
 
@@ -1345,22 +1656,103 @@ bool Parser::parse_term_prm(expr_type& term_prm0_type) {
     // ADVANCE.
     advance();
 
-    // Match FACTOR and TERM_PRM - ACTION.
-    if (parse_factor(factor_type) && parse_term_prm(term_prm1_type)) {
-      // Semantic analysis.
-      if (term_prm1_type == NO_T && mulop_type == factor_type) {
-        term_prm0_type = mulop_type;
-      } else if (mulop_type == factor_type && factor_type == term_prm1_type) {
-        term_prm0_type = mulop_type;
-      } else if (term_prm1_type == NO_T) {
-        type_error(mulop_type, factor_type);
+    if (parse_factor(factor_type, right_op)) {
+      /* At this point, we can generate code for
+
+	 "right_op operation left_op".
+
+	 First we need to make sure the left operand (which
+	 was passed to us as a parm) is in a register.  If the left op
+	 is in a register, grab the register.  If the left operand is
+	 not in a register, allocate a register and move the operand
+	 there.
+      */
+      Register *left_op_reg;
+      if (left_op->get_type() == OPTYPE_REGISTER) {
+	// The left operand is already in a register.
+	left_op_reg = left_op->get_r_value();
       } else {
-        type_error(mulop_type, factor_type, term_prm1_type);
+	// Allocate a new register and move the left op into it.
+	left_op_reg = allocator->allocate_register();
+	if (left_op->get_type() == OPTYPE_IMMEDIATE) {
+	  e->emit_move(left_op_reg, left_op->get_i_value());
+	} else {  // left factor op is in memory.
+	  e->emit_move(left_op_reg, left_op->get_m_value());
+	}
+	// We are done with the Operand object that our parent node
+	// gave us, and it no longer describes the left operand.
+	// Delete it and make a new Operand object representing the
+	// current state of the left operand, which is now in a
+	// register.
+	delete left_op;
+	left_op = new Operand(OPTYPE_REGISTER, left_op_reg);
       }
 
-      return true;
+      /* Output IR to perform the operation.
+	 First, determine which mulop we the program has called for.
+      */
+      inst_type instruction;
+      if (mulop_attr == MULOP_MUL || mulop_attr == MULOP_AND) {
+	instruction = INST_MUL;
+      } else {
+	instruction = INST_DIV;
+      }
 
-      // Fail to match FACTOR and TERM_PRM.
+      /* Now, output the appropriate instruction, depending on the
+	 location (immediate, register, memory) of the right hand op.
+       */
+      switch (right_op->get_type()) {
+        case OPTYPE_REGISTER:
+          e->emit_2addr(instruction, left_op->get_r_value(),
+                        right_op->get_r_value());
+          break;
+
+        case OPTYPE_IMMEDIATE:
+          e->emit_2addr(instruction, left_op->get_r_value(),
+                        right_op->get_i_value());
+          break;
+
+        case OPTYPE_MEMORY:
+          e->emit_2addr(instruction, left_op->get_r_value(),
+                        right_op->get_m_value());
+          break;
+
+        default:
+          break;
+      }
+
+      /* Clean up.
+	 We are done with the right Operand object.
+      */
+      if (right_op->get_type() == OPTYPE_REGISTER) {
+	// IMPORTANT: don't forget to deallocate the register if
+	// you are done with an operand that resides in a
+	// register.  We only have 3 usuable ones.
+	allocator->deallocate_register(right_op->get_r_value());
+      }
+      delete right_op;
+
+      // Match TERM_PRM - ACTION.
+      // Send left_op to next step in expression parse.
+      if (parse_term_prm(term_prm1_type, left_op)) {
+	/* Semantic Analysis cont. */
+	if (term_prm1_type == NO_T && mulop_type == factor_type) {
+	  term_prm0_type = mulop_type;
+	} else if (mulop_type == factor_type && factor_type == term_prm1_type) {
+	  term_prm0_type = mulop_type;
+	} else if (term_prm1_type == NO_T) {
+          type_error(mulop_type, factor_type);
+        } else {
+	  type_error(mulop_type, factor_type, term_prm1_type);
+	}
+	return true;
+
+        // Fail to match TERM_PRM.
+      } else {
+	return false;
+      }
+
+      // Fail to match FACTOR.
     } else {
       return false;
     }
@@ -1375,7 +1767,7 @@ bool Parser::parse_term_prm(expr_type& term_prm0_type) {
   return false;
 }
 
-bool Parser::parse_factor(expr_type& factor0_type) {
+bool Parser::parse_factor(expr_type& factor0_type, Operand*& op) {
   /* FACTOR -> identifier
      Predict(identifier) = {identifier} */
   if (is_identifier(word)) {
@@ -1388,6 +1780,8 @@ bool Parser::parse_factor(expr_type& factor0_type) {
     } else {
       factor0_type = stab.get_type(identifier_attr, current_env);
     }
+    // IR action.
+    op = new Operand(OPTYPE_MEMORY, identifier_attr);
 
     // ADVANCE.
     advance();
@@ -1402,6 +1796,18 @@ bool Parser::parse_factor(expr_type& factor0_type) {
     // Semantic analysis.
     factor0_type = INT_T;
 
+    /* IR action.
+       Make a new Operand object to represent the literal we just
+       found.
+       There is a slight complication here.  NumToken attributes are
+       stored as strings in the token, but we want them as ints in the
+       operand.  We do the conversion here.
+    */
+    stringstream ss(*(static_cast<NumToken *>(word)->get_attribute()));
+    int op_val;
+    ss >> op_val;
+    op = new Operand(OPTYPE_IMMEDIATE, op_val);
+
     // ADVANCE.
     advance();
 
@@ -1415,11 +1821,11 @@ bool Parser::parse_factor(expr_type& factor0_type) {
     // ADVANCE.
     advance();
 
+    // Parse the expression between the (), discover the expression
+    // type, and create an Operand object for it.
     expr_type expr_type_result = GARBAGE_T;
-
     // Match EXPR.
-    if (parse_expr(expr_type_result)) {
-
+    if (parse_expr(expr_type_result, op)) {
       // Match close bracket.
       if (is_punctuation(word, PUNC_CLOSE)) {
         // Semantic analysis.
@@ -1451,16 +1857,69 @@ bool Parser::parse_factor(expr_type& factor0_type) {
     expr_type sign_type = GARBAGE_T;
     expr_type factor1_type = GARBAGE_T;
 
-    // Match SIGN and FACTOR.
-    if (parse_sign(sign_type) && parse_factor(factor1_type)) {
-      if (sign_type != factor1_type) {
-        type_error(sign_type, factor1_type);
-      } else {
-        factor0_type = factor1_type;
-      }
-      return true;
+    int sign = -1;
+    if (is_addop(word, ADDOP_ADD)) {
+      sign = 0;
+    } else if (is_addop(word, ADDOP_SUB)) {
+      sign = 1;
+    } else if (is_keyword(word, KW_NOT)) {
+      sign = 2;
+    }
 
-      // Fail to match SIGN and FACTOR.
+    // Match SIGN - ACTION.
+    if (parse_sign(sign_type)) {
+      // Match FACTOR - ACTION.
+      if (parse_factor(factor1_type, op)) {
+	/* Semantic analysis. */
+	if (sign_type != factor1_type) {
+	  type_error(sign_type, factor1_type);
+	}
+	factor0_type = factor1_type;
+
+	/* At this point, we need to generate code to apply the sign
+	   operation to the operand.  If the sign is a "+", that's a
+	   no-op.  If it's a "-" or NOT, we need to move the operand
+	   into a register and then generate the instruction to peform
+	   the appropriate operation. */
+        if (sign == 0) {  // SIGN is +.
+          // do nothing.
+	} else {
+	  // Make sure operand is in a register.
+	  Register *op_register;
+	  if (op->get_type() == OPTYPE_REGISTER) {
+	    op_register = op->get_r_value();
+	  } else {
+	    op_register = allocator->allocate_register();
+	    // Emit instruction to move operand into register.
+	    if (op->get_type() == OPTYPE_IMMEDIATE) {
+	      // move Rn, #immediate_value
+	      e->emit_move(op_register, op->get_i_value());
+	    } else if (op->get_type() == OPTYPE_MEMORY) {
+	      // move RN, #memory_location_name
+	      e->emit_move(op_register, op->get_m_value());
+	    }
+
+	    // The operand is now in register op_register.  Make a new
+	    // operand object to represent it.
+	    delete op;
+            op = new Operand(OPTYPE_REGISTER, op_register);
+	  }  // op not in a register.
+
+          // Finally, emit the instruction to perform the SIGN operation.
+          if (sign == 1) {  // SIGN is -.
+            e->emit_1addr(INST_NEG, op->get_r_value());
+          } else if (sign == 2) {  // SIGN is not.
+            e->emit_1addr(INST_NOT, op->get_r_value());
+          }
+	} // operation is "-" or "NOT".
+
+        return true;
+
+        // Fail to match FACTOR.
+      } else {
+        return false;
+      }
+      // Fail to match SIGN.
     } else {
       return false;
     }

@@ -20,8 +20,16 @@
 #include "idtoken.h"
 #include "numtoken.h"
 #include "eoftoken.h"
+
+// Imports for syntax and semantic analysis.
 #include "scanner.h"
 #include "symbol_table.h"
+
+// Imports for code generation.
+#include "register.h"
+#include "register_allocator.h"
+#include "emitter.h"
+#include "operand.h"
 
 // Disable semantic analysis. Useful for testing syntax analysis.
 #define PARSER_TEST_MODE 0
@@ -76,7 +84,7 @@ class Parser {
 
   bool parse_stmt();
 
-  bool parse_adhoc_as_pc_tail(expr_type& adhoc_as_pc_tail_type);
+  bool parse_adhoc_as_pc_tail(expr_type& adhoc_as_pc_tail_type, Operand*& expr);
 
   bool parse_if_stmt();
 
@@ -92,19 +100,19 @@ class Parser {
 
   bool parse_actual_parm_list_hat();
 
-  bool parse_expr(expr_type& expr_type_result);
+  bool parse_expr(expr_type& expr_type_result, Operand*& op);
 
-  bool parse_expr_hat(expr_type& expr_hat_type);
+  bool parse_expr_hat(expr_type& expr_hat_type, Operand*& op);
 
-  bool parse_simple_expr(expr_type& simple_expr_type);
+  bool parse_simple_expr(expr_type& simple_expr_type, Operand*& op);
 
-  bool parse_simple_expr_prm(expr_type& simple_expr_prm_type);
+  bool parse_simple_expr_prm(expr_type& simple_expr_prm_type, Operand*& op);
 
-  bool parse_term(expr_type& term_type);
+  bool parse_term(expr_type& term_type, Operand*& op);
 
-  bool parse_term_prm(expr_type& term_prm_type);
+  bool parse_term_prm(expr_type& term_prm_type, Operand*& left_op);
 
-  bool parse_factor(expr_type& factor_type);
+  bool parse_factor(expr_type& factor_type, Operand*& op);
 
   bool parse_sign(expr_type& sign_type);
 
@@ -142,6 +150,10 @@ class Parser {
 
   // Symbol table.
   Symbol_Table stab;
+
+  /*********** Code Generation **********/
+  Register_Allocator *allocator;
+  Emitter *e;
 
   /* These functions are for signalling semantic errors.  None of
      them return - they exit and terminate the compilation.
