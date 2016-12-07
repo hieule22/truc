@@ -79,6 +79,16 @@ expr_type Symbol_Table::get_type(string *proc_id, const int pos) {
   return GARBAGE_T;
 }
 
+vector<const string*> Symbol_Table::get_identifiers(const string* env) const {
+  vector<const string*> result;
+  for (const STAB_ENTRY& entry : stab) {
+    if ((entry.type == INT_T || entry.type == BOOL_T) && entry.env == *env) {
+      result.push_back(&entry.id);
+    }
+  }
+  return result;
+}
+
 void Symbol_Table::update_type(expr_type standard_type_type) {
   /* Change the type of all symbol table variables with type UNKNOWN_T
      to standard_type_type. */

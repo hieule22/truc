@@ -62,6 +62,10 @@ class Symbol_Table {
      the procedure proc_id. */
   expr_type get_type(string *proc_id, const int position);
 
+  /* Get the identifiers for all int and bool variables declared in
+     a given environment. */
+  vector<const string*> get_identifiers(const string* env) const;
+
   /* Iterate over symbol table, updating all entries with
      type == UNKNOWN_T to standard_type_type. */
   void update_type(const expr_type standard_type_type);
