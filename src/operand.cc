@@ -4,26 +4,16 @@
 
 #include "operand.h"
 
-Operand::Operand (const op_type_type o_type, const int val) {
-  op_type = o_type;
-  i_value = val;
-  r_value = NULL;
-  m_value = NULL;
-}
+Operand::Operand(const op_type_type o_type, const int val)
+    : op_type(o_type), i_value(val), r_value(nullptr), m_value(nullptr) {}
 
-Operand::Operand (const op_type_type o_type, const string *memory_location_name) {
-  op_type = o_type;
-  m_value = new string (*memory_location_name);
-  i_value = OPTYPE_GARBAGE_I_VALUE;
-  r_value = NULL;
-}
+Operand::Operand(const op_type_type o_type, const string *memory_location_name)
+    : op_type(o_type), i_value(OPTYPE_GARBAGE_I_VALUE), r_value(nullptr),
+      m_value(new string(*memory_location_name)) {}
 
-Operand:: Operand (const op_type_type o_type, Register *reg) {
-  op_type = o_type;
-  r_value = reg;
-  i_value = OPTYPE_GARBAGE_I_VALUE;
-  m_value = NULL;
-}
+Operand:: Operand(const op_type_type o_type, Register *reg)
+    : op_type(o_type), i_value(OPTYPE_GARBAGE_I_VALUE), r_value(reg),
+      m_value(nullptr) {}
 
 Operand::~Operand() {
   if (m_value != NULL) {
@@ -48,6 +38,7 @@ int Operand::get_i_value() const {
 
     case OPTYPE_REGISTER:
       bad_op_request("int value of register operand");
+      break;
 
     case OPTYPE_GARBAGE:
       bad_op_request("int value of garbage type operand");
@@ -56,7 +47,7 @@ int Operand::get_i_value() const {
     default:
       bad_op_request("int value of undefined type operand");
       break;
-  }    
+  }
   return OPTYPE_GARBAGE_I_VALUE;
 }
 
@@ -67,24 +58,24 @@ Register *Operand::get_r_value() const {
       if (r_value != NULL) {
         return r_value;
       } else {
-        bad_op_request ("register is null");
+        bad_op_request("register is null");
       }
       break;
 
     case OPTYPE_IMMEDIATE:
-      bad_op_request ("register value of immediate operand");
+      bad_op_request("register value of immediate operand");
       break;
 
     case OPTYPE_MEMORY:
-      bad_op_request ("register value of memory operand");
+      bad_op_request("register value of memory operand");
       break;
 
     case OPTYPE_GARBAGE:
-      bad_op_request ("register value of garbage operand");
+      bad_op_request("register value of garbage operand");
       break;
 
     default:
-      bad_op_request ("register valueof undefined type operand");
+      bad_op_request("register valueof undefined type operand");
       break;
   }
 
@@ -99,27 +90,27 @@ string *Operand::get_m_value() const {
       if (m_value != NULL) {
         return new string (*m_value);
       } else {
-        bad_op_request ("name of m operand is undefined");
+        bad_op_request("name of m operand is undefined");
       }
       break;
 
     case OPTYPE_IMMEDIATE:
     case OPTYPE_REGISTER:
-      bad_op_request ("name of immediate or register op");
+      bad_op_request("name of immediate or register op");
       break;
 
     case OPTYPE_GARBAGE:
-      bad_op_request ("name of garbage type operand");
+      bad_op_request("name of garbage type operand");
       break;
 
     default:
-      bad_op_request ("name of undefined operand");
+      bad_op_request("name of undefined operand");
       break;
   }
   return NULL;
 }
 
-void Operand::bad_op_request (const char *message) const {
+void Operand::bad_op_request(const char *message) const {
   cout << "Operand error: requested " << message;
   return;
 }

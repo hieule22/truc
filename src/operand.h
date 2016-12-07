@@ -39,13 +39,13 @@ class Operand {
 
  private:
   // The type of this operand.
-  op_type_type op_type;
+  const op_type_type op_type;
 
   /* Depending on the type of the operand, it will either have an
      immediate value, be in a register or be in memory. */
-  int i_value;
-  Register *r_value;
-  string *m_value;
+  const int i_value;
+  Register * const r_value;
+  string * const m_value;
 
   void bad_op_request(const char *message) const;
 };
