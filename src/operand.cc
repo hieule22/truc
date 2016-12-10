@@ -111,6 +111,6 @@ string *Operand::get_m_value() const {
 }
 
 void Operand::bad_op_request(const char *message) const {
-  cout << "Operand error: requested " << message;
+  cout << "Operand error: requested " << message << endl;
   return;
 }

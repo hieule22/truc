@@ -30,7 +30,7 @@ Register *Register_Allocator::allocate_register() {
       return register_set[i];
     }
   }
-  cout << "NO FREE REGISTERS!!!";
+  cout << "NO FREE REGISTERS!!!" << endl;
   return NULL;
 }
 
@@ -42,7 +42,6 @@ void Register_Allocator::deallocate_register(Register *reg) {
   }
   register_set[reg->get_num()]->clear_inuse();
 }
-
 
 void Register_Allocator::freeing_unallocated_register(Register *reg) {
   cout << "Attempt to free unallocated register number ";
