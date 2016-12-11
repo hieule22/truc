@@ -1,0 +1,32 @@
+program foo;
+  a: int;
+  b, c: int;
+  d, e: bool;
+  f: bool;
+  g, h: int;
+  i: int;
+  n, p, q, r: int;
+  s: bool;
+  t, v: int;
+  w, x: int;
+begin
+  print a > 1;
+
+  print b <> c;
+
+  print d or e;
+
+  print not f and f;
+
+  print g + h;
+
+  print -i * i;
+
+  a := b;
+
+  if n > p + 1 then begin q := r * 2; end
+
+  else begin s := t < v; end;
+
+  while w < 10 loop begin x := x + 1; end;
+end;

@@ -1,0 +1,9 @@
+program foo;
+	a, b, c: int;
+	a0, a1, a2, a3, a4, a5, a6, a7: int;
+begin
+	print (a0 * a1) * ((a2 * a3) * ((a4 * a5) * (a6 * a7)));
+	print a + c + (a * b + b * (a + c));
+	print a * a + (a + a + a * (a + a));
+	print a * (a * a) * ((a * a) / (a * a));
+end;
