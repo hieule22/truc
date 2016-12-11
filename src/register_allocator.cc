@@ -43,6 +43,15 @@ void Register_Allocator::deallocate_register(Register *reg) {
   register_set[reg->get_num()]->clear_inuse();
 }
 
+bool Register_Allocator::has_free_register() const {
+  for (int i = 0; i < N_REGS; ++i) {
+    if (!register_set[i]->is_inuse()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void Register_Allocator::freeing_unallocated_register(Register *reg) {
   cout << "Attempt to free unallocated register number ";
   cout << reg->get_num() << endl;

@@ -29,6 +29,9 @@ class Register_Allocator {
   // Frees a previously allocated register.
   void deallocate_register(Register *r);
 
+  // Checks if there is a register available for allocation.
+  bool has_free_register() const;
+
  private:
   // The register set we can allocate from.
   Register *register_set[N_REGS];
