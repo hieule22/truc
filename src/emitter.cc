@@ -119,7 +119,14 @@ void Emitter::emit_halt() const {
 }
 
 void Emitter::emit_data_directive(const string *label, int size) const {
-  cout << *label << ':' << "\t\t" << "data " << size << endl;
+  int length = label->size();
+  if (length < 7) {
+    cout << *label << ':' << "\t\t" << "data " << size << endl;
+  } else if (length < 15) {
+    cout << *label << ':' << "\t" << "data " << size << endl;
+  } else {
+    cout << *label << ':' << " " << "data " << size << endl;
+  }
 }
 
 void Emitter::emit_data_directive(int size) const {
