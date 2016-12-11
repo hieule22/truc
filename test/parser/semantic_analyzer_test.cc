@@ -64,22 +64,20 @@ TEST_F(SemanticAnalyzerTest, ParseValidProgram) {
         "print(a + b + c + d); "
       "end;")->parse_program());
 
-  // TODO(hieule): Fix failing tests.
+  EXPECT_TRUE(CreateParser(
+      "program foo; "
+        "a, b, c, d: int; "
+      "begin "
+        "a := (-a + (b * c) - (a / -b)) + (((a - b))) + (-10 / (c * (d + 1))); "
+      "end;")->parse_program());
 
-  // EXPECT_TRUE(CreateParser(
-  //     "program foo; "
-  //       "a, b, c, d: int; "
-  //     "begin "
-  //       "a := (-a + (b * c) - (a / -b)) + (((a - b))) + (-10 / (c * (d + 1))); "
-  //     "end;")->parse_program());
-
-  // EXPECT_TRUE(CreateParser(
-  //     "program foo; "
-  //       "a, b, c, d: bool; "
-  //     "begin "
-  //       "a := (b and not c) or (not d and not a) and ((10 = 12) and "
-  //             "(not(not c))); "
-  //     "end;")->parse_program());
+  EXPECT_TRUE(CreateParser(
+      "program foo; "
+        "a, b, c, d: bool; "
+      "begin "
+        "a := (b and not c) or (not d and not a) and ((10 = 12) and "
+              "(not(not c))); "
+      "end;")->parse_program());
 
   EXPECT_TRUE(CreateParser(
       "program foo; "
