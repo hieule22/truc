@@ -9,6 +9,7 @@
 // To print error messages.
 #include <iostream>
 #include <string>
+#include <vector>
 
 // The parser needs to access token attributes.
 #include "token.h"
@@ -154,6 +155,14 @@ class Parser {
   /*********** Code Generation **********/
   Register_Allocator *allocator;
   Emitter *e;
+
+  // Labels of all memory locations used in this program.
+  // Intended for generating data directives.
+  vector<string> memory_labels;
+
+  // Last register operand. Intended for spilling register onto memory when no
+  // register is available for allocation.
+  Operand **last_register_op;
 
   /* These functions are for signalling semantic errors.  None of
      them return - they exit and terminate the compilation.
