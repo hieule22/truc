@@ -8,6 +8,7 @@
 
 // To print error messages.
 #include <iostream>
+#include <utility>
 #include <string>
 #include <vector>
 
@@ -156,13 +157,23 @@ class Parser {
   Register_Allocator *allocator;
   Emitter *e;
 
-  // Labels of all memory locations used in this program.
-  // Intended for generating data directives.
-  vector<string> memory_labels;
+  // Labels used to generate data directives for all program variables.
+  vector<const string *> program_labels;
 
-  // Last register operand. Intended for spilling register onto memory when no
-  // register is available for allocation.
+  // Last register operand, to keep track of which register to spill onto memory
+  // when no register is available for allocation.
   Operand **last_register_op;
+
+  // Labels used to generate data directives for memory locations used for
+  // register spilling. Each entry has the form <label, status> where status
+  // indicates whether the memory is active.
+  vector<pair<string *, bool>> spilled_labels;
+
+  // Allocates a memory location used for register spilling.
+  const string *allocate_spill_memory();
+
+  // Deallocates a memory location previously used for register spilling.
+  void deallocate_spill_memory(const string *spilled_label);
 
   /* These functions are for signalling semantic errors.  None of
      them return - they exit and terminate the compilation.

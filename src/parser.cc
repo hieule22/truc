@@ -99,6 +99,27 @@ void Parser::type_error(const expr_type expected1, const expr_type expected2,
 #endif
 }
 
+const string* Parser::allocate_spill_memory() {
+  for (const auto& entry : spilled_labels) {
+    // Returns any inactive spilled label.
+    if (!entry.second) {
+      return entry.first;
+    }
+  }
+  // Reserves a new memory location if no previously spilled locaion is active.
+  string *spilled_label = e->get_new_label("spill");
+  spilled_labels.push_back({spilled_label, true});
+  return spilled_label;
+}
+
+void Parser::deallocate_spill_memory(const string *spilled_label) {
+  for (auto& entry : spilled_labels) {
+    if (*entry.first == *spilled_label) {
+      entry.second = false;
+    }
+  }
+}
+
 namespace {
 
 // Checks if a given token is an identifier.
@@ -172,7 +193,7 @@ bool Parser::parse_program() {
       delete id_name;
 
       // IR - Output a label for the program.
-      e->emit_label(id_name);
+      e->emit_label(new string("_" + *main_env));
 
       // ADVANCE
       advance();
@@ -204,8 +225,19 @@ bool Parser::parse_program() {
               e->emit_halt();
 
               // IR - Generate data directives for all memory labels.
-              for (const string& label : memory_labels) {
-                e->emit_data_directive(&label, 1);
+              // Emit data directives for all program variables.
+              if (!program_labels.empty()) {
+                e->emit_comment("Data directives for program variables.");
+                for (const string *label : program_labels) {
+                  e->emit_data_directive(label, 1);
+                }
+              }
+              // Emit data directives for all spilled memory.
+              if (!spilled_labels.empty()) {
+                e->emit_comment("Data directives for spilled memories.");
+                for (const auto &entry : spilled_labels) {
+                  e->emit_data_directive(entry.first, 1);
+                }
               }
 
               // Parse_program succeeded.
@@ -414,7 +446,7 @@ bool Parser::parse_identifier_list() {
 
     // Reserve a data directive for word if it represents a program variable.
     if (*current_env == *main_env) {
-      memory_labels.push_back(*identifier_attr);
+      program_labels.push_back(identifier_attr);
     }
 
     // ADVANCE.
@@ -460,7 +492,7 @@ bool Parser::parse_identifier_list_prm() {
 
       // Reserve a data directive for word if it represents a program variable.
       if (*current_env == *main_env) {
-        memory_labels.push_back(*identifier_attr);
+        program_labels.push_back(identifier_attr);
       }
 
       // ADVANCE.
@@ -908,11 +940,11 @@ bool Parser::parse_stmt() {
           // last register operand because it will be deallocated right after
           // its use.
           if (!allocator->has_free_register()) {
-            string *spill_location = e->get_new_label("spill");
-            e->emit_comment("Spill onto memory since all registers are live.");
+            const string *spill_location = allocate_spill_memory();
+            e->emit_comment(
+                "Spill register to memory since all registers are live.");
             e->emit_move(spill_location, (*last_register_op)->get_r_value());
             allocator->deallocate_register((*last_register_op)->get_r_value());
-            memory_labels.push_back(*spill_location);
             *last_register_op = new Operand(OPTYPE_MEMORY, spill_location);
           }
 
@@ -1040,11 +1072,11 @@ bool Parser::parse_if_stmt() {
         // the last register operand since it will be deallocated right after
         // its use.
         if (!allocator->has_free_register()) {
-          string *spill_location = e->get_new_label("spill");
-          e->emit_comment("Spill onto memory since all registers are live.");
+          const string *spill_location = allocate_spill_memory();
+          e->emit_comment(
+              "Spill register to memory since all registers are live.");
           e->emit_move(spill_location, (*last_register_op)->get_r_value());
           allocator->deallocate_register((*last_register_op)->get_r_value());
-          memory_labels.push_back(*spill_location);
           *last_register_op = new Operand(OPTYPE_MEMORY, spill_location);
         }
 
@@ -1179,11 +1211,11 @@ bool Parser::parse_while_stmt() {
         // allocation. There is no need to set expression_register to be the
         // last register operand since it will be deallocated after its use.
         if (!allocator->has_free_register()) {
-          string *spill_location = e->get_new_label("spill");
-          e->emit_comment("Spill onto memory since all registers are live.");
+          const string *spill_location = allocate_spill_memory();
+          e->emit_comment(
+              "Spill register to memory since all registers are live.");
           e->emit_move(spill_location, (*last_register_op)->get_r_value());
           allocator->deallocate_register((*last_register_op)->get_r_value());
-          memory_labels.push_back(*spill_location);
           *last_register_op = new Operand(OPTYPE_MEMORY, spill_location);
         }
 
@@ -1272,11 +1304,11 @@ bool Parser::parse_print_stmt() {
         // for allocation. There is no need to set expression_register to be
         // the last register operand since it will be allocated after its use.
         if (!allocator->has_free_register()) {
-          string *spill_location = e->get_new_label("spill");
-          e->emit_comment("Spill onto memory since all registers are live.");
+          const string *spill_location = allocate_spill_memory();
+          e->emit_comment(
+              "Spill register to memory since all registers are live.");
           e->emit_move(spill_location, (*last_register_op)->get_r_value());
           allocator->deallocate_register((*last_register_op)->get_r_value());
-          memory_labels.push_back(*spill_location);
           *last_register_op = new Operand(OPTYPE_MEMORY, spill_location);
         }
 
@@ -1435,11 +1467,11 @@ bool Parser::parse_expr_hat(expr_type& expr_hat_type, Operand*& op) {
         // Spill the last register operand if there is no register available
         // for allocation.
         if (!allocator->has_free_register()) {
-          string *spill_location = e->get_new_label("spill");
-          e->emit_comment("Spill onto memory since all registers are live.");
+          const string *spill_location = allocate_spill_memory();
+          e->emit_comment(
+              "Spill register to memory since all registers are live.");
           e->emit_move(spill_location, (*last_register_op)->get_r_value());
           allocator->deallocate_register((*last_register_op)->get_r_value());
-          memory_labels.push_back(*spill_location);
           *last_register_op = new Operand(OPTYPE_MEMORY, spill_location);
         }
 
@@ -1476,7 +1508,7 @@ bool Parser::parse_expr_hat(expr_type& expr_hat_type, Operand*& op) {
       }
 
       string* false_label = e->get_new_label("false");
-      string* next_label = e->get_new_label();
+      string* next_label = e->get_new_label("done");
 
       // IR - Emit instruction to evaluate the relational expression.
       switch (comparator) {
@@ -1490,8 +1522,8 @@ bool Parser::parse_expr_hat(expr_type& expr_hat_type, Operand*& op) {
           break;
 
         case RELOP_GT:
-          e->emit_branch(INST_BREZ, op->get_r_value(), false_label);
           e->emit_branch(INST_BRNE, op->get_r_value(), false_label);
+          e->emit_branch(INST_BREZ, op->get_r_value(), false_label);
           break;
 
         case RELOP_GE:
@@ -1512,7 +1544,7 @@ bool Parser::parse_expr_hat(expr_type& expr_hat_type, Operand*& op) {
       }
 
       // IR - Emit instructions to populate op.
-      e->emit_comment("Normalize boolean value to 0 or 1.");
+      e->emit_comment("Cast comparison outcome to 0 or 1.");
       e->emit_move(op->get_r_value(), 1);
       e->emit_branch(next_label);
       e->emit_label(false_label);
@@ -1522,6 +1554,9 @@ bool Parser::parse_expr_hat(expr_type& expr_hat_type, Operand*& op) {
       // Clean up right operand.
       if (right_op->get_type() == OPTYPE_REGISTER) {
         allocator->deallocate_register(right_op->get_r_value());
+      } else if (right_op->get_type() == OPTYPE_MEMORY) {
+        // Deallocate if right_op is stored in a spilled memory.
+        deallocate_spill_memory(right_op->get_m_value());
       }
       delete right_op;
 
@@ -1603,11 +1638,11 @@ bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type,
         // Spill the last register operand if there is no register available
         // for allocation.
         if (!allocator->has_free_register()) {
-          string *spill_location = e->get_new_label("spill");
-          e->emit_comment("Spill onto memory since all registers are live.");
+          const string *spill_location = allocate_spill_memory();
+          e->emit_comment(
+              "Spill register to memory since all registers are live.");
           e->emit_move(spill_location, (*last_register_op)->get_r_value());
           allocator->deallocate_register((*last_register_op)->get_r_value());
-          memory_labels.push_back(*spill_location);
           *last_register_op = new Operand(OPTYPE_MEMORY, spill_location);
         }
 
@@ -1655,17 +1690,21 @@ bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type,
 
       // Prevent the case when 'op or right_op' > 1 by normalizing op to 0 or 1.
       if (addop_attr == ADDOP_OR) {
-        e->emit_comment("Normalize boolean value to 0 or 1.");
-        string *false_label = e->get_new_label("false");
-        e->emit_branch(INST_BREZ , op->get_r_value(), false_label);
+        e->emit_comment("Normalize result of OR operator to 0 or 1.");
+        string *done_label = e->get_new_label("done");
+        e->emit_branch(INST_BREZ , op->get_r_value(), done_label);
         e->emit_move(op->get_r_value(), 1);
-        e->emit_label(false_label);
+        e->emit_label(done_label);
       }
 
       // Clean up the right operand.
       if (right_op->get_type() == OPTYPE_REGISTER) {
         allocator->deallocate_register(right_op->get_r_value());
+      } else if (right_op->get_type() == OPTYPE_MEMORY) {
+        // Deallocate if right_op is stored in a spilled memory.
+        deallocate_spill_memory(right_op->get_m_value());
       }
+
       delete right_op;
 
       // Match SIMPLE_EXPR_PRM - ACTION.
@@ -1784,11 +1823,11 @@ bool Parser::parse_term_prm(expr_type& term_prm0_type, Operand*& left_op) {
         // Spill the last register operand if there is no register available for
         // allocation.
         if (!allocator->has_free_register()) {
-          string *spill_location = e->get_new_label("spill");
-          e->emit_comment("Spill onto memory since all registers are live.");
+          const string *spill_location = allocate_spill_memory();
+          e->emit_comment(
+              "Spill register to memory since all registers are live.");
           e->emit_move(spill_location, (*last_register_op)->get_r_value());
           allocator->deallocate_register((*last_register_op)->get_r_value());
-          memory_labels.push_back(*spill_location);
           *last_register_op = new Operand(OPTYPE_MEMORY, spill_location);
         }
 
@@ -1851,6 +1890,9 @@ bool Parser::parse_term_prm(expr_type& term_prm0_type, Operand*& left_op) {
 	// you are done with an operand that resides in a
 	// register.  We only have 3 usuable ones.
 	allocator->deallocate_register(right_op->get_r_value());
+      } else if (right_op->get_type() == OPTYPE_MEMORY) {
+        // Deallocate if right_op is stored in a spilled memory.
+        deallocate_spill_memory(right_op->get_m_value());
       }
       delete right_op;
 
@@ -2018,11 +2060,12 @@ bool Parser::parse_factor(expr_type& factor0_type, Operand*& op) {
             // Spill the last register operand if there is no register available
             // for allocation.
             if (!allocator->has_free_register()) {
-              string *spill_location = e->get_new_label("spill");
-              e->emit_comment("Spill onto memory since all registers are live.");
+              const string *spill_location = allocate_spill_memory();
+              e->emit_comment(
+                  "Spill register to memory since all registers are live.");
               e->emit_move(spill_location, (*last_register_op)->get_r_value());
-              allocator->deallocate_register((*last_register_op)->get_r_value());
-              memory_labels.push_back(*spill_location);
+              allocator->deallocate_register(
+                  (*last_register_op)->get_r_value());
               *last_register_op = new Operand(OPTYPE_MEMORY, spill_location);
             }
 
@@ -2051,7 +2094,7 @@ bool Parser::parse_factor(expr_type& factor0_type, Operand*& op) {
           } else if (sign_operation == 2) {  // SIGN is 'not'.
             e->emit_1addr(INST_NOT, op->get_r_value());
           }
-	} // operation is "-" or "NOT".
+	}  // operation is "-" or "NOT".
 
         return true;
 
