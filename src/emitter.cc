@@ -48,19 +48,19 @@ void Emitter::emit_label(const string *label) const {
 
 // move Ri, #1
 void Emitter::emit_move(const Register *reg, int immediate) const {
-  cout << "\t\t" << "move " << " R" << reg->get_num();
+  cout << "\t\t" << "move " << "R" << reg->get_num();
   cout << ", #" << immediate << endl;
 }
 
 // move Ri, Rj
 void Emitter::emit_move(const Register *reg, const Register *regr) const {
-  cout << "\t\t" << "move " << " R" << reg->get_num();
+  cout << "\t\t" << "move " << "R" << reg->get_num();
   cout << ", R" << regr->get_num() << endl;
 }
 
 // move Ri, variable
 void Emitter::emit_move(const Register *reg, const string *var) const {
-  cout << "\t\t" << "move " << " R" << reg->get_num();
+  cout << "\t\t" << "move " << "R" << reg->get_num();
   cout << ", " << *var << endl;
 }
 
@@ -134,7 +134,9 @@ void Emitter::emit_data_directive(int size) const {
 }
 
 void Emitter::emit_comment(const char comment[]) const {
+#if COMMENT_MODE
   cout << "\t\t" << "; " << comment << endl;
+#endif
 }
 
 void Emitter::translate_and_emit(inst_type inst) const {

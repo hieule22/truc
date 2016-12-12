@@ -12,6 +12,9 @@
 
 #include "register.h"
 
+// Enable expressive comment when generating target code.
+#define COMMENT_MODE 1
+
 using namespace std;
 
 // Instruction mnemonics.
