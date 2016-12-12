@@ -19,3 +19,14 @@ cc_test(
        "//util:ptr_util",
   ],
 )
+
+cc_test(
+  name = "code_generation_test",
+  srcs = ["code_generation_test.cc"],
+  size = "small",
+  deps = [
+      "//src:parser",
+      "//third_party/gtest:gtest_main",
+      "//util:ptr_util",
+  ],
+)

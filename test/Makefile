@@ -43,10 +43,13 @@ PROJECT_ROOT = ..
 CXXFLAGS += -std=c++11 --pedantic
 
 # All tests produced by this Makefile.
-TESTS = buffer_test scanner_test parser_test semantic_analyzer_test
+TESTS = buffer_test scanner_test parser_test semantic_analyzer_test \
+	code_generation_test
 
 PROJECT_SRCS = $(SRC_DIR)/parser.cc $(SRC_DIR)/scanner.cc $(SRC_DIR)/buffer.cc \
-	       $(SRC_DIR)/*token.cc $(SRC_DIR)/symbol_table.cc
+	       $(SRC_DIR)/*token.cc $(SRC_DIR)/symbol_table.cc \
+	       $(SRC_DIR)/emitter.cc $(SRC_DIR)/register.cc \
+	       $(SRC_DIR)/operand.cc $(SRC_DIR)/register_allocator.cc
 
 buffer_test:	scanner/buffer_test.cc $(PROJECT_SRCS) gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(PROJECT_ROOT) -lpthread $^  -o $@ \
@@ -61,6 +64,11 @@ parser_test:	parser/parser_test.cc $(PROJECT_SRCS) gtest_main.a
 	&& ./$@
 
 semantic_analyzer_test: parser/semantic_analyzer_test.cc $(PROJECT_SRCS) \
+			gtest_main.a
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(PROJECT_ROOT) -lpthread $^ -o $@ \
+	&& ./$@
+
+code_generation_test:	parser/code_generation_test.cc $(PROJECT_SRCS) \
 			gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(PROJECT_ROOT) -lpthread $^ -o $@ \
 	&& ./$@
