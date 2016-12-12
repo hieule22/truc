@@ -195,6 +195,186 @@ TEST_F(CodeGenerationTest, ParseBasicStatement) {
               "k:\t\tdata 1\n");
 }
 
+TEST_F(CodeGenerationTest, RelationalStatement) {
+  MatchOutput("program foo; a, b: int; begin print a = b; end;",
+
+              "_foo:\n"
+              "\t\tmove R0, a\n"
+              "\t\tsub R0, b\n"
+              "\t\tbrne R0, _false0\n"
+              "\t\tbrpo R0, _false0\n"
+              "\t\tmove R0, #1\n"
+              "\t\tbrun _done1\n"
+              "_false0:\n"
+              "\t\tmove R0, #0\n"
+              "_done1:\n"
+              "\t\toutb R0\n"
+              "\t\thalt\n"
+
+              "a:\t\tdata 1\n"
+              "b:\t\tdata 1\n");
+
+  MatchOutput("program foo; a, b: int; begin print a < b; end;",
+
+              "_foo:\n"
+              "\t\tmove R0, a\n"
+              "\t\tsub R0, b\n"
+              "\t\tbrez R0, _false0\n"
+              "\t\tbrpo R0, _false0\n"
+              "\t\tmove R0, #1\n"
+              "\t\tbrun _done1\n"
+              "_false0:\n"
+              "\t\tmove R0, #0\n"
+              "_done1:\n"
+              "\t\toutb R0\n"
+              "\t\thalt\n"
+
+              "a:\t\tdata 1\n"
+              "b:\t\tdata 1\n");
+
+  MatchOutput("program foo; a, b: int; begin print a <= b; end;",
+
+              "_foo:\n"
+              "\t\tmove R0, a\n"
+              "\t\tsub R0, b\n"
+              "\t\tbrpo R0, _false0\n"
+              "\t\tmove R0, #1\n"
+              "\t\tbrun _done1\n"
+              "_false0:\n"
+              "\t\tmove R0, #0\n"
+              "_done1:\n"
+              "\t\toutb R0\n"
+              "\t\thalt\n"
+
+              "a:\t\tdata 1\n"
+              "b:\t\tdata 1\n");
+
+  MatchOutput("program foo; a, b: int; begin print a > b; end;",
+
+              "_foo:\n"
+              "\t\tmove R0, a\n"
+              "\t\tsub R0, b\n"
+              "\t\tbrne R0, _false0\n"
+              "\t\tbrez R0, _false0\n"
+              "\t\tmove R0, #1\n"
+              "\t\tbrun _done1\n"
+              "_false0:\n"
+              "\t\tmove R0, #0\n"
+              "_done1:\n"
+              "\t\toutb R0\n"
+              "\t\thalt\n"
+
+              "a:\t\tdata 1\n"
+              "b:\t\tdata 1\n");
+
+  MatchOutput("program foo; a, b: int; begin print a >= b; end;",
+
+              "_foo:\n"
+              "\t\tmove R0, a\n"
+              "\t\tsub R0, b\n"
+              "\t\tbrne R0, _false0\n"
+              "\t\tmove R0, #1\n"
+              "\t\tbrun _done1\n"
+              "_false0:\n"
+              "\t\tmove R0, #0\n"
+              "_done1:\n"
+              "\t\toutb R0\n"
+              "\t\thalt\n"
+
+              "a:\t\tdata 1\n"
+              "b:\t\tdata 1\n");
+}
+
+TEST_F(CodeGenerationTest, BooleanOperator) {
+  MatchOutput("program foo; a, b: bool; begin print a and b; end;",
+
+              "_foo:\n"
+              "\t\tmove R0, a\n"
+              "\t\tmul R0, b\n"
+              "\t\toutb R0\n"
+              "\t\thalt\n"
+
+              "a:\t\tdata 1\n"
+              "b:\t\tdata 1\n");
+
+  MatchOutput("program foo; a, b: bool; begin print a or b; end;",
+
+              "_foo:\n"
+              "\t\tmove R0, a\n"
+              "\t\tadd R0, b\n"
+              "\t\tbrez R0, _done0\n"
+              "\t\tmove R0, #1\n"
+              "_done0:\n"
+              "\t\toutb R0\n"
+              "\t\thalt\n"
+
+              "a:\t\tdata 1\n"
+              "b:\t\tdata 1\n");
+}
+
+TEST_F(CodeGenerationTest, UnaryOperator) {
+  MatchOutput("program foo; a: int; begin print -a; end;",
+
+              "_foo:\n"
+              "\t\tmove R0, a\n"
+              "\t\tneg R0\n"
+              "\t\toutb R0\n"
+              "\t\thalt\n"
+              "a:\t\tdata 1\n");
+
+  MatchOutput("program foo; a: bool; begin print not a; end;",
+
+              "_foo:\n"
+              "\t\tmove R0, a\n"
+              "\t\tnot R0\n"
+              "\t\toutb R0\n"
+              "\t\thalt\n"
+              "a:\t\tdata 1\n");
+}
+
+TEST_F(CodeGenerationTest, MixedOperators) {
+  MatchOutput("program foo; a: int;"
+              "begin a := a + a * a - a / a - a + a; end;",
+
+              "_foo:\n"
+              "\t\tmove R0, a\n"
+              "\t\tmul R0, a\n"
+              "\t\tmove R1, a\n"
+              "\t\tadd R1, R0\n"
+
+              "\t\tmove R0, a\n"
+              "\t\tdiv R0, a\n"
+              "\t\tsub R1, R0\n"
+
+              "\t\tsub R1, a\n"
+              "\t\tadd R1, a\n"
+              "\t\tmove a, R1\n"
+
+              "\t\thalt\n"
+              "a:\t\tdata 1\n");
+
+  MatchOutput("program foo; a: int;"
+              "begin a := (a - a) * (a - (a + a * (a + a))); end; ",
+
+              "_foo:\n"
+              "\t\tmove R0, a\n"
+              "\t\tsub R0, a\n"
+              "\t\tmove R1, a\n"
+              "\t\tadd R1, a\n"
+              "\t\tmove R2, a\n"
+              "\t\tmul R2, R1\n"
+
+              "\t\tmove R1, a\n"
+              "\t\tadd R1, R2\n"
+              "\t\tmove R2, a\n"
+              "\t\tsub R2, R1\n"
+
+              "\t\tmul R0, R2\n"
+              "\t\tmove a, R0\n"
+              "\t\thalt\n"
+              "a:\t\tdata 1\n");
+}
+
 TEST_F(CodeGenerationTest, IfStatement) {
   // if l then begin m := 0; end;
   MatchOutput("program foo; l: bool; m: int;"
@@ -520,6 +700,83 @@ TEST_F(CodeGenerationTest, General) {
               "\t\thalt\n"
               "sum:\t\tdata 1\n"
               "current:\tdata 1\n");
+
+  MatchOutput("program foo; evensum, oddsum, current: int; isodd: bool; "
+              "begin evensum := 0; oddsum := 0; current := 1; isodd := (1 = 1);"
+              "while current <= 100 loop begin "
+              "if isodd then begin oddsum := oddsum + current; end "
+              "else begin evensum := evensum + current; end; "
+              "current := current + 1; isodd := not isodd; end; "
+              "print evensum; print oddsum; end;",
+
+              "_foo:\n"
+              "\t\tmove R0, #0\n"
+              "\t\tmove evensum, R0\n"
+              "\t\tmove R0, #0\n"
+              "\t\tmove oddsum, R0\n"
+              "\t\tmove R0, #1\n"
+              "\t\tmove current, R0\n"
+
+              "\t\tmove R0, #1\n"
+              "\t\tsub R0, #1\n"
+              "\t\tbrne R0, _false0\n"
+              "\t\tbrpo R0, _false0\n"
+              "\t\tmove R0, #1\n"
+              "\t\tbrun _done1\n"
+              "_false0:\n"
+              "\t\tmove R0, #0\n"
+              "_done1:\n"
+              "\t\tmove isodd, R0\n"
+
+              "_while_cond2:\n"
+              "\t\tmove R0, current\n"
+              "\t\tsub R0, #100\n"
+              "\t\tbrpo R0, _false4\n"
+              "\t\tmove R0, #1\n"
+              "\t\tbrun _done5\n"
+              "_false4:\n"
+              "\t\tmove R0, #0\n"
+              "_done5:\n"
+              "\t\tbrez R0, _while_done3\n"
+
+              "\t\tmove R0, isodd\n"
+              "\t\tbrez R0, _else6\n"
+              "\t\tmove R0, oddsum\n"
+              "\t\tadd R0, current\n"
+              "\t\tmove oddsum, R0\n"
+              "\t\tbrun _if_done7\n"
+
+              "_else6:\n"
+              "\t\tmove R0, evensum\n"
+              "\t\tadd R0, current\n"
+              "\t\tmove evensum, R0\n"
+
+              "_if_done7:\n"
+              "\t\tmove R0, current\n"
+              "\t\tadd R0, #1\n"
+              "\t\tmove current, R0\n"
+              "\t\tmove R0, isodd\n"
+              "\t\tnot R0\n"
+              "\t\tmove isodd, R0\n"
+              "\t\tbrun _while_cond2\n"
+
+              "_while_done3:\n"
+              "\t\tmove R0, evensum\n"
+              "\t\toutb R0\n"
+              "\t\tmove R0, oddsum\n"
+              "\t\toutb R0\n"
+              "\t\thalt\n"
+
+              "evensum:\tdata 1\n"
+              "oddsum:\t\tdata 1\n"
+              "current:\tdata 1\n"
+              "isodd:\t\tdata 1\n");
+
+  // Empty program.
+  MatchOutput("program foo; begin ; end;",
+
+              "_foo:\n"
+              "\t\thalt\n");
 }
 
 }  // namespace
