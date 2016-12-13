@@ -935,9 +935,9 @@ bool Parser::parse_stmt() {
           expression_register = expression->get_r_value();
         } else {
           // Allocate a register for the expression value and move it there.
-          // Spill the last register operand if there is no register available
-          // for allocation. There is no need to set expression_register to the
-          // last register operand because it will be deallocated right after
+          // Spill last_register_op if there is no register available
+          // for allocation. There is no need to reset last_register_op to
+          // expression_register because it will be deallocated right after
           // its use.
           if (!allocator->has_free_register()) {
             const string *spill_location = allocate_spill_memory();
@@ -1067,9 +1067,9 @@ bool Parser::parse_if_stmt() {
         expression_register = expression->get_r_value();
       } else {
         // Allocate a register for the expression value and move it there.
-        // Spill the last register operand if there is no register available
-        // for allocation. There is no need to set expression_register to be
-        // the last register operand since it will be deallocated right after
+        // Spill last_register_op if there is no register available
+        // for allocation. There is no need to reset last_register_op to
+        // expression_register since it will be deallocated right after
         // its use.
         if (!allocator->has_free_register()) {
           const string *spill_location = allocate_spill_memory();
@@ -1207,9 +1207,9 @@ bool Parser::parse_while_stmt() {
         expression_register = expression->get_r_value();
       } else {
         // Allocate a register for expression value and move it there.
-        // Spill the last register operand if there is no register available for
-        // allocation. There is no need to set expression_register to be the
-        // last register operand since it will be deallocated after its use.
+        // Spill last_register_op if there is no register available for
+        // allocation. There is no need to reset last_register_op to
+        // expression_register since it will be deallocated right after its use.
         if (!allocator->has_free_register()) {
           const string *spill_location = allocate_spill_memory();
           e->emit_comment(
@@ -1300,9 +1300,9 @@ bool Parser::parse_print_stmt() {
         expression_register = expression->get_r_value();
       } else {
         // Allocate a register for the expression value and move it there.
-        // Spill the last register operand if there is no register available
-        // for allocation. There is no need to set expression_register to be
-        // the last register operand since it will be allocated after its use.
+        // Spill last_register_op if there is no register available
+        // for allocation. There is no need to reset last_register_op to
+        // expression_register since it will be allocated right after its use.
         if (!allocator->has_free_register()) {
           const string *spill_location = allocate_spill_memory();
           e->emit_comment(
@@ -1436,7 +1436,7 @@ bool Parser::parse_expr(expr_type& expr_type_result, Operand*& op) {
   return false;
 }
 
-bool Parser::parse_expr_hat(expr_type& expr_hat_type, Operand*& op) {
+bool Parser::parse_expr_hat(expr_type& expr_hat_type, Operand*& left_op) {
   /* EXPR_HAT -> relop SIMPLE_EXPR
      Predict(relop SIMPLE_EXPR) = {relop} */
   if (is_relop(word)) {
@@ -1458,13 +1458,13 @@ bool Parser::parse_expr_hat(expr_type& expr_hat_type, Operand*& op) {
         type_error(INT_T, simple_expr_type);
       }
 
-      // IR - Generate code for "op relop right_op".
-      // Make sure that op is in a register.
+      // IR - Generate code for "left_op relop right_op".
+      // Make sure that left_op is in a register.
       Register* left_op_reg;
-      if (op->get_type() == OPTYPE_REGISTER) {
-        left_op_reg = op->get_r_value();
+      if (left_op->get_type() == OPTYPE_REGISTER) {
+        left_op_reg = left_op->get_r_value();
       } else {
-        // Spill the last register operand if there is no register available
+        // Spill last_register_op if there is no register available
         // for allocation.
         if (!allocator->has_free_register()) {
           const string *spill_location = allocate_spill_memory();
@@ -1476,80 +1476,84 @@ bool Parser::parse_expr_hat(expr_type& expr_hat_type, Operand*& op) {
         }
 
         left_op_reg = allocator->allocate_register();
-        if (op->get_type() == OPTYPE_IMMEDIATE) {
-          e->emit_move(left_op_reg, op->get_i_value());
+        if (left_op->get_type() == OPTYPE_IMMEDIATE) {
+          e->emit_move(left_op_reg, left_op->get_i_value());
         } else {
-          e->emit_move(left_op_reg, op->get_m_value());
+          e->emit_move(left_op_reg, left_op->get_m_value());
         }
-        delete op;
-        op = new Operand(OPTYPE_REGISTER, left_op_reg);
+        delete left_op;
+        left_op = new Operand(OPTYPE_REGISTER, left_op_reg);
       }
 
-      // Set op to be the last register operand.
-      last_register_op = &op;
+      // Set last_register_op to left_op.
+      last_register_op = &left_op;
 
-      // Store the value of op - right_op in the register containing op.
-      e->emit_comment("Compare two values by analyzing their difference.");
+      // Store value of left_op - right_op in the register containing left_op.
+      e->emit_comment("Compare two values by examining their difference.");
       switch (right_op->get_type()) {
         case OPTYPE_REGISTER:
-          e->emit_2addr(INST_SUB, op->get_r_value(), right_op->get_r_value());
+          e->emit_2addr(INST_SUB, left_op->get_r_value(),
+                        right_op->get_r_value());
           break;
 
         case OPTYPE_IMMEDIATE:
-          e->emit_2addr(INST_SUB, op->get_r_value(), right_op->get_i_value());
+          e->emit_2addr(INST_SUB, left_op->get_r_value(),
+                        right_op->get_i_value());
           break;
 
         case OPTYPE_MEMORY:
-          e->emit_2addr(INST_SUB, op->get_r_value(), right_op->get_m_value());
+          e->emit_2addr(INST_SUB, left_op->get_r_value(),
+                        right_op->get_m_value());
           break;
 
         default:
           break;
       }
 
-      string* false_label = e->get_new_label("false");
-      string* next_label = e->get_new_label("done");
+      string* compare_false = e->get_new_label("compare_false");
+      string* compare_done = e->get_new_label("compare_done");
+
+      e->emit_comment("Normalize result of comparison to 0 or 1.");
 
       // IR - Emit instruction to evaluate the relational expression.
       switch (comparator) {
         case RELOP_EQ:
-          e->emit_branch(INST_BRNE, op->get_r_value(), false_label);
-          e->emit_branch(INST_BRPO, op->get_r_value(), false_label);
+          e->emit_branch(INST_BRNE, left_op->get_r_value(), compare_false);
+          e->emit_branch(INST_BRPO, left_op->get_r_value(), compare_false);
           break;
 
         case RELOP_NE:
-          e->emit_branch(INST_BREZ, op->get_r_value(), false_label);
+          e->emit_branch(INST_BREZ, left_op->get_r_value(), compare_false);
           break;
 
         case RELOP_GT:
-          e->emit_branch(INST_BRNE, op->get_r_value(), false_label);
-          e->emit_branch(INST_BREZ, op->get_r_value(), false_label);
+          e->emit_branch(INST_BRNE, left_op->get_r_value(), compare_false);
+          e->emit_branch(INST_BREZ, left_op->get_r_value(), compare_false);
           break;
 
         case RELOP_GE:
-          e->emit_branch(INST_BRNE, op->get_r_value(), false_label);
+          e->emit_branch(INST_BRNE, left_op->get_r_value(), compare_false);
           break;
 
         case RELOP_LT:
-          e->emit_branch(INST_BREZ, op->get_r_value(), false_label);
-          e->emit_branch(INST_BRPO, op->get_r_value(), false_label);
+          e->emit_branch(INST_BREZ, left_op->get_r_value(), compare_false);
+          e->emit_branch(INST_BRPO, left_op->get_r_value(), compare_false);
           break;
 
         case RELOP_LE:
-          e->emit_branch(INST_BRPO, op->get_r_value(), false_label);
+          e->emit_branch(INST_BRPO, left_op->get_r_value(), compare_false);
           break;
 
         default:
           break;
       }
 
-      // IR - Emit instructions to populate op.
-      e->emit_comment("Cast comparison outcome to 0 or 1.");
-      e->emit_move(op->get_r_value(), 1);
-      e->emit_branch(next_label);
-      e->emit_label(false_label);
-      e->emit_move(op->get_r_value(), 0);
-      e->emit_label(next_label);
+      // IR - Emit instructions to populate left_op.
+      e->emit_move(left_op->get_r_value(), 1);
+      e->emit_branch(compare_done);
+      e->emit_label(compare_false);
+      e->emit_move(left_op->get_r_value(), 0);
+      e->emit_label(compare_done);
 
       // Clean up right operand.
       if (right_op->get_type() == OPTYPE_REGISTER) {
@@ -1605,7 +1609,7 @@ bool Parser::parse_simple_expr(expr_type& simple_expr_type, Operand*& op) {
 }
 
 bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type,
-                                   Operand*& op) {
+                                   Operand*& left_op) {
   /* SIMPLE_EXPR_PRM -> addop TERM SIMPLE_EXPR_PRM
      Predict(addop TERM SIMPLE_EXPR_PRM) == {addop} */
   if (is_addop(word)) {
@@ -1629,13 +1633,13 @@ bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type,
 
     // Match TERM - ACTION.
     if (parse_term(term_type, right_op)) {
-      // IR - Generate code for "op addop right_op".
+      // IR - Generate code for "left_op addop right_op".
       // Make sure that the left operand is stored in a register.
       Register* left_op_reg;
-      if (op->get_type() == OPTYPE_REGISTER) {
-        left_op_reg = op->get_r_value();
+      if (left_op->get_type() == OPTYPE_REGISTER) {
+        left_op_reg = left_op->get_r_value();
       } else {
-        // Spill the last register operand if there is no register available
+        // Spill last_register_op if there is no register available
         // for allocation.
         if (!allocator->has_free_register()) {
           const string *spill_location = allocate_spill_memory();
@@ -1647,17 +1651,17 @@ bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type,
         }
 
         left_op_reg = allocator->allocate_register();
-        if (op->get_type() == OPTYPE_IMMEDIATE) {
-          e->emit_move(left_op_reg, op->get_i_value());
+        if (left_op->get_type() == OPTYPE_IMMEDIATE) {
+          e->emit_move(left_op_reg, left_op->get_i_value());
         } else {
-          e->emit_move(left_op_reg, op->get_m_value());
+          e->emit_move(left_op_reg, left_op->get_m_value());
         }
-        delete op;
-        op = new Operand(OPTYPE_REGISTER, left_op_reg);
+        delete left_op;
+        left_op = new Operand(OPTYPE_REGISTER, left_op_reg);
       }
 
-      // Set op to be the last register operand.
-      last_register_op = &op;
+      // Set last_register_op to left_op.
+      last_register_op = &left_op;
 
       // Output IR to perform the operation.
       inst_type instruction;
@@ -1670,17 +1674,17 @@ bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type,
       // Output the appropriate instruction.
       switch (right_op->get_type()) {
         case OPTYPE_REGISTER:
-          e->emit_2addr(instruction, op->get_r_value(),
+          e->emit_2addr(instruction, left_op->get_r_value(),
                         right_op->get_r_value());
           break;
 
         case OPTYPE_IMMEDIATE:
-          e->emit_2addr(instruction, op->get_r_value(),
+          e->emit_2addr(instruction, left_op->get_r_value(),
                         right_op->get_i_value());
           break;
 
         case OPTYPE_MEMORY:
-          e->emit_2addr(instruction, op->get_r_value(),
+          e->emit_2addr(instruction, left_op->get_r_value(),
                         right_op->get_m_value());
           break;
 
@@ -1688,13 +1692,14 @@ bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type,
           break;
       }
 
-      // Prevent the case when 'op or right_op' > 1 by normalizing op to 0 or 1.
+      // Prevent the case when 'left_op or right_op' > 1 by normalizing
+      // the boolean result to 0 or 1.
       if (addop_attr == ADDOP_OR) {
-        e->emit_comment("Normalize result of OR operator to 0 or 1.");
-        string *done_label = e->get_new_label("done");
-        e->emit_branch(INST_BREZ , op->get_r_value(), done_label);
-        e->emit_move(op->get_r_value(), 1);
-        e->emit_label(done_label);
+        e->emit_comment("Normalize result of OR operation to 0 or 1.");
+        string *or_done = e->get_new_label("or_done");
+        e->emit_branch(INST_BREZ , left_op->get_r_value(), or_done);
+        e->emit_move(left_op->get_r_value(), 1);
+        e->emit_label(or_done);
       }
 
       // Clean up the right operand.
@@ -1708,7 +1713,7 @@ bool Parser::parse_simple_expr_prm(expr_type& simple_expr_prm0_type,
       delete right_op;
 
       // Match SIMPLE_EXPR_PRM - ACTION.
-      if (parse_simple_expr_prm(simple_expr_prm1_type, op)) {
+      if (parse_simple_expr_prm(simple_expr_prm1_type, left_op)) {
         // Semantic analysis.
         if (simple_expr_prm1_type == NO_T) {
           if (addop_type == term_type) {
@@ -1820,7 +1825,7 @@ bool Parser::parse_term_prm(expr_type& term_prm0_type, Operand*& left_op) {
 	left_op_reg = left_op->get_r_value();
       } else {
 	// Allocate a new register and move the left op into it.
-        // Spill the last register operand if there is no register available for
+        // Spill last_register_op if there is no register available for
         // allocation.
         if (!allocator->has_free_register()) {
           const string *spill_location = allocate_spill_memory();
@@ -1846,7 +1851,7 @@ bool Parser::parse_term_prm(expr_type& term_prm0_type, Operand*& left_op) {
 	left_op = new Operand(OPTYPE_REGISTER, left_op_reg);
       }
 
-      // Set left_op to be the last register operand.
+      // Reset last_register_op to left_op.
       last_register_op = &left_op;
 
       /* Output IR to perform the operation.
@@ -2057,7 +2062,7 @@ bool Parser::parse_factor(expr_type& factor0_type, Operand*& op) {
 	  if (op->get_type() == OPTYPE_REGISTER) {
 	    op_register = op->get_r_value();
 	  } else {
-            // Spill the last register operand if there is no register available
+            // Spill last_register_op if there is no register available
             // for allocation.
             if (!allocator->has_free_register()) {
               const string *spill_location = allocate_spill_memory();
@@ -2085,7 +2090,7 @@ bool Parser::parse_factor(expr_type& factor0_type, Operand*& op) {
             op = new Operand(OPTYPE_REGISTER, op_register);
 	  }  // op not in a register.
 
-          // Set op to be the last register operand.
+          // Reset last_register_op to op.
           last_register_op = &op;
 
           // Finally, emit the instruction to perform the SIGN operation.

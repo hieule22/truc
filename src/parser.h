@@ -112,7 +112,7 @@ class Parser {
 
   bool parse_term(expr_type& term_type, Operand*& op);
 
-  bool parse_term_prm(expr_type& term_prm_type, Operand*& left_op);
+  bool parse_term_prm(expr_type& term_prm_type, Operand*& op);
 
   bool parse_factor(expr_type& factor_type, Operand*& op);
 
@@ -160,8 +160,8 @@ class Parser {
   // Labels used to generate data directives for all program variables.
   vector<const string *> program_labels;
 
-  // Last register operand, to keep track of which register to spill onto memory
-  // when no register is available for allocation.
+  // Last operand to be placed in a register, to keep track of which register
+  // to spill onto memory when no register is available for allocation.
   Operand **last_register_op;
 
   // Labels used to generate data directives for memory locations used for
