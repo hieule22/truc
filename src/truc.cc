@@ -21,14 +21,14 @@ int main(int argc, char **argv) {
   // Create a Parser for this source file.
   Parser parser(new Scanner(filename));
 
+  // Generate target code for the given source program.
   if (parser.parse_program()) {
-    if (parser.done_with_input()) {
-      std::cout << "Parsing succeeded!" << std::endl;
-    } else {
-      std::cout << "Extra tokens found at the end of program!" << std::endl;
+    if (!parser.done_with_input()) {
+      std::cerr << "ERROR: Extra tokens found at the end of program!"
+                << std::endl;
     }
   } else {
-    std::cout << "Parsing failed!" << std::endl;
+    std::cerr << "ERROR: Parsing failed!" << std::endl;
   }
 
   return 0;
