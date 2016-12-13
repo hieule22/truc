@@ -1,0 +1,20 @@
+# TruPL program to find the value of an integer raised to an integral power.
+program power;
+	a, b, result: int;
+begin
+	# Initialize a and b with some demo values.
+	a := 2;
+	b := 11;
+
+	if a = 0 then begin
+	     result := 0;
+        end else begin
+	    result := 1;
+	    while b > 0 loop begin
+	    	  result := result * a;
+		  b := b - 1;
+	    end;
+	end;
+
+	print result;
+end;

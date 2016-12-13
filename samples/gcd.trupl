@@ -1,0 +1,18 @@
+# TruPL program to find the greatest common divisor of two integers.
+program gcdfinder;
+	a, b: int;
+begin
+	# Initialize a and b with some demo values.
+	a := 28;
+	b := 119;
+	
+	while a <> b loop begin
+	      if a < b then begin
+	      	   b := b - a;
+	      end else begin
+	      	   a := a - b;
+	      end;
+	end;
+
+	print a;
+end;
